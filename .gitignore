@@ -23,3 +23,14 @@
 /depcomp
 /install-sh
 /missing
+/Makefile
+/config.h
+/config.log
+/config.status
+/hashlet
+
+autom4te.cache/
+src/.deps/
+/src/.dirstamp
+/stamp-h1
+/config.h.in~

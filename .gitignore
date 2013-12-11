@@ -16,3 +16,10 @@
 *.exe
 *.out
 *.app
+/configure
+/config.h.in
+/aclocal.m4
+/Makefile.in
+/depcomp
+/install-sh
+/missing

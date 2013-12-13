@@ -24,11 +24,16 @@
 #include <stdarg.h>
 #include <time.h>
 
+const int DEFAULT_LOG_LEVEL = DEBUG;
+
 void CTX_LOG(enum LOG_LEVEL lvl, const char *format, ...)
 {
-  va_list args;
-  va_start(args, format);
-  vfprintf(stdout, format, args);
-  printf("\n");
-  va_end(args);
+  if (lvl <= DEFAULT_LOG_LEVEL)
+    {
+      va_list args;
+      va_start(args, format);
+      vfprintf(stdout, format, args);
+      printf("\n");
+      va_end(args);
+    }
 }

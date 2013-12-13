@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-
+#include "log.h"
 
 
 const uint16_t crc_tab_8005_normal[256] = {
@@ -123,7 +123,6 @@ bool is_crc_16_valid(uint8_t *data, unsigned int data_len,
   assert(NULL != data);
   assert(NULL != crc);
 
-  printf("In CRC16 valid Length: %d ", data_len);
   print_hex_string("crc", crc, 2);
 
   result = calculate_crc16(data, data_len);

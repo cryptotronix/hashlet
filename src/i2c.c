@@ -69,6 +69,17 @@ bool wakeup(int fd)
   unsigned char buf[4] = {0};
   bool awake = false;
 
+  /* The assumption here that the fd is the i2c fd.  Of course, it may
+   * not be, so this may loop for a while (read forever).  This should
+   * probably try for only so often before quitting.
+  */
+
+  /* Perform a basic check to see if this fd is open.  This does not
+     guarantee it is the correct fd */
+
+  if(fcntl(fd, F_GETFD) < 0)
+    perror("Invalid FD.\n");
+
   while (!awake)
     {
       if (write(fd,&wakeup,sizeof(wakeup)) > 1)

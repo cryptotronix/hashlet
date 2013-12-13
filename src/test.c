@@ -102,7 +102,7 @@ int main(){
   while(x < 2)
     {
 
-      if (wakeup(fd) >= 0)
+      if (wakeup(fd))
         {
 
           random_len = get_random(fd, 1, &random_buf);

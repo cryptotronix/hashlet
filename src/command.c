@@ -28,6 +28,7 @@
 #include <string.h>
 #include "i2c.h"
 #include "command_adaptation.h"
+#include "log.h"
 
 struct Command_ATSHA204 make_command()
 {
@@ -98,62 +99,63 @@ void print_command(struct Command_ATSHA204 *c)
 
   const char* opcode = NULL;
 
-  printf("*** Printing Command ***\n");
-  printf("Command: 0x%02X\n", c->command);
-  printf("Count: 0x%02X\n", c->count);
-  printf("OpCode: 0x%02X\n", c->opcode);
+  CTX_LOG(DEBUG, "*** Printing Command ***");
+  CTX_LOG(DEBUG, "Command: 0x%02X", c->command);
+  CTX_LOG(DEBUG, "Count: 0x%02X", c->count);
+  CTX_LOG(DEBUG, "OpCode: 0x%02X", c->opcode);
 
   switch(c->opcode)
     {
     case COMMAND_DERIVE_KEY:
-      opcode = "Command Derive Key\n";
+      opcode = "Command Derive Key";
       break;
     case COMMAND_DEV_REV:
-      opcode = "Command Dev Rev\n";
+      opcode = "Command Dev Rev";
       break;
     case COMMAND_GEN_DIG:
-      opcode = "Command Generate Digest\n";
+      opcode = "Command Generate Digest";
       break;
     case COMMAND_HMAC:
-      opcode = "Command HMAC\n";
+      opcode = "Command HMAC";
       break;
     case COMMAND_CHECK_MAC:
-      opcode = "Command Check MAC\n";
+      opcode = "Command Check MAC";
       break;
     case COMMAND_LOCK:
-      opcode = "Command Lock\n";
+      opcode = "Command Lock";
       break;
     case COMMAND_MAC:
-      opcode = "Command MAC\n";
+      opcode = "Command MAC";
       break;
     case COMMAND_NONCE:
-      opcode = "Command NONCE\n";
+      opcode = "Command NONCE";
       break;
     case COMMAND_PAUSE:
-      opcode = "Command Pause\n";
+      opcode = "Command Pause";
       break;
     case COMMAND_RANDOM:
-      opcode = "Command Random\n";
+      opcode = "Command Random";
       break;
     case COMMAND_READ:
-      opcode = "Command Read\n";
+      opcode = "Command Read";
       break;
     case COMMAND_UPDATE_EXTRA:
-      opcode = "Command Update Extran\n";
+      opcode = "Command Update Extra";
       break;
     case COMMAND_WRITE:
-      opcode = "Command Write\n";
+      opcode = "Command Write";
       break;
     default:
       assert(false);
     }
-  printf("%s", opcode);
-  printf("param1: 0x%02X\n", c->param1);
-  printf("param2: 0x%02X 0x%02X\n", c->param2[0], c->param2[1]);
+  CTX_LOG(DEBUG,"%s", opcode);
+  CTX_LOG(DEBUG,"param1: 0x%02X", c->param1);
+  CTX_LOG(DEBUG,"param2: 0x%02X 0x%02X", c->param2[0], c->param2[1]);
   if (c->data_len > 0)
     print_hex_string("Data", c->data, c->data_len);
-  printf("CRC: 0x%02X 0x%02X\n", c->checksum[0], c->checksum[1]);
-  printf("Wait time: %ld seconds %lu nanoseconds\n", c->exec_time.tv_sec, c->exec_time.tv_nsec);
+  CTX_LOG(DEBUG,"CRC: 0x%02X 0x%02X", c->checksum[0], c->checksum[1]);
+  CTX_LOG(DEBUG,"Wait time: %ld seconds %lu nanoseconds",
+            c->exec_time.tv_sec, c->exec_time.tv_nsec);
 
 
 
@@ -497,12 +499,23 @@ bool write_slot_configs(int fd, enum config_slots slot,
 
 bool set_slot_config(fd)
 {
-  struct slot_config s1 = make_slot_config(0, true, false, false, false, 0,
-                                           ALWAYS);
-  struct slot_config s2 = make_slot_config(0, false, false, false, false, 0,
-                                           ALWAYS);
+    enum config_slots slots[CONFIG_SLOTS_NUM_SLOTS] = {slot0, slot2, slot4,
+                                                       slot6, slot8, slot10,
+                                                       slot12, slot14};
 
-  return write_slot_configs(fd, slot0, &s1, &s2);
+    struct slot_config s1 = make_slot_config(0, true, false, false, false, 0,
+                                             ALWAYS);
+    struct slot_config s2 = make_slot_config(0, false, false, false, false, 0,
+                                             ALWAYS);
+
+    int x = 0;
+
+    for(x; x < CONFIG_SLOTS_NUM_SLOTS; x++)
+        {
+            write_slot_configs(fd, slots[x], &s1, &s2);
+        }
+
+    return true;
 
 }
 
@@ -625,4 +638,26 @@ bool is_config_locked(int fd)
 bool is_data_locked(int fd)
 {
   return is_locked(fd, DATA_ZONE);
+}
+
+
+struct octet_buffer get_config_zone(fd)
+{
+    const unsigned int SIZE_OF_CONFIG_ZONE = 88;
+    const unsigned int NUM_OF_WORDS = SIZE_OF_CONFIG_ZONE / 4;
+
+    struct octet_buffer buf = make_buffer(SIZE_OF_CONFIG_ZONE);
+    uint8_t *write_loc = buf.ptr;
+
+    unsigned int addr = 0;
+    unsigned int word = 0;
+
+    while(word < NUM_OF_WORDS)
+        {
+            addr = word * 4;
+            read4(fd, CONFIG_ZONE, word, (uint32_t*)(write_loc+addr));
+            word++;
+        }
+
+    return buf;
 }

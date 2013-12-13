@@ -52,6 +52,15 @@ struct octet_buffer
   unsigned int len;   /* Length of data */
 };
 
+/**
+ * Created a malloc'd octet buffer.
+ *
+ * @param len The length of the desired buffer.
+ *
+ * @return A malloc'd and wiped octet buffer.
+ */
+struct octet_buffer make_buffer(unsigned int len);
+
 uint8_t reverse_bits_in_byte(uint8_t b);
 
 

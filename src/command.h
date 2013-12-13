@@ -100,14 +100,15 @@ enum WRITE_CONFIG
 */
 enum config_slots
 {
-  slot0,
+  slot0 = 0,
   slot2,
   slot4,
   slot6,
   slot8,
   slot10,
   slot12,
-  slot14
+  slot14,
+  CONFIG_SLOTS_NUM_SLOTS
 };
 
 struct slot_config
@@ -231,5 +232,7 @@ struct octet_buffer perform_mac(int fd, struct mac_mode_encoding m,
  * @return True if the configuration zone is locked
  */
 bool is_config_locked(int fd);
+
+struct octet_buffer get_config_zone(fd);
 
 #endif /* COMMAND_H */

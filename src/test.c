@@ -64,6 +64,7 @@ int main(){
   struct octet_buffer n_in = {nonce_in, 20};
   struct octet_buffer n_out;
   struct octet_buffer challenge;
+  struct octet_buffer config_zone;
 
   const unsigned char challenge_data[] = {
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
@@ -99,45 +100,48 @@ int main(){
 
   //assert(0 < gnutls_hash_init(dig, GNUTLS_MAC_SHA256));
 
-  while(x < 2)
+
+  if (wakeup(fd))
     {
 
-      if (wakeup(fd))
+      config_zone = get_config_zone(fd);
+      print_hex_string("Config Zone:", config_zone.ptr, config_zone.len);
+
+
+      random_len = get_random(fd, 1, &random_buf);
+      if (!is_config_locked(fd))
         {
-
-          random_len = get_random(fd, 1, &random_buf);
-          if (!is_config_locked(fd))
-            {
-              printf("Config is not locked\n");
-              assert(0 == memcmp(random_buf, random_non_person, random_len));
-            }
-
-          read4(fd, CONFIG_ZONE, 0x15, (uint32_t *)buf4);
-          printf("Word %x: ", 0x15);
-          print_hex_string("Data", buf4, 4);
-
-          /* gen nonce */
-
-
-          n_out = gen_nonce(fd, 1, n_in);
-          print_hex_string("nonce", n_out.ptr, n_out.len);
-
-          assert(true == set_slot_config(fd));
-
-          read4(fd, CONFIG_ZONE, 0x05, (uint32_t *)buf4);
-          printf("Word %x: ", 0x05);
-          print_hex_string("Data", buf4, 4);
-
-          /* Perform MAC */
-          challenge.ptr = challenge_data;
-          challenge.len = sizeof(challenge_data);
-
-          challenge_response = perform_mac(fd, m, 0, challenge);
+          printf("Config is not locked\n");
+          assert(0 == memcmp(random_buf, random_non_person, random_len));
         }
 
-      sleep_device(fd);
-      sleep(1);
-      x++;
+      read4(fd, CONFIG_ZONE, 0x15, (uint32_t *)buf4);
+      printf("Word %x: ", 0x15);
+      print_hex_string("Data", buf4, 4);
+
+      /* gen nonce */
+
+
+      n_out = gen_nonce(fd, 1, n_in);
+      print_hex_string("nonce", n_out.ptr, n_out.len);
+
+      assert(true == set_slot_config(fd));
+
+      read4(fd, CONFIG_ZONE, 0x05, (uint32_t *)buf4);
+      printf("Word %x: ", 0x05);
+      print_hex_string("Data", buf4, 4);
+
+      /* Perform MAC */
+      challenge.ptr = challenge_data;
+      challenge.len = sizeof(challenge_data);
+
+      challenge_response = perform_mac(fd, m, 0, challenge);
+
+      set_slot_config(fd);
     }
 
+  sleep_device(fd);
+  sleep(1);
+
+  close(fd);
 }

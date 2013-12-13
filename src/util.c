@@ -74,3 +74,12 @@ uint8_t reverse_bits_in_byte(uint8_t b)
   return (b * 0x0202020202ULL & 0x010884422010ULL) % 1023;
 
 }
+
+struct octet_buffer make_buffer(unsigned int len)
+{
+    struct octet_buffer b = {};
+    b.len = len;
+    b.ptr = malloc_wipe(len);
+
+    return b;
+}

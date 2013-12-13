@@ -31,6 +31,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "log.h"
 
 int i2c_setup(char* bus)
 {
@@ -38,17 +39,19 @@ int i2c_setup(char* bus)
 
   int fd;
 
-  if ((fd = open(bus, O_RDWR)) < 0) 
+  if ((fd = open(bus, O_RDWR)) < 0)
     {
       perror("Failed to open I2C bus\n");
       exit(1);
     }
 
+  return fd;
+
 }
 
-int i2c_acquire_bus(int fd, int addr)
+void i2c_acquire_bus(int fd, int addr)
 {
-  if (ioctl(fd, I2C_SLAVE, addr) < 0) 
+  if (ioctl(fd, I2C_SLAVE, addr) < 0)
     {
       perror("Failed to acquire bus access and/or talk to slave.\n");
 
@@ -59,36 +62,34 @@ int i2c_acquire_bus(int fd, int addr)
 
 
 
-int wakeup(int fd)
+bool wakeup(int fd)
 {
-  unsigned char wakeup[4] = {0};
-  unsigned char buf[32] = {0};
-  int temp = 0;
 
-  if (write(fd,wakeup,sizeof(wakeup)) > 1)
+  uint32_t wakeup = 0;
+  unsigned char buf[4] = {0};
+  bool awake = false;
+
+  while (!awake)
     {
-
-      // Using I2C Read
-      if (read(fd,buf,4) <= 0) 
-        {
-          /* ERROR HANDLING: i2c transaction failed */
-          perror("Failed to read from the i2c bus.\n");
-
-        } 
-      else 
+      if (write(fd,&wakeup,sizeof(wakeup)) > 1)
         {
 
-          assert(is_crc_16_valid(buf, 2, buf+2));
-
-          for(temp=0; temp<4; temp++)
+          CTX_LOG(DEBUG, "%s", "Device is awake.");
+          // Using I2C Read
+          if (read(fd,buf,sizeof(buf)) <= 0)
             {
-              printf("%x ",buf[temp]);
+              /* ERROR HANDLING: i2c transaction failed */
+              perror("Failed to read from the i2c bus.\n");
             }
-          return 0;
+          else
+            {
+              assert(is_crc_16_valid(buf, 2, buf+2));
+              awake = true;
+            }
         }
     }
 
-  return -1;
+  return awake;
 
 }
 

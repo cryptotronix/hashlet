@@ -22,19 +22,20 @@
 #define I2C_H
 
 #include <unistd.h>
+#include <stdbool.h>
 
-/** 
+/**
  * Open the I2C bus
- * 
+ *
  * @param bus The desired I2C bus.
- * 
- * @return An open file descriptor or error.
+ *
+ * @return An open file descriptor or the program will exit.
  */
 int i2c_setup(char* bus);
 
-int i2c_acquire_bus(int fd, int addr);
+void i2c_acquire_bus(int fd, int addr);
 
-int wakeup(int fd);
+bool wakeup(int fd);
 
 int sleep_device(int fd);
 

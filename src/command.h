@@ -39,8 +39,12 @@
  * Generate a Nonce from the device
  *
  * @param fd The open file descriptor
- * @param seed_update_flag Determines if the device's random seed should be updated.
- * @param input Must contain a malloced buffer of 32 or 20 bytes.  If 32 bytes, the nonce will act like a pass through the the value will be loaded directly.  If 20, the value will be used in generating the nonce value.
+ * @param seed_update_flag Determines if the device's random seed
+ * should be updated.
+ * @param input Must contain a malloced buffer of 32 or 20 bytes.  If
+ * 32 bytes, the nonce will act like a pass through the the value will
+ * be loaded directly.  If 20, the value will be used in generating
+ * the nonce value.
  *
  * @return A malloced buffer that contains 32 bytes of random data.
  */
@@ -138,7 +142,9 @@ struct slot_config
 };
 
 /**
- * Write the Configuration slots.  The minimum write length is four bytes therefore this function must write two slot configurations at one time.
+ * Write the Configuration slots.  The minimum write length is four
+ * bytes therefore this function must write two slot configurations at
+ * one time.
  *
  * @param fd The open file descriptor.
  * @param slot The first (even) slot to which to write
@@ -156,7 +162,8 @@ struct slot_config make_slot_config(unsigned int read_key, bool check_only,
                                     enum WRITE_CONFIG write_config);
 
 /**
- * Set the configuration zone based.  This function will setup the configuration zone, and thus the device, to a fixed configuration.
+ * Set the configuration zone based.  This function will setup the
+ * configuration zone, and thus the device, to a fixed configuration.
  *
  * @param fd The open file descriptor.
  *

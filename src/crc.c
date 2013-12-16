@@ -127,7 +127,7 @@ bool is_crc_16_valid(uint8_t *data, unsigned int data_len,
 
   result = calculate_crc16(data, data_len);
 
-  print_hex_string("Calculated crc", &result, 2);
+  print_hex_string("Calculated crc", (uint8_t*)&result, 2);
 
   return ((0 == memcmp(&result, crc, sizeof(result))) ? true : false);
 

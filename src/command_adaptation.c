@@ -26,6 +26,7 @@
 #include "i2c.h"
 #include "crc.h"
 #include <assert.h>
+#include "util.h"
 
 
 bool process_command(int fd, struct Command_ATSHA204 *c,

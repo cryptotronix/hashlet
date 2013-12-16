@@ -63,10 +63,10 @@ int main(){
   unsigned char nonce_in[20] = {0};
   struct octet_buffer n_in = {nonce_in, 20};
   struct octet_buffer n_out;
-  struct octet_buffer challenge;
+
   struct octet_buffer config_zone;
 
-  const unsigned char challenge_data[] = {
+   unsigned char challenge_data[] = {
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
     0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
@@ -81,8 +81,12 @@ int main(){
       0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00
     };
 
+  struct octet_buffer challenge =
+    {challenge_data, sizeof(challenge_data)};
 
   struct octet_buffer challenge_response;
+
+
 
   struct mac_mode_encoding m = {0};
 
@@ -132,8 +136,6 @@ int main(){
       print_hex_string("Data", buf4, 4);
 
       /* Perform MAC */
-      challenge.ptr = challenge_data;
-      challenge.len = sizeof(challenge_data);
 
       challenge_response = perform_mac(fd, m, 0, challenge);
 

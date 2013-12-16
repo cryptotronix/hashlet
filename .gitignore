@@ -35,3 +35,4 @@ src/.deps/
 /stamp-h1
 /config.h.in~
 /TAGS
+/compile

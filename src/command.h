@@ -233,6 +233,17 @@ struct octet_buffer perform_mac(int fd, struct mac_mode_encoding m,
  */
 bool is_config_locked(int fd);
 
-struct octet_buffer get_config_zone(fd);
+struct octet_buffer get_config_zone(int fd);
+
+/**
+ * Locks the specified zone.
+ *
+ * @param fd The open file descriptor
+ * @param zone The zone to lock.  Either CONFIG_ZONE or (DATA_ZONE or
+ * OTP_ZONE). The later will be locked together
+ *
+ * @return True if now locked.
+ */
+bool lock(int fd, enum DATA_ZONE zone);
 
 #endif /* COMMAND_H */

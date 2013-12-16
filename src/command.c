@@ -661,3 +661,64 @@ struct octet_buffer get_config_zone(fd)
 
     return buf;
 }
+
+bool lock(int fd, enum DATA_ZONE zone)
+{
+
+    struct octet_buffer zone_data;
+    uint16_t crc;
+    uint8_t param1;
+    uint8_t param2[2] = {0};
+    uint8_t *int_ptr;
+    uint8_t response;
+    bool result = false;
+
+
+    if (is_locked(fd, zone))
+        return true;
+
+
+    switch (zone)
+    {
+    case CONFIG_ZONE:
+        zone_data = get_config_zone(fd);
+        param1 = 0;
+        break;
+    case DATA_ZONE:
+    case OTP_ZONE:
+        param1 = 0b10000000;
+        assert(false);
+        break;
+    default:
+        assert(false);
+
+    }
+
+    crc = calculate_crc16(zone_data.ptr, zone_data.len);
+    memcpy(param2, &crc, sizeof(param2));
+
+    struct Command_ATSHA204 c = make_command();
+
+    set_opcode(&c, COMMAND_LOCK);
+    set_param1(&c, param1);
+    set_param2(&c, param2);
+    set_data(&c, NULL, 0);
+    set_execution_time(&c, 0, LOCK_AVG_EXEC);
+
+    if (process_command(fd, &c, &response, sizeof(response)))
+    {
+        if (0 == response)
+            {
+                result = true;
+                CTX_LOG(DEBUG, "Lock Successful");
+            }
+        else
+            {
+                CTX_LOG(DEBUG, "Lock Failed");
+            }
+    }
+
+
+    return result;
+
+}

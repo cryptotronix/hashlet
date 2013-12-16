@@ -138,6 +138,8 @@ int main(){
       challenge_response = perform_mac(fd, m, 0, challenge);
 
       set_slot_config(fd);
+
+      lock(fd, CONFIG_ZONE);
     }
 
   sleep_device(fd);

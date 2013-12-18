@@ -36,3 +36,4 @@ src/.deps/
 /config.h.in~
 /TAGS
 /compile
+.deps/

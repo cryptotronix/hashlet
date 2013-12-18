@@ -383,19 +383,29 @@ void serialize_slot_config(struct slot_config *s, uint8_t *buf)
   /* Place read key in the first four bits */
   temp = s->read_key;
   temp = temp << 4;
-  buf[0] = buf[0] ^ temp;
+  buf[0] = buf[0] | temp;
 
   if (s->check_only)
-    buf[0] = buf[0] ^ CHECK_ONLY_MASK;
+    {
+      buf[0] = buf[0] | CHECK_ONLY_MASK;
+      CTX_LOG(DEBUG, "Check only set on slot config");
+    }
+
 
   if (s->single_use)
-    buf[0] = buf[0] ^ SINGLE_USE_MASK;
+    buf[0] = buf[0] | SINGLE_USE_MASK;
 
   if (s->encrypted_read)
-    buf[0] = buf[0] ^ ENCRYPTED_READ_MASK;
+    {
+      buf[0] = buf[0] | ENCRYPTED_READ_MASK;
+      CTX_LOG(DEBUG, "Encrypted read set on slot conifg");
+    }
 
   if (s->is_secret)
-    buf[0] = buf[0] ^ IS_SECRET_MASK;
+    {
+      buf[0] = buf[0] | IS_SECRET_MASK;
+      CTX_LOG(DEBUG, "Is Secret set on slot config");
+    }
 
   /* The first byte has now been set */
 
@@ -406,20 +416,20 @@ void serialize_slot_config(struct slot_config *s, uint8_t *buf)
   switch(s->write_config)
     {
     case ALWAYS:
-      buf[1] = buf[1] ^ WRITE_CONFIG_ALWAYS_MASK;
+      buf[1] = buf[1] | WRITE_CONFIG_ALWAYS_MASK;
       break;
     case NEVER:
-      buf[1] = buf[1] ^ WRITE_CONFIG_NEVER_MASK;
+      buf[1] = buf[1] | WRITE_CONFIG_NEVER_MASK;
       break;
     case ENCRYPT:
-      buf[1] = buf[1] ^ WRITE_CONFIG_ENCRYPT_MASK;
+      buf[1] = buf[1] | WRITE_CONFIG_ENCRYPT_MASK;
       break;
     default:
       assert(false);
 
     }
 
-
+  CTX_LOG(DEBUG, "Slot Config set: 0x%02X 0x%02X", buf[0], buf[1]);
 
 }
 
@@ -509,9 +519,9 @@ bool set_config_zone(int fd)
                                                        slot6, slot8, slot10,
                                                        slot12, slot14};
 
-    struct slot_config s1 = make_slot_config(0, true, false, false, false, 0,
+    struct slot_config s1 = make_slot_config(0, true, false, false, true, 0,
                                              ALWAYS);
-    struct slot_config s2 = make_slot_config(0, false, false, false, false, 0,
+    struct slot_config s2 = make_slot_config(0, false, false, false, true, 0,
                                              ALWAYS);
 
     int x = 0;

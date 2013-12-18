@@ -65,7 +65,7 @@ int main(){
   struct octet_buffer n_out;
 
   struct octet_buffer config_zone;
-  struct octet_buffer otp_zone;
+
 
    unsigned char challenge_data[] = {
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
@@ -86,14 +86,10 @@ int main(){
     {challenge_data, sizeof(challenge_data)};
 
   struct octet_buffer challenge_response;
-
-
-
   struct mac_mode_encoding m = {0};
 
-  gnutls_hash_hd_t * dig;
+  //gnutls_hash_hd_t * dig;
 
-  int x = 0;
 
   fd = i2c_setup(bus);
 
@@ -139,6 +135,8 @@ int main(){
       /* Perform MAC */
 
       challenge_response = perform_mac(fd, m, 0, challenge);
+      print_hex_string("Challenge Response", challenge_response.ptr,
+                       challenge_response.len);
 
       //      lock(fd, CONFIG_ZONE);
 
@@ -151,4 +149,6 @@ int main(){
   sleep(1);
 
   close(fd);
+
+  return 0;
 }

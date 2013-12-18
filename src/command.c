@@ -95,6 +95,7 @@ void set_execution_time(struct Command_ATSHA204 *c, unsigned int sec,
   c->exec_time.tv_nsec = nano;
 
 }
+
 void print_command(struct Command_ATSHA204 *c)
 {
   assert(NULL != c);
@@ -524,7 +525,7 @@ bool set_config_zone(int fd)
 
     assert(write4(fd, CONFIG_ZONE, I2C_ADDR_ETC_WORD,to_send));
 
-    for(x; x < CONFIG_SLOTS_NUM_SLOTS; x++)
+    for(x=0; x < CONFIG_SLOTS_NUM_SLOTS; x++)
         {
             assert(write_slot_configs(fd, slots[x], &s1, &s2));
         }
@@ -683,7 +684,6 @@ bool lock(int fd, enum DATA_ZONE zone)
     uint16_t crc;
     uint8_t param1;
     uint8_t param2[2] = {0};
-    uint8_t *int_ptr;
     uint8_t response;
     bool result = false;
 
@@ -782,7 +782,7 @@ bool set_otp_zone(int fd)
         memcpy(&to_send, BLANK, sizeof(to_send));
 
         if (false == write4(fd, OTP_ZONE, x, to_send))
-            assert(false);
+            success = false;
 
 
     }
@@ -793,7 +793,8 @@ bool set_otp_zone(int fd)
         CTX_LOG(DEBUG, "Writing: %s", data[x]);
         memcpy(&to_send, data[x], sizeof(to_send));
         if(false == write4(fd, OTP_ZONE, x, to_send))
-            assert(false);
+            success = false;
     }
 
+    return success;
 }

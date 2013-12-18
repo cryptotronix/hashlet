@@ -270,6 +270,11 @@ struct octet_buffer get_otp_zone(int fd);
  */
 bool lock(int fd, enum DATA_ZONE zone);
 
-
+/**
+ * Print the command structure to the debug log source.
+ *
+ * @param c The command to be sent.
+ */
+void print_command(struct Command_ATSHA204 *c);
 
 #endif /* COMMAND_H */

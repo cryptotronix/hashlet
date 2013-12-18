@@ -29,11 +29,13 @@
 #include "i2c.h"
 #include "command_adaptation.h"
 #include "log.h"
+#include "config.h"
 
 struct Command_ATSHA204 make_command()
 {
-  struct Command_ATSHA204 c = { .command = 0x03, .count = 0, .opcode = 0, .param1 = 0,
-                         .data = NULL, .data_len = 0};
+  struct Command_ATSHA204 c = { .command = 0x03, .count = 0, .opcode = 0,
+                                .param1 = 0,
+                                .data = NULL, .data_len = 0};
 
   return c;
 
@@ -720,5 +722,66 @@ bool lock(int fd, enum DATA_ZONE zone)
 
 
     return result;
+
+}
+
+bool is_otp_read_only_mode(int fd)
+{
+    const uint8_t ADDR = 0x04;
+    uint32_t word = 0;
+    assert(read4(fd, CONFIG_ZONE, ADDR, &word));
+
+    uint8_t * byte = (uint8_t *)&word;
+
+    const unsigned int OFFSET_TO_OTP_MODE = 3;
+    const unsigned int OTP_READ_ONLY_MODE = 0xAA;
+
+    return OTP_READ_ONLY_MODE == byte[OFFSET_TO_OTP_MODE] ? true : false;
+
+
+}
+bool set_otp_zone(int fd)
+{
+    /* The device must be using an OTP read only mode */
+
+    if (!is_otp_read_only_mode(fd))
+        assert(false);
+
+    /* Copy the software version over */
+    char version[] = {0,0,0,0};
+    unsigned int len = sizeof(version) < strlen(PACKAGE_VERSION) ?
+        sizeof(version) : strlen(PACKAGE_VERSION);
+    memcpy(version, PACKAGE_VERSION, len);
+
+    /* Setup the fixed OTP data zone */
+    const char * const data [] = {"CRYP", "TOTR", "ONIX", "HASH",
+                                  "LET ", "REV:", "A   ", "SWVN",  version};
+
+    unsigned int num_data_items = sizeof(data) / sizeof(data[0]);
+    const char * BLANK = "    ";
+    const unsigned int NUM_WORDS = 16;
+    unsigned int x = 0;
+    uint32_t to_send = 0;
+    bool success = true;
+
+    /* Fill the OTP zone with blanks from their default FFFF */
+    for (x=0; x<NUM_WORDS && success; x++)
+    {
+        memcpy(&to_send, BLANK, sizeof(to_send));
+
+        if (false == write4(fd, OTP_ZONE, x, to_send))
+            assert(false);
+
+
+    }
+
+    /* Fill in the data */
+    for (x=0; x<num_data_items && success; x++)
+    {
+        CTX_LOG(DEBUG, "Writing: %s", data[x]);
+        memcpy(&to_send, data[x], sizeof(to_send));
+        if(false == write4(fd, OTP_ZONE, x, to_send))
+            assert(false);
+    }
 
 }

@@ -65,6 +65,7 @@ int main(){
   struct octet_buffer n_out;
 
   struct octet_buffer config_zone;
+  struct octet_buffer otp_zone;
 
    unsigned char challenge_data[] = {
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
@@ -142,6 +143,10 @@ int main(){
       set_slot_config(fd);
 
       lock(fd, CONFIG_ZONE);
+
+      assert(set_otp_zone(fd));
+
+
     }
 
   sleep_device(fd);

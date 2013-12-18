@@ -172,7 +172,14 @@ struct slot_config make_slot_config(unsigned int read_key, bool check_only,
  */
 bool set_slot_config(int fd);
 
-
+/**
+ * Programs the OTP zone with fixed data
+ *
+ * @param fd The open file descriptor
+ *
+ * @return True if the OTP zone has been written.
+ */
+bool set_otp_zone(int fd);
 /**
  * Structure to encode options for the MAC command.
  *
@@ -233,7 +240,24 @@ struct octet_buffer perform_mac(int fd, struct mac_mode_encoding m,
  */
 bool is_config_locked(int fd);
 
+/**
+ * Returns the entire configuration zone.
+ *
+ * @param fd The open file descriptor
+ *
+ * @return A malloc'ed buffer containing the entire configuration
+ * zone.
+ */
 struct octet_buffer get_config_zone(int fd);
+
+/**
+ * Returns the entire OTP zone.
+ *
+ * @param fd The open file descriptor.
+ *
+ * @return A malloc'ed buffer containing the entire OTP zone.
+ */
+struct octet_buffer get_otp_zone(int fd);
 
 /**
  * Locks the specified zone.
@@ -245,5 +269,7 @@ struct octet_buffer get_config_zone(int fd);
  * @return True if now locked.
  */
 bool lock(int fd, enum DATA_ZONE zone);
+
+
 
 #endif /* COMMAND_H */

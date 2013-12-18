@@ -170,7 +170,7 @@ struct slot_config make_slot_config(unsigned int read_key, bool check_only,
  *
  * @return True if succesful, otherwise false
  */
-bool set_slot_config(int fd);
+bool set_config_zone(int fd);
 
 /**
  * Programs the OTP zone with fixed data

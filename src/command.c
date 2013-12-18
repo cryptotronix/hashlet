@@ -499,8 +499,11 @@ bool write_slot_configs(int fd, enum config_slots slot,
 
 }
 
-bool set_slot_config(fd)
+bool set_config_zone(int fd)
 {
+    if(is_config_locked(fd))
+        return false;
+
     enum config_slots slots[CONFIG_SLOTS_NUM_SLOTS] = {slot0, slot2, slot4,
                                                        slot6, slot8, slot10,
                                                        slot12, slot14};
@@ -512,9 +515,18 @@ bool set_slot_config(fd)
 
     int x = 0;
 
+    const uint8_t I2C_ADDR_OTP_MODE_SELECTOR_MODE [] =
+        { 0xC8, 0x00, 0xAA, 0x00 };
+    const uint8_t I2C_ADDR_ETC_WORD = 0x04;
+
+    uint32_t to_send = 0;
+    memcpy(&to_send, &I2C_ADDR_OTP_MODE_SELECTOR_MODE, sizeof(to_send));
+
+    assert(write4(fd, CONFIG_ZONE, I2C_ADDR_ETC_WORD,to_send));
+
     for(x; x < CONFIG_SLOTS_NUM_SLOTS; x++)
         {
-            write_slot_configs(fd, slots[x], &s1, &s2);
+            assert(write_slot_configs(fd, slots[x], &s1, &s2));
         }
 
     return true;

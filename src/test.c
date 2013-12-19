@@ -126,7 +126,8 @@ int main(){
       n_out = gen_nonce(fd, 1, n_in);
       print_hex_string("nonce", n_out.ptr, n_out.len);
 
-      assert(true == set_config_zone(fd));
+      if (!is_config_locked(fd))
+          assert(true == set_config_zone(fd));
 
       read4(fd, CONFIG_ZONE, 0x05, (uint32_t *)buf4);
       printf("Word %x: ", 0x05);
@@ -138,9 +139,9 @@ int main(){
       print_hex_string("Challenge Response", challenge_response.ptr,
                        challenge_response.len);
 
-      //      lock(fd, CONFIG_ZONE);
+      lock(fd, CONFIG_ZONE);
 
-      //assert(set_otp_zone(fd));
+      assert(set_otp_zone(fd));
 
 
     }

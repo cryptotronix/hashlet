@@ -303,6 +303,11 @@ bool write32(int fd, enum DATA_ZONE zone, uint8_t addr, struct octet_buffer buf)
   uint8_t param2[2] = {0};
   uint8_t param1 = set_zone_bits(zone);
 
+  /* If writing 32 bytes, this bit must be set in param1 */
+  uint8_t WRITE_32_MASK = 0b00000001;
+
+  param1 = param1 | WRITE_32_MASK;
+
   param2[0] = addr;
 
   struct Command_ATSHA204 c = make_command();
@@ -841,4 +846,15 @@ bool set_otp_zone(int fd)
   write32(fd, OTP_ZONE, SIZE_OF_WRITE / sizeof(uint32_t), buf);
 
   return success;
+}
+
+void write_keys(int fd)
+{
+  struct octet_buffer key;
+
+  key = get_random(fd, false);
+
+  write32(fd, DATA_ZONE, 0, key);
+
+
 }

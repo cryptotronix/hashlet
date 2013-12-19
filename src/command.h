@@ -285,4 +285,7 @@ bool lock(int fd, enum DATA_ZONE zone);
  */
 void print_command(struct Command_ATSHA204 *c);
 
+
+void write_keys(int fd);
+
 #endif /* COMMAND_H */

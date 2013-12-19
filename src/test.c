@@ -145,6 +145,7 @@ int main(){
 
       assert(set_otp_zone(fd));
 
+      write_keys(fd);
 
     }
 

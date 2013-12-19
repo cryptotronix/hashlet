@@ -87,6 +87,7 @@ int main(){
 
   struct octet_buffer challenge_response;
   struct mac_mode_encoding m = {0};
+  struct octet_buffer random;
 
   //gnutls_hash_hd_t * dig;
 
@@ -109,7 +110,8 @@ int main(){
       print_hex_string("Config Zone:", config_zone.ptr, config_zone.len);
 
 
-      random_len = get_random(fd, 1, &random_buf);
+      random = get_random(fd, false);
+      print_hex_string("Random Data", random.ptr, random.len);
       if (!is_config_locked(fd))
         {
           printf("Config is not locked\n");

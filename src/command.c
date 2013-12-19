@@ -176,31 +176,31 @@ int parse_status_response(uint8_t* rsp)
 }
 
 
-int get_random(int fd, int seed_update_flag, uint8_t **random_buf)
+struct octet_buffer get_random(int fd, bool update_seed)
 {
   uint8_t *random = NULL;
   uint8_t param2[2] = {0};
-
-  assert(NULL != random_buf);
+  uint8_t param1 = update_seed ? 0 : 1;
+  struct octet_buffer buf = {};
 
   random = malloc_wipe(RANDOM_RSP_LENGTH);
 
   struct Command_ATSHA204 c = make_command();
 
   set_opcode(&c, COMMAND_RANDOM);
-  set_param1(&c, seed_update_flag);
+  set_param1(&c, param1);
   set_param2(&c, param2);
   set_data(&c, NULL, 0);
-  set_execution_time(&c, 0, 11000000);
+  set_execution_time(&c, 0, RANDOM_AVG_EXEC);
 
   if (process_command(fd, &c, random, RANDOM_RSP_LENGTH))
     //if(send_and_receive(fd, serialized, len, random, RANDOM_RSP_LENGTH, tim))
     {
-      *random_buf = random;
-      return RANDOM_RSP_LENGTH;
+      buf.ptr = random;
+      buf.len = RANDOM_RSP_LENGTH;
     }
 
-  return 0;
+  return buf;
 
 
 

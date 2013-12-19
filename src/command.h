@@ -79,7 +79,15 @@ int parse_status_response(uint8_t* rsp);
 
 /* Random Commands */
 
-int get_random(int fd, int seed_update_flag, uint8_t** random_buf);
+/**
+ * Get 32 bytes of random data from the device
+ *
+ * @param fd The open file descriptor
+ * @param update_seed True updates the seed.  Do this sparingly.
+ *
+ * @return A malloc'ed buffer with random data.
+ */
+struct octet_buffer get_random(int fd, bool update_seed);
 
 
 bool read4(int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t *buf);

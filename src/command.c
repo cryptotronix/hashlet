@@ -292,6 +292,39 @@ bool write4(int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf)
 
 }
 
+bool write32(int fd, enum DATA_ZONE zone, uint8_t addr, struct octet_buffer buf)
+{
+
+  assert(NULL != buf.ptr);
+  assert(32 == buf.len);
+
+  bool status = false;
+  uint8_t recv = 0;
+  uint8_t param2[2] = {0};
+  uint8_t param1 = set_zone_bits(zone);
+
+  param2[0] = addr;
+
+  struct Command_ATSHA204 c = make_command();
+
+  set_opcode(&c, COMMAND_WRITE);
+  set_param1(&c, param1);
+  set_param2(&c, param2);
+  set_data(&c, buf.ptr, buf.len);
+  set_execution_time(&c, 0, WRITE_AVG_EXEC);
+
+  if (process_command(fd, &c, &recv, sizeof(recv)));
+  {
+    if (0 == (int) recv)
+      status = true;
+  }
+
+  return status;
+
+
+
+}
+
 struct octet_buffer gen_nonce(int fd, int seed_update_flag,
                               struct octet_buffer input)
 
@@ -755,7 +788,7 @@ bool is_otp_read_only_mode(int fd)
 
     uint8_t * byte = (uint8_t *)&word;
 
-    const unsigned int OFFSET_TO_OTP_MODE = 3;
+    const unsigned int OFFSET_TO_OTP_MODE = 2;
     const unsigned int OTP_READ_ONLY_MODE = 0xAA;
 
     return OTP_READ_ONLY_MODE == byte[OFFSET_TO_OTP_MODE] ? true : false;
@@ -764,47 +797,48 @@ bool is_otp_read_only_mode(int fd)
 }
 bool set_otp_zone(int fd)
 {
-    /* The device must be using an OTP read only mode */
 
-    if (!is_otp_read_only_mode(fd))
-        assert(false);
+  const unsigned int SIZE_OF_WRITE = 32;
+  /* The device must be using an OTP read only mode */
 
-    /* Copy the software version over */
-    char version[] = {0,0,0,0};
-    unsigned int len = sizeof(version) < strlen(PACKAGE_VERSION) ?
-        sizeof(version) : strlen(PACKAGE_VERSION);
-    memcpy(version, PACKAGE_VERSION, len);
-
-    /* Setup the fixed OTP data zone */
-    const char * const data [] = {"CRYP", "TOTR", "ONIX", "HASH",
-                                  "LET ", "REV:", "A   ", "SWVN",  version};
-
-    unsigned int num_data_items = sizeof(data) / sizeof(data[0]);
-    const char * BLANK = "    ";
-    const unsigned int NUM_WORDS = 16;
-    unsigned int x = 0;
-    uint32_t to_send = 0;
-    bool success = true;
-
-    /* Fill the OTP zone with blanks from their default FFFF */
-    for (x=0; x<NUM_WORDS && success; x++)
-    {
-        memcpy(&to_send, BLANK, sizeof(to_send));
-
-        if (false == write4(fd, OTP_ZONE, x, to_send))
-            success = false;
+  if (!is_otp_read_only_mode(fd))
+    assert(false);
 
 
-    }
 
-    /* Fill in the data */
-    for (x=0; x<num_data_items && success; x++)
-    {
-        CTX_LOG(DEBUG, "Writing: %s", data[x]);
-        memcpy(&to_send, data[x], sizeof(to_send));
-        if(false == write4(fd, OTP_ZONE, x, to_send))
-            success = false;
-    }
+  /* The writes must be done in 32 bytes blocks */
 
-    return success;
+  uint8_t nulls[SIZE_OF_WRITE];
+  uint8_t part1[SIZE_OF_WRITE];
+  uint8_t part2[SIZE_OF_WRITE];
+  struct octet_buffer buf ={};
+  wipe(nulls, SIZE_OF_WRITE);
+  wipe(part1, SIZE_OF_WRITE);
+  wipe(part2, SIZE_OF_WRITE);
+
+  /* Simple check to make sure PACKAGE_VERSION isn't too long */
+  assert(strlen(PACKAGE_VERSION) < 10);
+
+  /* Setup the fixed OTP data zone */
+  sprintf((char *)part1, "CRYPTOTRONIX HASHLET REV: A");
+  sprintf((char *)part2, "SOFTWARE VERSION: %s", PACKAGE_VERSION);
+
+  bool success = true;
+
+  buf.ptr = nulls;
+  buf.len = sizeof(nulls);
+
+  /* Fill the OTP zone with blanks from their default FFFF */
+  write32(fd, OTP_ZONE, 0, buf);
+  write32(fd, OTP_ZONE, SIZE_OF_WRITE / sizeof(uint32_t), buf);
+
+  /* Fill in the data */
+  buf.ptr = part1;
+  CTX_LOG(DEBUG, "Writing: %s", buf.ptr);
+  write32(fd, OTP_ZONE, 0, buf);
+  buf.ptr = part2;
+  CTX_LOG(DEBUG, "Writing: %s", buf.ptr);
+  write32(fd, OTP_ZONE, SIZE_OF_WRITE / sizeof(uint32_t), buf);
+
+  return success;
 }

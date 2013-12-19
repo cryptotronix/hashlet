@@ -58,7 +58,8 @@ unsigned int copy_over(uint8_t *dst, const uint8_t *src, unsigned int src_len,
 
 
 }
-struct octet_buffer perform_hash(struct octet_buffer challenge)
+struct octet_buffer perform_hash(struct octet_buffer challenge,
+                                 unsigned int slot)
 {
   const uint8_t key[] =
     {
@@ -74,7 +75,7 @@ struct octet_buffer perform_hash(struct octet_buffer challenge)
 
   const uint8_t opcode = {0x08};
   const uint8_t mode = 0;
-  const uint8_t param2[] = {0x01, 0x00};
+  const uint8_t param2[2] = {slot, 0};
   const uint8_t otp8[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   const uint8_t otp3[] = {0x00, 0x00, 0x00};
   const uint8_t sn = 0xEE;
@@ -109,11 +110,17 @@ struct octet_buffer perform_hash(struct octet_buffer challenge)
 
   uint8_t *output = malloc_wipe(gnutls_hash_get_len(GNUTLS_DIG_SHA256));
 
-  gnutls_hash_output(dig, output);
+  gnutls_hash_deinit(dig, output);
 
   print_hex_string("Result hash", output, gnutls_hash_get_len(GNUTLS_DIG_SHA256));
 
+  struct octet_buffer result;
+  result.ptr = output;
+  result.len = gnutls_hash_get_len(GNUTLS_DIG_SHA256);
 
+  free(buf);
+
+  return result;
 }
 
 
@@ -143,12 +150,6 @@ int main(){
       0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00
     };
 
-  const uint8_t challenge_canned[] = {
-    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-    0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
-    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-    0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF
-  };
 
   struct octet_buffer challenge = {challenge_data, sizeof(challenge_data)};
 
@@ -158,6 +159,7 @@ int main(){
   struct mac_mode_encoding m = {0};
   struct octet_buffer random;
   struct octet_buffer serial;
+  struct octet_buffer calc_hash;
 
 
 
@@ -213,15 +215,19 @@ int main(){
 
       /* Perform MAC */
 
-      challenge_response = perform_mac(fd, m, 8, challenge);
+      unsigned int slot_key = 1;
+
+      challenge_response = perform_mac(fd, m, slot_key, challenge);
       print_hex_string("Challenge Response", challenge_response.ptr,
                        challenge_response.len);
 
-      perform_hash(challenge);
+      calc_hash = perform_hash(challenge, slot_key);
+
+      assert(0 == memcmp(calc_hash.ptr, challenge_response.ptr, calc_hash.len));
 
       //lock(fd, CONFIG_ZONE);
 
-      //assert(set_otp_zone(fd));
+      assert(set_otp_zone(fd));
 
 
 

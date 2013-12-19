@@ -216,10 +216,10 @@ uint8_t set_zone_bits(enum DATA_ZONE zone)
       z = 0b00000000;
       break;
     case OTP_ZONE:
-      z = 0b01000000;
+      z = 0b00000001;
       break;
     case DATA_ZONE:
-      z = 0b10000000;
+      z = 0b00000010;
       break;
     default:
       assert(false);
@@ -307,12 +307,7 @@ bool write32(int fd, enum DATA_ZONE zone, uint8_t addr, struct octet_buffer buf)
   /* If writing 32 bytes, this bit must be set in param1 */
   uint8_t WRITE_32_MASK = 0b10000000;
 
-  uint8_t DATA_ZONE = 0b00000010;
-
-  param1 = 0;
-  param1 = param1 | WRITE_32_MASK | DATA_ZONE;
-
-  printf("Param 1 %x", param1);
+  param1 |= WRITE_32_MASK;
 
   param2[0] = addr;
 
@@ -625,18 +620,14 @@ struct octet_buffer perform_mac(int fd, struct mac_mode_encoding m,
   struct octet_buffer response = {NULL, recv_len};
   uint8_t param1 = serialize_mac_mode(m);
   uint8_t param2[2] = {0};
-  uint8_t *int_ptr;
+
 
   assert(data_slot <= MAX_NUM_DATA_SLOTS);
   if (!m.use_second_32_temp_key)
     assert(NULL != challenge.ptr && recv_len == challenge.len);
 
   /* Param 2 is guaranteed to be less than 15 (check above) */
-  int_ptr = (uint8_t *)&data_slot;
-  param2[0] = int_ptr[2];
-  param2[1] = int_ptr[3];
-
-  param2[0] = 1;
+  param2[0] = data_slot;
   param2[1] = 0;
 
   response.ptr = malloc_wipe(recv_len);
@@ -819,8 +810,6 @@ bool set_otp_zone(int fd)
   if (!is_otp_read_only_mode(fd))
     assert(false);
 
-
-
   /* The writes must be done in 32 bytes blocks */
 
   uint8_t nulls[SIZE_OF_WRITE];
@@ -844,16 +833,20 @@ bool set_otp_zone(int fd)
   buf.len = sizeof(nulls);
 
   /* Fill the OTP zone with blanks from their default FFFF */
-  write32(fd, OTP_ZONE, 0, buf);
-  write32(fd, OTP_ZONE, SIZE_OF_WRITE / sizeof(uint32_t), buf);
+  success = write32(fd, OTP_ZONE, 0, buf);
+
+  if (success)
+    success = write32(fd, OTP_ZONE, SIZE_OF_WRITE / sizeof(uint32_t), buf);
 
   /* Fill in the data */
   buf.ptr = part1;
   CTX_LOG(DEBUG, "Writing: %s", buf.ptr);
-  write32(fd, OTP_ZONE, 0, buf);
+  if (success)
+    success = write32(fd, OTP_ZONE, 0, buf);
   buf.ptr = part2;
   CTX_LOG(DEBUG, "Writing: %s", buf.ptr);
-  write32(fd, OTP_ZONE, SIZE_OF_WRITE / sizeof(uint32_t), buf);
+  if (success)
+    success = write32(fd, OTP_ZONE, SIZE_OF_WRITE / sizeof(uint32_t), buf);
 
   return success;
 }
@@ -862,18 +855,18 @@ void write_keys(int fd)
 {
   struct octet_buffer key;
 
-  const uint8_t test[] =
-{
+  uint8_t test[] =
+    {
 
-  0x40, 0x83, 0x6C, 0xA7,
-  0x31, 0x28, 0x45, 0x02,
-  0xD1, 0x7B, 0x34, 0xA3,
-  0x49, 0xB6, 0x26, 0x67,
-  0x4E, 0x3B, 0x16, 0x71,
-  0x4A, 0xF1, 0x2E, 0xAA,
-  0xDB, 0x58, 0xDB, 0x52,
-  0x79, 0xA6, 0x82, 0x55
-};
+      0x40, 0x83, 0x6C, 0xA7,
+      0x31, 0x28, 0x45, 0x02,
+      0xD1, 0x7B, 0x34, 0xA3,
+      0x49, 0xB6, 0x26, 0x67,
+      0x4E, 0x3B, 0x16, 0x71,
+      0x4A, 0xF1, 0x2E, 0xAA,
+      0xDB, 0x58, 0xDB, 0x52,
+      0x79, 0xA6, 0x82, 0x55
+    };
 
   key.ptr = test;
   key.len = sizeof(test);
@@ -888,7 +881,7 @@ void write_keys(int fd)
 struct octet_buffer get_serial_num(int fd)
 {
   struct octet_buffer serial;
-  const unsigned int len = sizeof(uint32_t) * 2;
+  const unsigned int len = sizeof(uint32_t) * 2 + 1;
   serial.ptr = malloc_wipe(len);
   serial.len = len;
 
@@ -896,13 +889,19 @@ struct octet_buffer get_serial_num(int fd)
 
   const uint8_t SERIAL_PART1_ADDR = 0x00;
   const uint8_t SERIAL_PART2_ADDR = 0x02;
-  read4(fd, CONFIG_ZONE, SERIAL_PART1_ADDR, &word);
+  const uint8_t SERIAL_PART3_ADDR = 0x03;
 
+  read4(fd, CONFIG_ZONE, SERIAL_PART1_ADDR, &word);
   memcpy(serial.ptr, &word, sizeof(word));
 
   read4(fd, CONFIG_ZONE, SERIAL_PART2_ADDR, &word);
-
   memcpy(serial.ptr + sizeof(word), &word, sizeof(word));
+
+  read4(fd, CONFIG_ZONE, SERIAL_PART3_ADDR, &word);
+
+  uint8_t * ptr = (uint8_t *)&word;
+
+  memcpy(serial.ptr + len - 1, ptr, 1);
 
   return serial;
 

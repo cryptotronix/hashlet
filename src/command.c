@@ -262,6 +262,7 @@ bool read4(int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t *buf)
 }
 
 
+
 bool write4(int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf)
 {
 
@@ -304,9 +305,14 @@ bool write32(int fd, enum DATA_ZONE zone, uint8_t addr, struct octet_buffer buf)
   uint8_t param1 = set_zone_bits(zone);
 
   /* If writing 32 bytes, this bit must be set in param1 */
-  uint8_t WRITE_32_MASK = 0b00000001;
+  uint8_t WRITE_32_MASK = 0b10000000;
 
-  param1 = param1 | WRITE_32_MASK;
+  uint8_t DATA_ZONE = 0b00000010;
+
+  param1 = 0;
+  param1 = param1 | WRITE_32_MASK | DATA_ZONE;
+
+  printf("Param 1 %x", param1);
 
   param2[0] = addr;
 
@@ -630,6 +636,9 @@ struct octet_buffer perform_mac(int fd, struct mac_mode_encoding m,
   param2[0] = int_ptr[2];
   param2[1] = int_ptr[3];
 
+  param2[0] = 1;
+  param2[1] = 0;
+
   response.ptr = malloc_wipe(recv_len);
 
   struct Command_ATSHA204 c = make_command();
@@ -637,7 +646,8 @@ struct octet_buffer perform_mac(int fd, struct mac_mode_encoding m,
   set_opcode(&c, COMMAND_MAC);
   set_param1(&c, param1);
   set_param2(&c, param2);
-  set_data(&c, NULL, 0);
+  /* TODO Fix for situations not sending the challlenge */
+  set_data(&c, challenge.ptr, challenge.len);
   set_execution_time(&c, 0, MAC_AVG_EXEC);
 
   if (process_command(fd, &c, response.ptr, recv_len))
@@ -852,9 +862,48 @@ void write_keys(int fd)
 {
   struct octet_buffer key;
 
-  key = get_random(fd, false);
+  const uint8_t test[] =
+{
 
-  write32(fd, DATA_ZONE, 0, key);
+  0x40, 0x83, 0x6C, 0xA7,
+  0x31, 0x28, 0x45, 0x02,
+  0xD1, 0x7B, 0x34, 0xA3,
+  0x49, 0xB6, 0x26, 0x67,
+  0x4E, 0x3B, 0x16, 0x71,
+  0x4A, 0xF1, 0x2E, 0xAA,
+  0xDB, 0x58, 0xDB, 0x52,
+  0x79, 0xA6, 0x82, 0x55
+};
 
+  key.ptr = test;
+  key.len = sizeof(test);
+
+  assert(write32(fd, DATA_ZONE, 8, key));
+
+  print_hex_string("Key in address 8", key.ptr, key.len);
+
+
+}
+
+struct octet_buffer get_serial_num(int fd)
+{
+  struct octet_buffer serial;
+  const unsigned int len = sizeof(uint32_t) * 2;
+  serial.ptr = malloc_wipe(len);
+  serial.len = len;
+
+  uint32_t word = 0;
+
+  const uint8_t SERIAL_PART1_ADDR = 0x00;
+  const uint8_t SERIAL_PART2_ADDR = 0x02;
+  read4(fd, CONFIG_ZONE, SERIAL_PART1_ADDR, &word);
+
+  memcpy(serial.ptr, &word, sizeof(word));
+
+  read4(fd, CONFIG_ZONE, SERIAL_PART2_ADDR, &word);
+
+  memcpy(serial.ptr + sizeof(word), &word, sizeof(word));
+
+  return serial;
 
 }

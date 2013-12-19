@@ -50,6 +50,71 @@ signal_handler(int signum)
 
 }
 
+unsigned int copy_over(uint8_t *dst, const uint8_t *src, unsigned int src_len,
+                       unsigned int offset)
+{
+  memcpy(dst + offset, src, src_len);
+  return offset + src_len;
+
+
+}
+struct octet_buffer perform_hash(struct octet_buffer challenge)
+{
+  const uint8_t key[] =
+    {
+      0x40, 0x83, 0x6C, 0xA7,
+      0x31, 0x28, 0x45, 0x02,
+      0xD1, 0x7B, 0x34, 0xA3,
+      0x49, 0xB6, 0x26, 0x67,
+      0x4E, 0x3B, 0x16, 0x71,
+      0x4A, 0xF1, 0x2E, 0xAA,
+      0xDB, 0x58, 0xDB, 0x52,
+      0x79, 0xA6, 0x82, 0x55
+    };
+
+  const uint8_t opcode = {0x08};
+  const uint8_t mode = 0;
+  const uint8_t param2[] = {0x01, 0x00};
+  const uint8_t otp8[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  const uint8_t otp3[] = {0x00, 0x00, 0x00};
+  const uint8_t sn = 0xEE;
+  const uint8_t sn4[] = {0x00, 0x00, 0x00, 0x00};
+  const uint8_t sn2[] ={0x01, 0x23};
+  const uint8_t sn23[] = {0x00, 0x00};
+
+  unsigned int len = challenge.len + sizeof(key) + sizeof(opcode) + sizeof(mode)
+    + sizeof(param2) + sizeof(otp8) + sizeof(otp3) + sizeof(sn) + +sizeof(sn4)
+    + sizeof(sn2) + sizeof(sn23);
+
+  uint8_t *buf = malloc_wipe(len);
+
+  unsigned int offset = 0;
+  offset = copy_over(buf, key, sizeof(key), offset);
+  offset = copy_over(buf, challenge.ptr, challenge.len, offset);
+  offset = copy_over(buf, &opcode, sizeof(opcode), offset);
+  offset = copy_over(buf, &mode, sizeof(mode), offset);
+  offset = copy_over(buf, param2, sizeof(param2), offset);
+  offset = copy_over(buf, otp8, sizeof(otp8), offset);
+  offset = copy_over(buf, otp3, sizeof(otp3), offset);
+  offset = copy_over(buf, &sn, sizeof(sn), offset);
+  offset = copy_over(buf, sn4, sizeof(sn4), offset);
+  offset = copy_over(buf, sn2, sizeof(sn2), offset);
+  offset = copy_over(buf, sn23, sizeof(sn23), offset);
+
+  print_hex_string("Data to hash", buf, len);
+
+  gnutls_hash_hd_t  dig;
+  assert(0 == gnutls_hash_init(&dig, GNUTLS_DIG_SHA256));
+  assert(0 == gnutls_hash(dig, buf, len));
+
+  uint8_t *output = malloc_wipe(gnutls_hash_get_len(GNUTLS_DIG_SHA256));
+
+  gnutls_hash_output(dig, output);
+
+  print_hex_string("Result hash", output, gnutls_hash_get_len(GNUTLS_DIG_SHA256));
+
+
+}
 
 
 int main(){
@@ -67,12 +132,8 @@ int main(){
   struct octet_buffer config_zone;
 
 
-   unsigned char challenge_data[] = {
-    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-    0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
-    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-    0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF
-  };
+  unsigned char challenge_data[32];
+  memset(challenge_data, 0xFF, 32);
 
   const uint8_t random_non_person[] =
     {
@@ -82,14 +143,23 @@ int main(){
       0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00
     };
 
-  struct octet_buffer challenge =
-    {challenge_data, sizeof(challenge_data)};
+  const uint8_t challenge_canned[] = {
+    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+    0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
+    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+    0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF
+  };
+
+  struct octet_buffer challenge = {challenge_data, sizeof(challenge_data)};
+
+  /*struct octet_buffer challenge = {challenge_canned, sizeof(challenge_data)};*/
 
   struct octet_buffer challenge_response;
   struct mac_mode_encoding m = {0};
   struct octet_buffer random;
+  struct octet_buffer serial;
 
-  //gnutls_hash_hd_t * dig;
+
 
 
   fd = i2c_setup(bus);
@@ -100,7 +170,7 @@ int main(){
   /* Register the signal handler */
   signal(SIGINT, signal_handler);
 
-  //assert(0 < gnutls_hash_init(dig, GNUTLS_MAC_SHA256));
+
 
 
   if (wakeup(fd))
@@ -108,6 +178,9 @@ int main(){
 
       config_zone = get_config_zone(fd);
       print_hex_string("Config Zone:", config_zone.ptr, config_zone.len);
+
+      serial = get_serial_num(fd);
+      print_hex_string("Serial:", serial.ptr, serial.len);
 
 
       random = get_random(fd, false);
@@ -135,17 +208,22 @@ int main(){
       printf("Word %x: ", 0x05);
       print_hex_string("Data", buf4, 4);
 
+      write_keys(fd);
+
+
       /* Perform MAC */
 
-      challenge_response = perform_mac(fd, m, 0, challenge);
+      challenge_response = perform_mac(fd, m, 8, challenge);
       print_hex_string("Challenge Response", challenge_response.ptr,
                        challenge_response.len);
 
-      lock(fd, CONFIG_ZONE);
+      perform_hash(challenge);
 
-      assert(set_otp_zone(fd));
+      //lock(fd, CONFIG_ZONE);
 
-      write_keys(fd);
+      //assert(set_otp_zone(fd));
+
+
 
     }
 

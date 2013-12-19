@@ -285,6 +285,14 @@ bool lock(int fd, enum DATA_ZONE zone);
  */
 void print_command(struct Command_ATSHA204 *c);
 
+/**
+ * Retrieve the device's serial number
+ *
+ * @param fd An open file descriptor
+ *
+ * @return a malloc'd buffer with the serial number.
+ */
+struct octet_buffer get_serial_num(int fd);
 
 void write_keys(int fd);
 

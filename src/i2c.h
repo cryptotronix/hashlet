@@ -31,7 +31,7 @@
  *
  * @return An open file descriptor or the program will exit.
  */
-int i2c_setup(char* bus);
+int i2c_setup(const char* bus);
 
 void i2c_acquire_bus(int fd, int addr);
 

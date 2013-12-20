@@ -23,6 +23,7 @@
 
 #include "util.h"
 #include "log.h"
+#include "command.h"
 
 /**
  * Sets up the device for communication.

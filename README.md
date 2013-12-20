@@ -30,7 +30,12 @@ Currently supported commands:
 ./hashlet /dev/i2c-1 random
 62F95589AC76855A8F9204C9C6B8B85F06E6477D17C3888266AEE8E1CBD65319
 ```
-
+### serial-num
+```bash
+./hashlet /dev/i2c-1 serial-num
+0123XXXXXXXXXXXXEE
+```
+X's indicate the unique serial number.
 
 Design
 ---

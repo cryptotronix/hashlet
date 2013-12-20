@@ -33,7 +33,7 @@
 #include <unistd.h>
 #include "log.h"
 
-int i2c_setup(char* bus)
+int i2c_setup(const char* bus)
 {
   assert(NULL != bus);
 

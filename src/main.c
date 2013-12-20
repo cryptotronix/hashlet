@@ -23,6 +23,7 @@
 #include <argp.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
 #include "config.h"
 #include "hashlet.h"
 
@@ -35,28 +36,27 @@ const char *argp_program_bug_address = PACKAGE_BUGREPORT;
 static char doc[] =
   "Hashlet is a program to interface to the Cryptotronix Hashlet.\n\n"
   "Currently implemented Commands:\n\n"
-  "random    --  Retrieves 32 bytes of random data from the device.\n";
+  "random        --  Retrieves 32 bytes of random data from the device.\n"
+  "serial-num    --  Retrieves the device's serial number.\n";
 
 /* A description of the arguments we accept. */
 static char args_doc[] = "i2c_bus command";
+
+#define CMD_UPDATE_SEED 300
+#define CMD_SERIAL_NUM 301
 
 /* The options we understand. */
 static struct argp_option options[] = {
   {"verbose",  'v', 0,      0,  "Produce verbose output" },
   {"quiet",    'q', 0,      0,  "Don't produce any output" },
   {"silent",   's', 0,      OPTION_ALIAS },
-  {"update-seed", 300, 0, 0,
+  {"update-seed", CMD_UPDATE_SEED, 0, 0,
      "Updates the random seed.  Only applicable to certain commands"},
   {"output",   'o', "FILE", 0,
    "Output to FILE instead of standard output" },
   { 0 }
 };
 
-/* The list of commands supported */
-const static char *commands[] =
-{
-  "random"
-};
 
 #define NUM_ARGS 2
 
@@ -169,6 +169,12 @@ main (int argc, char **argv)
       free_octet_buffer(response);
 
     }
+  else if(0 == strcmp(arguments.args[1], "serial-num"))
+  {
+      response = get_serial_num(fd);
+      output_hex(stdout, response);
+      free_octet_buffer(response);
+  }
   else
     {
       printf("Invalid command, exiting.  Try --help\n");

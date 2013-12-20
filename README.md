@@ -41,3 +41,7 @@ Design
 ---
 
 In the `hardware` folder, one should find the design files for the Hashlet.  The IC on the hashlet is the [Atmel ATSHA204](http://www.atmel.com/Images/Atmel-8740-CryptoAuth-ATSHA204-Datasheet.pdf).
+
+Contributing
+---
+See the wiki page on [contributing](https://github.com/cryptotronix/hashlet/wiki/Contributing).

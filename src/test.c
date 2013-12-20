@@ -229,7 +229,8 @@ int main(){
 
       assert(set_otp_zone(fd));
 
-
+      struct octet_buffer read_otp = read32(fd, OTP_ZONE, 0);
+      print_hex_string("OTP Zone:", read_otp.ptr, read_otp.len);
 
     }
 

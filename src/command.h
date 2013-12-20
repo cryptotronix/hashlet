@@ -294,6 +294,16 @@ void print_command(struct Command_ATSHA204 *c);
  */
 struct octet_buffer get_serial_num(int fd);
 
+/**
+ * Reads 32 Bytes from the address
+ *
+ * @param fd The open file descriptor
+ * @param zone The zone to read from
+ * @param addr The address to read from
+ *
+ * @return 32 bytes of data or buf.ptr will be null on an error
+ */
+struct octet_buffer read32(int fd, enum DATA_ZONE zone, uint8_t addr);
 void write_keys(int fd);
 
 #endif /* COMMAND_H */

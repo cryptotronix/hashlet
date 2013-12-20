@@ -256,9 +256,40 @@ bool read4(int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t *buf)
     }
 
   return result;
+}
+
+struct octet_buffer read32(int fd, enum DATA_ZONE zone, uint8_t addr)
+{
 
 
+  uint8_t param2[2] = {0};
+  uint8_t param1 = set_zone_bits(zone);
 
+  uint8_t READ_32_MASK = 0b10000000;
+
+  param1 |= READ_32_MASK;
+
+  param2[0] = addr;
+
+  struct Command_ATSHA204 c = make_command();
+
+  set_opcode(&c, COMMAND_READ);
+  set_param1(&c, param1);
+  set_param2(&c, param2);
+  set_data(&c, NULL, 0);
+  set_execution_time(&c, 0, READ_AVG_EXEC);
+
+  const unsigned int LENGTH_OF_RESPONSE = 32;
+  struct octet_buffer buf = make_buffer(LENGTH_OF_RESPONSE);
+
+  if (!process_command(fd, &c, buf.ptr, LENGTH_OF_RESPONSE))
+    {
+      free_wipe(buf.ptr, LENGTH_OF_RESPONSE);
+      buf.ptr = NULL;
+      buf.len = 0;
+    }
+
+  return buf;
 }
 
 

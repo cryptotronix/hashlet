@@ -21,8 +21,13 @@ The Hashlet is 3.3V and 5V friendly. The headers are setup for BeagleBone but on
 Running
 ---
 
-Currently, there is no UI.  A `hashlet` executable will be built that will run through a series of tests.  If you received a prototype version, the tests will run if you soldered the device correctly.
+see `./hashlet --help` for full details.
 
+Currently supported commands:
+
+**random**
+`./hashlet /dev/i2c-1 random`
+`62F95589AC76855A8F9204C9C6B8B85F06E6477D17C3888266AEE8E1CBD65319`
 
 
 Design

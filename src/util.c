@@ -54,6 +54,9 @@ void free_wipe(unsigned char* buf, unsigned int len)
 
 uint8_t reverse_bits_in_byte(uint8_t b)
 {
+  /* This gem is from
+     http://graphics.stanford.edu/~seander/bithacks.html
+  */
   return (b * 0x0202020202ULL & 0x010884422010ULL) % 1023;
 
 }

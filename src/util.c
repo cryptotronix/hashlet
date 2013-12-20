@@ -37,6 +37,8 @@ uint8_t* malloc_wipe(unsigned int len)
 {
   uint8_t* buf = malloc(len);
 
+  assert(NULL != buf);
+
   wipe(buf, len);
 
   return buf;

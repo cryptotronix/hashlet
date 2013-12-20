@@ -4,11 +4,7 @@ Cryptotronix Hashlet
 Status
 ---
 
-As of 16 December, 2013 this software is in an alpha state.  The code
-can certainly be a lot cleaner.  Feel free to look around but I'd
-recommend waiting to jump in until the Beta release.  This is because
-there are certain one-way operations on the device that can't be
-undone once set.  This may leave the device in a undesirable state.
+As of 16 December, 2013 this software is in an alpha state.  The code can certainly be a lot cleaner.  Feel free to look around but I'd recommend waiting to jump in until the Beta release.  This is because there are certain one-way operations on the device that can't be undone once set.  This may leave the device in a undesirable state.
 
 Building
 ----

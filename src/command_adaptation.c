@@ -27,6 +27,7 @@
 #include "crc.h"
 #include <assert.h>
 #include "util.h"
+#include "log.h"
 
 
 bool process_command(int fd, struct Command_ATSHA204 *c,
@@ -104,7 +105,9 @@ unsigned int serialize_command(struct Command_ATSHA204 *c, uint8_t **serialized)
 
   print_command(c);
 
-  printf("Total len: %d, count: %d, CRC_LEN: %d, CRC_OFFSET: %d\n", total_len, c->count, crc_len, crc_offset);
+  CTX_LOG(DEBUG,
+          "Total len: %d, count: %d, CRC_LEN: %d, CRC_OFFSET: %d\n",
+          total_len, c->count, crc_len, crc_offset);
 
   /* copy over the command */
   data[0] = c->command;
@@ -173,7 +176,7 @@ bool read_and_validate(int fd, uint8_t *buf, unsigned int len)
     }
   else
     {
-      perror("Read failed");
+      CTX_LOG(DEBUG,"Read failed, retrying");
       goto TRY_AGAIN;
 
     }

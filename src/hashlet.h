@@ -18,22 +18,41 @@
  *
  */
 
-#ifndef LOG_H
-#define LOG_H
+#ifndef HASHLET_H
+#define HASHLET_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "util.h"
+#include "log.h"
 
-enum LOG_LEVEL
-  {
-    SEVERE = 0,
-    WARNING,
-    INFO,
-    DEBUG
-  };
+/**
+ * Sets up the device for communication.
+ *
+ * @param bus The I2C bus.
+ * @param addr The address of the device
+ *
+ * @return An open file descriptor or -1 on error
+ */
+int hashlet_setup(const char *bus, unsigned int addr);
+
+/**
+ * Sleeps the device and closes the file descriptor.
+ *
+ * @param fd The open file descriptor
+ *
+ */
+void hashlet_teardown(int fd);
 
 void set_log_level(enum LOG_LEVEL lvl);
 
-void CTX_LOG(enum LOG_LEVEL, const char *format, ...);
+/* COMMANDS */
 
-#endif /* LOG_H */
+/**
+ * Get 32 bytes of random data from the device
+ *
+ * @param fd The open file descriptor
+ * @param update_seed True updates the seed.  Do this sparingly.
+ *
+ * @return A malloc'ed buffer with random data.
+ */
+struct octet_buffer get_random(int fd, bool update_seed);
+#endif

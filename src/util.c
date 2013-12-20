@@ -23,25 +23,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include "log.h"
 
-void print_hex_string(char *str, uint8_t *hex, unsigned int len)
-{
-  int i;
-
-  assert(NULL != str);
-  assert(NULL != hex);
-
-  printf("%s : ", str);
-
-  for (i = 0; i < len; i++)
-  {
-    if (i > 0) printf(" ");
-    printf("0x%02X", hex[i]);
-  }
-
-  printf("\n");
-
-}
 
 void wipe(unsigned char *buf, unsigned int len)
 {
@@ -82,4 +65,12 @@ struct octet_buffer make_buffer(unsigned int len)
     b.ptr = malloc_wipe(len);
 
     return b;
+}
+
+
+void free_octet_buffer(struct octet_buffer buf)
+{
+    free_wipe(buf.ptr, buf.len);
+
+
 }

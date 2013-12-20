@@ -124,7 +124,7 @@ struct octet_buffer perform_hash(struct octet_buffer challenge,
 }
 
 
-int main(){
+int test(){
 
   char *bus = "/dev/i2c-1"; /* Pins P9_19 and P9_20 */
   int addr = 0b1100100;          /* The I2C address of TMP102 */

@@ -130,3 +130,23 @@ ssize_t i2c_read(int fd, unsigned char *buf, unsigned int len)
 
 
 }
+
+int hashlet_setup(const char *bus, unsigned int addr)
+{
+    int fd = i2c_setup(bus);
+
+    i2c_acquire_bus(fd, addr);
+
+    wakeup(fd);
+
+    return fd;
+
+}
+
+void hashlet_teardown(int fd)
+{
+    sleep_device(fd);
+
+    close(fd);
+
+}

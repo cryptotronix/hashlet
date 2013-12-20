@@ -61,6 +61,13 @@ struct octet_buffer
  */
 struct octet_buffer make_buffer(unsigned int len);
 
+/**
+ * Frees and clears an octet_buffer
+ *
+ * @param buf The malloc'ed octet buffer
+ */
+void free_octet_buffer(struct octet_buffer buf);
+
 uint8_t reverse_bits_in_byte(uint8_t b);
 
 

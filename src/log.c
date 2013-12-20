@@ -23,12 +23,13 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <time.h>
+#include <assert.h>
 
-const int DEFAULT_LOG_LEVEL = DEBUG;
+static enum LOG_LEVEL CURRENT_LOG_LEVEL = INFO;
 
 void CTX_LOG(enum LOG_LEVEL lvl, const char *format, ...)
 {
-  if (lvl <= DEFAULT_LOG_LEVEL)
+  if (lvl <= CURRENT_LOG_LEVEL)
     {
       va_list args;
       va_start(args, format);
@@ -36,4 +37,33 @@ void CTX_LOG(enum LOG_LEVEL lvl, const char *format, ...)
       printf("\n");
       va_end(args);
     }
+}
+
+void set_log_level(enum LOG_LEVEL lvl)
+{
+  CURRENT_LOG_LEVEL = lvl;
+
+}
+
+void print_hex_string(char *str, uint8_t *hex, unsigned int len)
+{
+
+  if (CURRENT_LOG_LEVEL < DEBUG)
+    return;
+
+  int i;
+
+  assert(NULL != str);
+  assert(NULL != hex);
+
+  printf("%s : ", str);
+
+  for (i = 0; i < len; i++)
+    {
+      if (i > 0) printf(" ");
+      printf("0x%02X", hex[i]);
+    }
+
+  printf("\n");
+
 }

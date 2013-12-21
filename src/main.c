@@ -213,8 +213,7 @@ main (int argc, char **argv)
     }
   else if(0 == strcmp(arguments.args[1], "slot-config"))
     {
-      struct slot_config slot;
-      slot = get_slot_config (fd, arguments.key_slot);
+      printf ("TODO\n");
 
     }
   else

@@ -37,21 +37,27 @@ static char doc[] =
   "Hashlet is a program to interface to the Cryptotronix Hashlet.\n\n"
   "Currently implemented Commands:\n\n"
   "random        --  Retrieves 32 bytes of random data from the device.\n"
-  "serial-num    --  Retrieves the device's serial number.\n";
+  "serial-num    --  Retrieves the device's serial number.\n"
+  "mac           --  Calculates a SHA-256 digest of your input data and then\n"
+  "                  sends that digest to the device to be mac'ed with a key\n"
+  "                  other internal data\n"
+  "slot-config   --  Prints out the slot configuration for a given key.\n"
+  "                  Use with key-slot option\n";
 
 /* A description of the arguments we accept. */
 static char args_doc[] = "i2c_bus command";
 
-#define CMD_UPDATE_SEED 300
-#define CMD_SERIAL_NUM 301
+#define OPT_UPDATE_SEED 300
+
 
 /* The options we understand. */
 static struct argp_option options[] = {
   {"verbose",  'v', 0,      0,  "Produce verbose output" },
   {"quiet",    'q', 0,      0,  "Don't produce any output" },
   {"silent",   's', 0,      OPTION_ALIAS },
-  {"update-seed", CMD_UPDATE_SEED, 0, 0,
+  {"update-seed", OPT_UPDATE_SEED, 0, 0,
      "Updates the random seed.  Only applicable to certain commands"},
+  {"key-slot", 'k', "SLOT",      0,  "The internal key slot to use."},
   {"output",   'o', "FILE", 0,
    "Output to FILE instead of standard output" },
   { 0 }
@@ -67,6 +73,8 @@ struct arguments
   int silent, verbose;
   bool update_seed;
   char *output_file;
+  unsigned int key_slot;
+  struct mac_mode_encoding mac_mode;
 };
 
 /* Parse a single option. */
@@ -76,6 +84,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
   /* Get the input argument from argp_parse, which we
      know is a pointer to our arguments structure. */
   struct arguments *arguments = state->input;
+  int slot;
 
   switch (key)
     {
@@ -89,8 +98,15 @@ parse_opt (int key, char *arg, struct argp_state *state)
     case 'o':
       arguments->output_file = arg;
       break;
-    case 300:
+    case OPT_UPDATE_SEED:
       arguments->update_seed = true;
+      break;
+    case 'k':
+      slot = atoi(arg);
+      if (slot < 0 || slot > 15)
+        argp_usage (state);
+
+      arguments->key_slot = slot;
       break;
     case ARGP_KEY_ARG:
       if (state->arg_num > NUM_ARGS)
@@ -148,6 +164,15 @@ main (int argc, char **argv)
   arguments.verbose = 0;
   arguments.output_file = "-";
   arguments.update_seed = false;
+  arguments.key_slot = 0;
+
+  /* Default MAC mode */
+  arguments.mac_mode.use_serial_num = false;
+  arguments.mac_mode.use_otp_0_7 = false;
+  arguments.mac_mode.use_otp_0_10 = false;
+  arguments.mac_mode.temp_key_source_flag = false;
+  arguments.mac_mode.use_first_32_temp_key = false;
+  arguments.mac_mode.use_second_32_temp_key = false;
 
   /* Parse our arguments; every option seen by parse_opt will
      be reflected in arguments. */
@@ -175,9 +200,27 @@ main (int argc, char **argv)
       output_hex(stdout, response);
       free_octet_buffer(response);
   }
+  else if(0 == strcmp(arguments.args[1], "mac"))
+    {
+      uint8_t canned[32];
+      memset(canned, 0xFF, 32);
+      struct octet_buffer challenge = {canned, 32};
+
+      response = perform_mac(fd, arguments.mac_mode,
+                             arguments.key_slot, challenge);
+      output_hex(stdout, response);
+      free_octet_buffer(response);
+    }
+  else if(0 == strcmp(arguments.args[1], "slot-config"))
+    {
+      struct slot_config slot;
+      slot = get_slot_config (fd, arguments.key_slot);
+
+    }
   else
     {
       printf("Invalid command, exiting.  Try --help\n");
+      hashlet_teardown(fd);
       exit(1);
     }
 

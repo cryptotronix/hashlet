@@ -306,4 +306,15 @@ struct octet_buffer get_serial_num(int fd);
 struct octet_buffer read32(int fd, enum DATA_ZONE zone, uint8_t addr);
 void write_keys(int fd);
 
+/**
+ * Retrieve the slot configuration for the given slot.  The slot
+ * configuration contains details on how the key can be used.
+ *
+ * @param fd The open file descriptor
+ * @param slot The slot (0 - 15) to retrieve.
+ *
+ * @return A copied structure describing the slot configuration.
+ */
+struct slot_config get_slot_config(int fd, unsigned int slot);
+
 #endif /* COMMAND_H */

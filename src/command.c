@@ -503,6 +503,42 @@ void serialize_slot_config(struct slot_config *s, uint8_t *buf)
 
 }
 
+struct slot_config parse_slot_config(uint16_t raw)
+{
+    struct slot_config parsed = {};
+    uint8_t * ptr = (uint8_t *)&raw;
+
+    const uint16_t READ_KEY_MASK = ~7;
+
+    parsed.read_key = raw & READ_KEY_MASK;
+    parsed.check_only = ((*ptr & CHECK_ONLY_MASK) == CHECK_ONLY_MASK)
+        ? true : false;
+    parsed.single_use = ((*ptr & SINGLE_USE_MASK) == SINGLE_USE_MASK)
+        ? true : false;
+    parsed.encrypted_read = ((*ptr & ENCRYPTED_READ_MASK) ==
+                             ENCRYPTED_READ_MASK) ? true : false;
+    parsed.is_secret = ((*ptr & IS_SECRET_MASK) == IS_SECRET_MASK)
+        ? true : false;
+
+    const uint8_t WRITE_KEY_MASK = ~7;
+
+    parsed.write_key = *(ptr+1) & WRITE_KEY_MASK;
+
+    const uint8_t WRITE_MASK = 7;
+    const uint8_t ENCRYPT_MASK = 2;
+
+    uint8_t write_config = *(ptr+1) & WRITE_MASK;
+
+    if (0 == write_config)
+        parsed.write_config = ALWAYS;
+    else if(ENCRYPT_MASK == (write_config & ENCRYPT_MASK))
+        parsed.write_config = ENCRYPT;
+    else
+        parsed.write_config = NEVER;
+
+    return parsed;
+
+}
 uint8_t get_slot_addr(enum config_slots slot)
 {
   uint8_t addr;
@@ -935,5 +971,36 @@ struct octet_buffer get_serial_num(int fd)
   memcpy(serial.ptr + len - 1, ptr, 1);
 
   return serial;
+
+}
+
+struct slot_config get_slot_config(int fd, unsigned int slot)
+{
+  const unsigned int NUM_SLOTS = 16;
+
+  assert (slot < NUM_SLOTS);
+
+  uint32_t data;
+  uint16_t raw_slot_data;
+
+  const uint32_t OFFSET_TO_SLOT_CONFIGS = 5;
+  uint8_t addr = slot;
+
+  if (slot % 2 != 0)
+    addr -= 1;
+
+  addr += OFFSET_TO_SLOT_CONFIGS;
+
+  assert (read4 (fd, CONFIG_ZONE, addr, &data));
+
+  printf("Raw data %x\n", data);
+
+  if (slot % 2 != 0)
+    raw_slot_data = ~(data << 16);
+  else
+    raw_slot_data = raw_slot_data >> 16;
+
+  return parse_slot_config(raw_slot_data);
+
 
 }

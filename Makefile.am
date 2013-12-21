@@ -16,7 +16,7 @@ hashlet_SOURCES = src/driver/command.h src/driver/command.c \
 	          src/cli/main.c \
 	          src/driver/hashlet.h
 
-#hashlet_CPPFLAGS = $(DEPS_CFLAGS)
-#hashlet_LDFLAGS = $(DEPS_LDFLAGS)
+hashlet_CFLAGS = -Wall -Werror
+
 
 dist_noinst_SCRIPTS = autogen.sh

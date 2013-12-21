@@ -37,3 +37,5 @@ src/.deps/
 /TAGS
 /compile
 .deps/
+/src/cli/.dirstamp
+/src/driver/.dirstamp

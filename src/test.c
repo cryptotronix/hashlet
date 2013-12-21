@@ -30,11 +30,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <assert.h>
-#include "crc.h"
-#include "i2c.h"
-#include "util.h"
+#include "driver/crc.h"
+#include "driver/i2c.h"
+#include "driver/util.h"
 #include <time.h>
-#include "command.h"
+#include "driver/command.h"
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
 

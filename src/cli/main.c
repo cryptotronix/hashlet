@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <string.h>
 #include "config.h"
-#include "hashlet.h"
+#include "../driver/hashlet.h"
 
 
 const char *argp_program_version = PACKAGE_VERSION;

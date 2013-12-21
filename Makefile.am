@@ -5,10 +5,16 @@ AM_CPPFLAGS = $(DEPS_CFLAGS)
 hashlet_LDADD = $(DEPS_LIBS)
 
 bin_PROGRAMS = hashlet
-hashlet_SOURCES = src/command.h src/command.c src/crc.h src/crc.c \
-		  src/defs.h src/i2c.h src/i2c.c src/test.c src/util.h \
-		  src/util.c src/command_adaptation.h src/command_adaptation.c \
-	          src/log.h src/log.c src/main.c src/hashlet.h
+hashlet_SOURCES = src/driver/command.h src/driver/command.c \
+	          src/driver/crc.h src/driver/crc.c \
+	          src/driver/defs.h \
+	          src/driver/i2c.h src/driver/i2c.c \
+	          src/test.c \
+	          src/driver/util.h src/driver/util.c \
+	          src/driver/command_adaptation.h src/driver/command_adaptation.c \
+	          src/driver/log.h src/driver/log.c \
+	          src/cli/main.c \
+	          src/driver/hashlet.h
 
 #hashlet_CPPFLAGS = $(DEPS_CFLAGS)
 #hashlet_LDFLAGS = $(DEPS_LDFLAGS)

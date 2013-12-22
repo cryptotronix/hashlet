@@ -27,6 +27,7 @@
 #include "config.h"
 #include "../driver/hashlet.h"
 
+#define COMMAND_CMP(x) 0 == strcmp (arguments.args[1], x)
 
 const char *argp_program_version = PACKAGE_VERSION;
 
@@ -42,7 +43,8 @@ static char doc[] =
   "                  sends that digest to the device to be mac'ed with a key\n"
   "                  other internal data\n"
   "slot-config   --  Prints out the slot configuration for a given key.\n"
-  "                  Use with key-slot option\n";
+  "                  Use with key-slot option\n"
+  "get-config    --  Dumps the configuration zone\n";
 
 /* A description of the arguments we accept. */
 static char args_doc[] = "i2c_bus command";
@@ -185,7 +187,7 @@ main (int argc, char **argv)
   if (fd < 0)
     exit(fd);
 
-  if (0 == strcmp(arguments.args[1], "random"))
+  if (COMMAND_CMP ("random"))
     {
 
       response = get_random(fd, arguments.update_seed);
@@ -194,13 +196,13 @@ main (int argc, char **argv)
       free_octet_buffer(response);
 
     }
-  else if(0 == strcmp(arguments.args[1], "serial-num"))
+  else if(COMMAND_CMP ("serial-num"))
   {
       response = get_serial_num(fd);
       output_hex(stdout, response);
       free_octet_buffer(response);
   }
-  else if(0 == strcmp(arguments.args[1], "mac"))
+  else if(COMMAND_CMP ("mac"))
     {
       uint8_t canned[32];
       memset(canned, 0xFF, 32);
@@ -211,16 +213,24 @@ main (int argc, char **argv)
       output_hex(stdout, response);
       free_octet_buffer(response);
     }
-  else if(0 == strcmp(arguments.args[1], "slot-config"))
+  else if(COMMAND_CMP ("slot-config"))
     {
       printf ("TODO\n");
 
+    }
+  else if (COMMAND_CMP ("get-config"))
+    {
+      response = get_config_zone(fd);
+      output_hex (stdout, response);
+      free_octet_buffer (response);
     }
   else
     {
       printf("Invalid command, exiting.  Try --help\n");
       hashlet_teardown(fd);
       exit(1);
+
+
     }
 
   /* printf ("ARG1 = %s\nARG2 = %s\nOUTPUT_FILE = %s\n" */

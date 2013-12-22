@@ -26,6 +26,7 @@
 #include <string.h>
 #include "config.h"
 #include "../driver/hashlet.h"
+#include "../tests/test.h"
 
 #define COMMAND_CMP(x) 0 == strcmp (arguments.args[1], x)
 
@@ -42,9 +43,8 @@ static char doc[] =
   "mac           --  Calculates a SHA-256 digest of your input data and then\n"
   "                  sends that digest to the device to be mac'ed with a key\n"
   "                  other internal data\n"
-  "slot-config   --  Prints out the slot configuration for a given key.\n"
-  "                  Use with key-slot option\n"
   "get-config    --  Dumps the configuration zone\n";
+
 
 /* A description of the arguments we accept. */
 static char args_doc[] = "i2c_bus command";
@@ -54,11 +54,14 @@ static char args_doc[] = "i2c_bus command";
 
 /* The options we understand. */
 static struct argp_option options[] = {
+  { 0, 0, 0, 0, "Global Options:", -1},
   {"verbose",  'v', 0,      0,  "Produce verbose output" },
   {"quiet",    'q', 0,      0,  "Don't produce any output" },
   {"silent",   's', 0,      OPTION_ALIAS },
+  { 0, 0, 0, 0, "Random Command Options:", 2},
   {"update-seed", OPT_UPDATE_SEED, 0, 0,
      "Updates the random seed.  Only applicable to certain commands"},
+  { 0, 0, 0, 0, "Mac Command Options:", 3},
   {"key-slot", 'k', "SLOT",      0,  "The internal key slot to use."},
   {"output",   'o', "FILE", 0,
    "Output to FILE instead of standard output" },
@@ -76,6 +79,7 @@ struct arguments
   bool update_seed;
   char *output_file;
   unsigned int key_slot;
+  bool test;
   struct mac_mode_encoding mac_mode;
 };
 
@@ -223,6 +227,14 @@ main (int argc, char **argv)
       response = get_config_zone(fd);
       output_hex (stdout, response);
       free_octet_buffer (response);
+    }
+  else if (COMMAND_CMP ("test"))
+    {
+      if (run_tests ())
+        printf ("All tests passed\n");
+      else
+        printf ("One or more tests failed\n");
+
     }
   else
     {

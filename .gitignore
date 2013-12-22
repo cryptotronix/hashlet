@@ -39,3 +39,4 @@ src/.deps/
 .deps/
 /src/cli/.dirstamp
 /src/driver/.dirstamp
+/src/tests/.dirstamp

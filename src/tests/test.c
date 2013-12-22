@@ -30,11 +30,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <assert.h>
-#include "driver/crc.h"
-#include "driver/i2c.h"
-#include "driver/util.h"
+#include "../driver/crc.h"
+#include "../driver/i2c.h"
+#include "../driver/util.h"
 #include <time.h>
-#include "driver/command.h"
+#include "../driver/command.h"
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
 
@@ -124,7 +124,7 @@ struct octet_buffer perform_hash(struct octet_buffer challenge,
 }
 
 
-int test(){
+bool run_tests(){
 
   char *bus = "/dev/i2c-1"; /* Pins P9_19 and P9_20 */
   int addr = 0b1100100;          /* The I2C address of TMP102 */
@@ -239,5 +239,5 @@ int test(){
 
   close(fd);
 
-  return 0;
+  return true;
 }

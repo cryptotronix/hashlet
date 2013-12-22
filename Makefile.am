@@ -9,7 +9,7 @@ hashlet_SOURCES = src/driver/command.h src/driver/command.c \
 	          src/driver/crc.h src/driver/crc.c \
 	          src/driver/defs.h \
 	          src/driver/i2c.h src/driver/i2c.c \
-	          src/test.c \
+	          src/tests/test.c src/tests/test.h \
 	          src/driver/util.h src/driver/util.c \
 	          src/driver/command_adaptation.h src/driver/command_adaptation.c \
 	          src/driver/log.h src/driver/log.c \

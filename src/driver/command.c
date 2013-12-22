@@ -31,7 +31,7 @@
 #include "log.h"
 #include "config.h"
 
-struct Command_ATSHA204 make_command()
+struct Command_ATSHA204 make_command ()
 {
   struct Command_ATSHA204 c = { .command = 0x03, .count = 0, .opcode = 0,
                                 .param1 = 0,
@@ -650,6 +650,30 @@ bool set_config_zone (int fd)
 
 }
 
+uint8_t serialize_check_mac_mode (struct check_mac_encoding c)
+{
+  /* The serialized result */
+  uint8_t result = 0;
+
+  const uint8_t CLIENT_CHALLENGE_MASK = 0b00000001;
+  const uint8_t SLOT_ID_MASK =          0b00000010;
+  const uint8_t TEMP_KEY_MASK =         0b00000100;
+  const uint8_t OTP_ZONE_MASK =         0b00100000;
+
+  if (c.use_challenge)
+    result |= CLIENT_CHALLENGE_MASK;
+  if (c.use_slot_id)
+    result |= SLOT_ID_MASK;
+  if (c.use_otp_zone)
+    result |= OTP_ZONE_MASK;
+  if (c.temp_key)
+    result |= TEMP_KEY_MASK;
+
+  return result;
+
+
+}
+
 uint8_t serialize_mac_mode (struct mac_mode_encoding m)
 {
   /* The serialized result */
@@ -723,6 +747,66 @@ struct octet_buffer perform_mac (int fd, struct mac_mode_encoding m,
 
 
 }
+
+
+bool check_mac (int fd, struct check_mac_encoding cm,
+                unsigned int data_slot,
+                struct octet_buffer challenge,
+                struct octet_buffer challenge_response,
+                struct octet_buffer other_data)
+
+{
+  uint8_t response = 0;
+  bool result = false;
+  uint8_t param1 = serialize_check_mac_mode (cm);
+  uint8_t param2[2] = {0};
+  const unsigned int CHALLENGE_SIZE = 32;
+  const unsigned int OTHER_DATA_SIZE = 13;
+
+  assert (NULL != challenge.ptr);
+  assert (NULL != challenge_response.ptr);
+  assert (NULL != other_data.ptr);
+  assert (CHALLENGE_SIZE == challenge.len);
+  assert (CHALLENGE_SIZE == challenge_response.len);
+  assert (OTHER_DATA_SIZE == other_data.len);
+  assert (data_slot <= MAX_NUM_DATA_SLOTS);
+
+  const unsigned int DATA_LEN = CHALLENGE_SIZE * 2 + OTHER_DATA_SIZE;
+
+  struct octet_buffer data;
+  data = make_buffer(DATA_LEN);
+
+  memcpy (data.ptr, challenge.ptr, CHALLENGE_SIZE);
+  memcpy (data.ptr + CHALLENGE_SIZE, challenge_response.ptr, CHALLENGE_SIZE);
+  memcpy (data.ptr + CHALLENGE_SIZE * 2, other_data.ptr, OTHER_DATA_SIZE);
+
+
+  /* Param 2 is guaranteed to be less than 15 (check above) */
+  param2[0] = data_slot;
+  param2[1] = 0;
+
+
+  struct Command_ATSHA204 c = make_command ();
+
+  set_opcode (&c, COMMAND_MAC);
+  set_param1 (&c, param1);
+  set_param2 (&c, param2);
+  set_data (&c, data.ptr, data.len);
+  set_execution_time (&c, 0, CHECK_MAC_AVG_EXEC);
+
+  if (process_command (fd, &c, &response, sizeof(response)))
+    {
+      if (0 == response)
+        result = true;
+    }
+
+
+  return result;
+
+
+
+}
+
 
 bool is_locked (int fd, enum DATA_ZONE zone)
 {

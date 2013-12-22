@@ -96,28 +96,28 @@ bool write4(int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf);
 
 /// Enumerations for the Write config options
 enum WRITE_CONFIG
-{
-  ALWAYS = 0,                   /**< Always allow write access */
-  NEVER,                        /**< Never allow write access  */
-  ENCRYPT                       /**< Only allowed encrypted write access */
-};
+  {
+    ALWAYS = 0,                   /**< Always allow write access */
+    NEVER,                        /**< Never allow write access  */
+    ENCRYPT                       /**< Only allowed encrypted write access */
+  };
 
 
 /* Enumerations for the Slot configuration areas.  Two slots must be
    written together (as a 4 byte word).
 */
 enum config_slots
-{
-  slot0 = 0,
-  slot2,
-  slot4,
-  slot6,
-  slot8,
-  slot10,
-  slot12,
-  slot14,
-  CONFIG_SLOTS_NUM_SLOTS
-};
+  {
+    slot0 = 0,
+    slot2,
+    slot4,
+    slot6,
+    slot8,
+    slot10,
+    slot12,
+    slot14,
+    CONFIG_SLOTS_NUM_SLOTS
+  };
 
 struct slot_config
 {
@@ -214,6 +214,34 @@ struct mac_mode_encoding
                                    Otherwise, they are loaded from
                                    the challenge parameter */
 };
+
+
+struct check_mac_encoding
+{
+  bool use_challenge;           /**< Set to true if using the
+                                   challenge in the check mac
+                                   operation.  Otherwise it will use TempKey. */
+  bool use_slot_id;             /**< Set to true if the first 32
+                                   bytes of the message are from a
+                                   slot ID, otherwise they are from
+                                   temp Key */
+  bool use_otp_zone;            /**< Set to true if using 8 bytes
+                                   from the OTP zone, otherwise
+                                   zeroes are used. */
+  bool temp_key;                /**< If TempKey is used it must match
+                                   TempKey.SourceFlag
+                                */
+
+};
+
+/**
+ * Encode the check mac options
+ *
+ * @param c The check mac options
+ *
+ * @return The encoded value
+ */
+uint8_t serialize_check_mac_mode (struct check_mac_encoding c);
 
 /**
  * Encode the MAC commands mode options.

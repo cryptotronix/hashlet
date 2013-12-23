@@ -360,4 +360,24 @@ void write_keys (int fd);
  */
 struct slot_config get_slot_config (int fd, unsigned int slot);
 
+
+enum DEVICE_STATE
+{
+  STATE_FACTORY,                /**< Config zone, data and OTP zones
+                                   are unlocked */
+  STATE_INITIALIZED,             /**< Config zone locked, data and OTP
+                                   zones are unlockded */
+  STATE_PERSONALIZED            /**< Config, data, and OTP zones are locked */
+};
+
+/**
+ * Returns the logical state of the device based on the config, data,
+ * and OTP zones
+ *
+ * @param fd The open file descriptor
+ *
+ * @return The devie state
+ */
+enum DEVICE_STATE get_device_state (int fd);
+
 #endif /* COMMAND_H */

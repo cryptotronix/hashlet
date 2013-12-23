@@ -224,7 +224,7 @@ enum STATUS_RESPONSE read_and_validate (int fd, uint8_t *buf, unsigned int len)
 
   else if (read_bytes == recv_buf_len && tmp[0] == ERROR_RSP)
     {
-
+      print_hex_string ("Error RSP", tmp, tmp[0]);
       status = get_status_response (*(uint32_t *) tmp);
       CTX_LOG (DEBUG, status_to_string (status));
     }

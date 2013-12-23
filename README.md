@@ -37,6 +37,13 @@ Currently supported commands:
 ```
 X's indicate the unique serial number.
 
+### state
+```bash
+./hashlet /dev/i2c-1 state
+Factory
+```
+Factory indicates that the device is in it's original factory state.
+
 Design
 ---
 

@@ -43,7 +43,12 @@ static char doc[] =
   "mac           --  Calculates a SHA-256 digest of your input data and then\n"
   "                  sends that digest to the device to be mac'ed with a key\n"
   "                  other internal data\n"
-  "get-config    --  Dumps the configuration zone\n";
+  "get-config    --  Dumps the configuration zone\n"
+  "state         --  Returns the device's state.\n"
+  "                  Factory -- Random will produced a fixed 0xFFFF0000\n"
+  "                  Initialized -- Configuration is locked, keys may be \n"
+  "                                 written\n"
+  "                  Personalized -- Keys are loaded.  Memory is locked\n";
 
 
 /* A description of the arguments we accept. */
@@ -232,6 +237,25 @@ main (int argc, char **argv)
     {
       printf ("TODO\n");
 
+    }
+  else if (COMMAND_CMP ("state"))
+    {
+      const char *result;
+      switch (get_device_state (fd))
+        {
+        case STATE_FACTORY:
+          result = "Factory\n";
+          break;
+        case STATE_INITIALIZED:
+          result = "Initialized\n";
+          break;
+        case STATE_PERSONALIZED:
+          result = "Personalized\n";
+          break;
+        default:
+          assert (false);
+        }
+      printf (result);
     }
   else
     {

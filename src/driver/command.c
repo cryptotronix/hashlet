@@ -166,7 +166,7 @@ void print_command (struct Command_ATSHA204 *c)
 
 enum STATUS_RESPONSE get_status_response(uint32_t rsp)
 {
-  uint8_t *rsp_ptr = (uint8_t*) rsp;
+  uint8_t *rsp_ptr = (uint8_t*) &rsp;
   const unsigned int OFFSET_TO_CRC = 2;
   const unsigned int OFFSET_TO_RSP = 1;
 
@@ -836,7 +836,7 @@ bool is_locked (int fd, enum DATA_ZONE zone)
 
     }
 
-  if (read4 (fd, zone, config_addr, &buf))
+  if (read4 (fd, CONFIG_ZONE, config_addr, &buf))
     {
       ptr = ptr + offset;
       if (UNLOCKED == *ptr)
@@ -1089,5 +1089,27 @@ struct slot_config get_slot_config (int fd, unsigned int slot)
 
   return parse_slot_config (raw_slot_data);
 
+
+}
+
+enum DEVICE_STATE get_device_state (int fd)
+{
+  bool config_locked;
+  bool data_locked;
+  enum DEVICE_STATE state = STATE_FACTORY;
+
+  config_locked = is_config_locked (fd);
+  data_locked = is_data_locked (fd);
+
+  if (!config_locked && !data_locked)
+    state = STATE_FACTORY;
+  else if (config_locked && !data_locked)
+    state = STATE_INITIALIZED;
+  else if (config_locked && data_locked)
+    state = STATE_PERSONALIZED;
+  else
+    assert (false);
+
+  return state;
 
 }

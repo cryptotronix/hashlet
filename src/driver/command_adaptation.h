@@ -25,8 +25,8 @@
 #include <stdint.h>
 #include "command.h"
 
-bool process_command(int fd, struct Command_ATSHA204 *c,
-                     uint8_t* rec_buf, unsigned int recv_len);
+bool process_command (int fd, struct Command_ATSHA204 *c,
+                      uint8_t* rec_buf, unsigned int recv_len);
 
 int send_and_receive (int fd, uint8_t *send_buf, unsigned int send_buf_len,
                       uint8_t *recv_buf, unsigned int recv_buf_len,

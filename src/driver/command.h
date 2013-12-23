@@ -77,12 +77,17 @@ struct Command_ATSHA204
 
 enum STATUS_RESPONSE
   {
-    RSP_SUCCESS = 0,
-    RSP_CHECKMAC_MISCOMPARE = 0x01,
-    RSP_PARSE_ERROR = 0x03,
-    RSP_EXECUTION_ERROR = 0x0F,
-    RSP_AWAKE = 0x11,
-    RSP_COMM_ERROR = 0xFF
+    RSP_SUCCESS = 0,            /**< The command succeeded. */
+    RSP_CHECKMAC_MISCOMPARE = 0x01, /**< The CHECKMAC Command failed */
+    RSP_PARSE_ERROR = 0x03,     /**< Command was received but length,
+                                   opcode or parameters are illegal
+                                   regardless of device state */
+    RSP_EXECUTION_ERROR = 0x0F, /**< Command was received but can't
+                                   be executed in the current state */
+    RSP_AWAKE = 0x11,           /**< The device is awake */
+    RSP_COMM_ERROR = 0xFF,       /**< Command was not received properly
+                                   */
+    RSP_NAK = 0xAA,     /**< Response was NAKed and a retry should occur */
   };
 
 enum STATUS_RESPONSE get_status_response (uint32_t rsp);

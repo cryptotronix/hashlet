@@ -44,9 +44,6 @@
 #define IM_AWAKE                0x11
 #define CRC_OR_COMM_ERROR       0xFF
 
-#define STATUS_RSP_SIZE         4
-#define STATUS_RSP_CRC_OFFSET   2
-#define STATUS_RSP_PKT_OFFSET   1
 
 #define MAX_NUM_DATA_SLOTS      16
 

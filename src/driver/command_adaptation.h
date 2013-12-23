@@ -25,15 +25,18 @@
 #include <stdint.h>
 #include "command.h"
 
-bool process_command (int fd, struct Command_ATSHA204 *c,
-                      uint8_t* rec_buf, unsigned int recv_len);
+enum STATUS_RESPONSE process_command (int fd, struct Command_ATSHA204 *c,
+                                      uint8_t* rec_buf, unsigned int recv_len);
 
-int send_and_receive (int fd, uint8_t *send_buf, unsigned int send_buf_len,
-                      uint8_t *recv_buf, unsigned int recv_buf_len,
-                      struct timespec *wait_time);
+enum STATUS_RESPONSE send_and_receive (int fd, uint8_t *send_buf,
+                                       unsigned int send_buf_len,
+                                       uint8_t *recv_buf,
+                                       unsigned int recv_buf_len,
+                                       struct timespec *wait_time);
 
-unsigned int serialize_command (struct Command_ATSHA204 *c, uint8_t **serialized);
+unsigned int serialize_command (struct Command_ATSHA204 *c,
+                                uint8_t **serialized);
 
-bool read_and_validate (int fd, uint8_t *buf, unsigned int len);
+enum STATUS_RESPONSE read_and_validate (int fd, uint8_t *buf, unsigned int len);
 
 #endif /* COMMAND_ADAPTATION_H */

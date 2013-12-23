@@ -164,14 +164,16 @@ void print_command (struct Command_ATSHA204 *c)
 
 }
 
-int parse_status_response (uint8_t* rsp)
+enum STATUS_RESPONSE get_status_response(uint32_t rsp)
 {
-  assert (NULL != rsp);
+  uint8_t *rsp_ptr = (uint8_t*) rsp;
+  const unsigned int OFFSET_TO_CRC = 2;
+  const unsigned int OFFSET_TO_RSP = 1;
 
-  if (!is_crc_16_valid (rsp, STATUS_RSP_SIZE, rsp + STATUS_RSP_CRC_OFFSET))
-    return CRC_OR_COMM_ERROR;
+  if (!is_crc_16_valid (rsp_ptr, sizeof(rsp), rsp_ptr + OFFSET_TO_CRC))
+    return RSP_COMM_ERROR;
 
-  return *(rsp + STATUS_RSP_PKT_OFFSET);
+  return *(rsp_ptr + OFFSET_TO_RSP);
 
 }
 
@@ -193,12 +195,13 @@ struct octet_buffer get_random (int fd, bool update_seed)
   set_data (&c, NULL, 0);
   set_execution_time (&c, 0, RANDOM_AVG_EXEC);
 
-  if (process_command (fd, &c, random, RANDOM_RSP_LENGTH))
-    //if (send_and_receive (fd, serialized, len, random, RANDOM_RSP_LENGTH, tim))
+  if (RSP_SUCCESS == process_command (fd, &c, random, RANDOM_RSP_LENGTH))
     {
       buf.ptr = random;
       buf.len = RANDOM_RSP_LENGTH;
     }
+  else
+    CTX_LOG (DEBUG, "Random command failed");
 
   return buf;
 
@@ -250,7 +253,7 @@ bool read4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t *buf)
   set_execution_time (&c, 0, 1000000);
 
 
-  if (process_command (fd, &c, (uint8_t *)buf, sizeof (uint32_t)))
+  if (RSP_SUCCESS == process_command (fd, &c, (uint8_t *)buf, sizeof (uint32_t)))
     {
       result = true;
     }
@@ -312,7 +315,7 @@ bool write4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf)
   set_data (&c, (uint8_t *)&buf, sizeof (buf));
   set_execution_time (&c, 0, 4000000);
 
-  if (process_command (fd, &c, &recv, sizeof (recv)));
+  if (RSP_SUCCESS == process_command (fd, &c, &recv, sizeof (recv)));
   {
     if (0 == (int) recv)
       status = true;
@@ -350,7 +353,7 @@ bool write32 (int fd, enum DATA_ZONE zone, uint8_t addr, struct octet_buffer buf
   set_data (&c, buf.ptr, buf.len);
   set_execution_time (&c, 0, WRITE_AVG_EXEC);
 
-  if (process_command (fd, &c, &recv, sizeof (recv)));
+  if (RSP_SUCCESS == process_command (fd, &c, &recv, sizeof (recv)));
   {
     if (0 == (int) recv)
       status = true;
@@ -401,7 +404,7 @@ struct octet_buffer gen_nonce (int fd, int seed_update_flag,
   set_data (&c, input.ptr, input.len);
   set_execution_time (&c, 0, 22000000); /* avg. 22 msec */
 
-  if (process_command (fd, &c, recv, recv_len));
+  if (RSP_SUCCESS == process_command (fd, &c, recv, recv_len));
   {
     response.ptr = recv;
     response.len= recv_len;
@@ -732,7 +735,7 @@ struct octet_buffer perform_mac (int fd, struct mac_mode_encoding m,
   set_data (&c, challenge.ptr, challenge.len);
   set_execution_time (&c, 0, MAC_AVG_EXEC);
 
-  if (process_command (fd, &c, response.ptr, recv_len))
+  if (RSP_SUCCESS == process_command (fd, &c, response.ptr, recv_len))
     {
       /* Everything is already set */
     }
@@ -794,7 +797,7 @@ bool check_mac (int fd, struct check_mac_encoding cm,
   set_data (&c, data.ptr, data.len);
   set_execution_time (&c, 0, CHECK_MAC_AVG_EXEC);
 
-  if (process_command (fd, &c, &response, sizeof(response)))
+  if (RSP_SUCCESS == process_command (fd, &c, &response, sizeof(response)))
     {
       if (0 == response)
         result = true;
@@ -919,7 +922,7 @@ bool lock (int fd, enum DATA_ZONE zone)
   set_data (&c, NULL, 0);
   set_execution_time (&c, 0, LOCK_AVG_EXEC);
 
-  if (process_command (fd, &c, &response, sizeof (response)))
+  if (RSP_SUCCESS == process_command (fd, &c, &response, sizeof (response)))
     {
       if (0 == response)
         {

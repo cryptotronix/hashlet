@@ -49,7 +49,7 @@
  * @return A malloced buffer that contains 32 bytes of random data.
  */
 struct octet_buffer gen_nonce (int fd, int seed_update_flag,
-                              struct octet_buffer input);
+                               struct octet_buffer input);
 
 
 
@@ -76,14 +76,14 @@ struct Command_ATSHA204
 };
 
 enum STATUS_RESPONSE
-{
-  RSP_SUCCESS = 0,
-  RSP_CHECKMAC_MISCOMPARE = 0x01,
-  RSP_PARSE_ERROR = 0x03,
-  RSP_EXECUTION_ERROR = 0x0F,
-  RSP_AWAKE = 0x11,
-  RSP_COMM_ERROR = 0xFF
-};
+  {
+    RSP_SUCCESS = 0,
+    RSP_CHECKMAC_MISCOMPARE = 0x01,
+    RSP_PARSE_ERROR = 0x03,
+    RSP_EXECUTION_ERROR = 0x0F,
+    RSP_AWAKE = 0x11,
+    RSP_COMM_ERROR = 0xFF
+  };
 
 enum STATUS_RESPONSE get_status_response (uint32_t rsp);
 
@@ -173,12 +173,12 @@ struct slot_config
  * @return true if the write sucseeds, otherwise false.
  */
 bool write_slot_configs (int fd, enum config_slots slot,
-                        struct slot_config *s1, struct slot_config *s2);
+                         struct slot_config *s1, struct slot_config *s2);
 
 struct slot_config make_slot_config (unsigned int read_key, bool check_only,
-                                    bool single_use, bool encrypted_read,
-                                    bool is_secret, unsigned int write_key,
-                                    enum WRITE_CONFIG write_config);
+                                     bool single_use, bool encrypted_read,
+                                     bool is_secret, unsigned int write_key,
+                                     enum WRITE_CONFIG write_config);
 
 /**
  * Set the configuration zone based.  This function will setup the
@@ -274,8 +274,8 @@ uint8_t serialize_mac_mode (struct mac_mode_encoding m);
  * @return 32 Bytes of a SHA-256 digest
  */
 struct octet_buffer perform_mac (int fd, struct mac_mode_encoding m,
-                                unsigned int data_slot,
-                                struct octet_buffer challenge);
+                                 unsigned int data_slot,
+                                 struct octet_buffer challenge);
 
 /**
  *

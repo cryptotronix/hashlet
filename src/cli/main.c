@@ -99,7 +99,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
       break;
     case 'v':
       arguments->verbose = 1;
-      set_log_level(DEBUG);
+      set_log_level (DEBUG);
       break;
     case 'o':
       arguments->output_file = arg;
@@ -108,7 +108,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
       arguments->update_seed = true;
       break;
     case 'k':
-      slot = atoi(arg);
+      slot = atoi (arg);
       if (slot < 0 || slot > 15)
         argp_usage (state);
 
@@ -143,19 +143,19 @@ static struct argp argp = { options, parse_opt, args_doc, doc };
 const int ADDR = 0b1100100;
 
 
-void output_hex(FILE *stream, struct octet_buffer buf)
+void output_hex (FILE *stream, struct octet_buffer buf)
 {
-  assert(NULL != buf.ptr);
-  assert(NULL != stream);
+  assert (NULL != buf.ptr);
+  assert (NULL != stream);
 
   unsigned int i = 0;
 
   for (i = 0; i < buf.len; i++)
     {
-      fprintf(stream, "%02X", buf.ptr[i]);
+      fprintf (stream, "%02X", buf.ptr[i]);
     }
 
-  fprintf(stream, "\n");
+  fprintf (stream, "\n");
 
 }
 
@@ -186,45 +186,45 @@ main (int argc, char **argv)
 
   int fd;
 
-  fd = hashlet_setup(arguments.args[0], ADDR);
+  fd = hashlet_setup (arguments.args[0], ADDR);
 
   if (fd < 0)
-    exit(fd);
+    exit (fd);
 
   if (COMMAND_CMP ("random"))
     {
 
-      response = get_random(fd, arguments.update_seed);
-      print_hex_string("Random:", response.ptr, response.len);
-      output_hex(stdout, response);
-      free_octet_buffer(response);
+      response = get_random (fd, arguments.update_seed);
+      print_hex_string ("Random:", response.ptr, response.len);
+      output_hex (stdout, response);
+      free_octet_buffer (response);
 
     }
-  else if(COMMAND_CMP ("serial-num"))
+  else if (COMMAND_CMP ("serial-num"))
   {
-      response = get_serial_num(fd);
-      output_hex(stdout, response);
-      free_octet_buffer(response);
+      response = get_serial_num (fd);
+      output_hex (stdout, response);
+      free_octet_buffer (response);
   }
-  else if(COMMAND_CMP ("mac"))
+  else if (COMMAND_CMP ("mac"))
     {
       uint8_t canned[32];
-      memset(canned, 0xFF, 32);
+      memset (canned, 0xFF, 32);
       struct octet_buffer challenge = {canned, 32};
 
-      response = perform_mac(fd, arguments.mac_mode,
+      response = perform_mac (fd, arguments.mac_mode,
                              arguments.key_slot, challenge);
-      output_hex(stdout, response);
-      free_octet_buffer(response);
+      output_hex (stdout, response);
+      free_octet_buffer (response);
     }
-  else if(COMMAND_CMP ("slot-config"))
+  else if (COMMAND_CMP ("slot-config"))
     {
       printf ("TODO\n");
 
     }
   else if (COMMAND_CMP ("get-config"))
     {
-      response = get_config_zone(fd);
+      response = get_config_zone (fd);
       output_hex (stdout, response);
       free_octet_buffer (response);
     }
@@ -238,9 +238,9 @@ main (int argc, char **argv)
     }
   else
     {
-      printf("Invalid command, exiting.  Try --help\n");
-      hashlet_teardown(fd);
-      exit(1);
+      printf ("Invalid command, exiting.  Try --help\n");
+      hashlet_teardown (fd);
+      exit (1);
 
 
     }
@@ -252,6 +252,6 @@ main (int argc, char **argv)
   /*         arguments.verbose ? "yes" : "no", */
   /*         arguments.silent ? "yes" : "no"); */
 
-  hashlet_teardown(fd);
+  hashlet_teardown (fd);
   exit (0);
 }

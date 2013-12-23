@@ -26,7 +26,7 @@
 #include <string.h>
 #include "config.h"
 #include "../driver/hashlet.h"
-#include "../tests/test.h"
+
 
 #define COMMAND_CMP(x) 0 == strcmp (arguments.args[1], x)
 
@@ -230,10 +230,7 @@ main (int argc, char **argv)
     }
   else if (COMMAND_CMP ("test"))
     {
-      if (run_tests ())
-        printf ("All tests passed\n");
-      else
-        printf ("One or more tests failed\n");
+      printf ("TODO\n");
 
     }
   else

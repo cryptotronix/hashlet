@@ -48,7 +48,7 @@
  *
  * @return A malloced buffer that contains 32 bytes of random data.
  */
-struct octet_buffer gen_nonce(int fd, int seed_update_flag,
+struct octet_buffer gen_nonce (int fd, int seed_update_flag,
                               struct octet_buffer input);
 
 
@@ -75,7 +75,17 @@ struct Command_ATSHA204
   struct timespec exec_time;
 };
 
-int parse_status_response(uint8_t* rsp);
+enum STATUS_RESPONSE
+{
+  RSP_SUCCESS = 0,
+  RSP_CHECKMAC_MISCOMPARE = 0x01,
+  RSP_PARSE_ERROR = 0x03,
+  RSP_EXECUTION_ERROR = 0x0F,
+  RSP_AWAKE = 0x11,
+  RSP_COMM_ERROR = 0xFF
+};
+
+enum STATUS_RESPONSE get_status_response (uint32_t rsp);
 
 /* Random Commands */
 
@@ -87,11 +97,11 @@ int parse_status_response(uint8_t* rsp);
  *
  * @return A malloc'ed buffer with random data.
  */
-struct octet_buffer get_random(int fd, bool update_seed);
+struct octet_buffer get_random (int fd, bool update_seed);
 
 
-bool read4(int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t *buf);
-bool write4(int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf);
+bool read4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t *buf);
+bool write4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf);
 
 
 /// Enumerations for the Write config options
@@ -162,10 +172,10 @@ struct slot_config
  *
  * @return true if the write sucseeds, otherwise false.
  */
-bool write_slot_configs(int fd, enum config_slots slot,
+bool write_slot_configs (int fd, enum config_slots slot,
                         struct slot_config *s1, struct slot_config *s2);
 
-struct slot_config make_slot_config(unsigned int read_key, bool check_only,
+struct slot_config make_slot_config (unsigned int read_key, bool check_only,
                                     bool single_use, bool encrypted_read,
                                     bool is_secret, unsigned int write_key,
                                     enum WRITE_CONFIG write_config);
@@ -178,7 +188,7 @@ struct slot_config make_slot_config(unsigned int read_key, bool check_only,
  *
  * @return True if succesful, otherwise false
  */
-bool set_config_zone(int fd);
+bool set_config_zone (int fd);
 
 /**
  * Programs the OTP zone with fixed data
@@ -187,7 +197,7 @@ bool set_config_zone(int fd);
  *
  * @return True if the OTP zone has been written.
  */
-bool set_otp_zone(int fd);
+bool set_otp_zone (int fd);
 /**
  * Structure to encode options for the MAC command.
  *
@@ -250,7 +260,7 @@ uint8_t serialize_check_mac_mode (struct check_mac_encoding c);
  *
  * @return A byte that contains the encoded MAC command mode encodings.
  */
-uint8_t serialize_mac_mode(struct mac_mode_encoding m);
+uint8_t serialize_mac_mode (struct mac_mode_encoding m);
 
 /**
  *
@@ -263,7 +273,7 @@ uint8_t serialize_mac_mode(struct mac_mode_encoding m);
  *
  * @return 32 Bytes of a SHA-256 digest
  */
-struct octet_buffer perform_mac(int fd, struct mac_mode_encoding m,
+struct octet_buffer perform_mac (int fd, struct mac_mode_encoding m,
                                 unsigned int data_slot,
                                 struct octet_buffer challenge);
 
@@ -274,7 +284,7 @@ struct octet_buffer perform_mac(int fd, struct mac_mode_encoding m,
  *
  * @return True if the configuration zone is locked
  */
-bool is_config_locked(int fd);
+bool is_config_locked (int fd);
 
 /**
  * Returns the entire configuration zone.
@@ -284,7 +294,7 @@ bool is_config_locked(int fd);
  * @return A malloc'ed buffer containing the entire configuration
  * zone.
  */
-struct octet_buffer get_config_zone(int fd);
+struct octet_buffer get_config_zone (int fd);
 
 /**
  * Returns the entire OTP zone.
@@ -293,7 +303,7 @@ struct octet_buffer get_config_zone(int fd);
  *
  * @return A malloc'ed buffer containing the entire OTP zone.
  */
-struct octet_buffer get_otp_zone(int fd);
+struct octet_buffer get_otp_zone (int fd);
 
 /**
  * Locks the specified zone.
@@ -304,14 +314,14 @@ struct octet_buffer get_otp_zone(int fd);
  *
  * @return True if now locked.
  */
-bool lock(int fd, enum DATA_ZONE zone);
+bool lock (int fd, enum DATA_ZONE zone);
 
 /**
  * Print the command structure to the debug log source.
  *
  * @param c The command to be sent.
  */
-void print_command(struct Command_ATSHA204 *c);
+void print_command (struct Command_ATSHA204 *c);
 
 /**
  * Retrieve the device's serial number
@@ -320,7 +330,7 @@ void print_command(struct Command_ATSHA204 *c);
  *
  * @return a malloc'd buffer with the serial number.
  */
-struct octet_buffer get_serial_num(int fd);
+struct octet_buffer get_serial_num (int fd);
 
 /**
  * Reads 32 Bytes from the address
@@ -331,8 +341,8 @@ struct octet_buffer get_serial_num(int fd);
  *
  * @return 32 bytes of data or buf.ptr will be null on an error
  */
-struct octet_buffer read32(int fd, enum DATA_ZONE zone, uint8_t addr);
-void write_keys(int fd);
+struct octet_buffer read32 (int fd, enum DATA_ZONE zone, uint8_t addr);
+void write_keys (int fd);
 
 /**
  * Retrieve the slot configuration for the given slot.  The slot
@@ -343,6 +353,6 @@ void write_keys(int fd);
  *
  * @return A copied structure describing the slot configuration.
  */
-struct slot_config get_slot_config(int fd, unsigned int slot);
+struct slot_config get_slot_config (int fd, unsigned int slot);
 
 #endif /* COMMAND_H */

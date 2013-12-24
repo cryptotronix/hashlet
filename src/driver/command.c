@@ -327,7 +327,8 @@ bool write4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf)
 
 }
 
-bool write32 (int fd, enum DATA_ZONE zone, uint8_t addr, struct octet_buffer buf)
+bool write32 (int fd, enum DATA_ZONE zone, uint8_t addr,
+              struct octet_buffer buf)
 {
 
   assert (NULL != buf.ptr);
@@ -622,7 +623,7 @@ bool write_slot_configs (int fd, enum config_slots slot,
 bool set_config_zone (int fd)
 {
   if (is_config_locked (fd))
-    return false;
+    return true;;
 
   enum config_slots slots[CONFIG_SLOTS_NUM_SLOTS] = {slot0, slot2, slot4,
                                                      slot6, slot8, slot10,
@@ -880,39 +881,34 @@ struct octet_buffer get_config_zone (fd)
   return buf;
 }
 
-bool lock (int fd, enum DATA_ZONE zone)
+bool lock (int fd, enum DATA_ZONE zone, uint16_t crc)
 {
 
-  struct octet_buffer zone_data;
-  uint16_t crc;
-  uint8_t param1;
-  uint8_t param2[2] = {0};
+  uint8_t param1 = 0;
+  uint8_t param2[2];
   uint8_t response;
   bool result = false;
-
 
   if (is_locked (fd, zone))
     return true;
 
+  memcpy (param2, &crc, sizeof (param2));
+
+  const uint8_t CONFIG_MASK = 0;
+  const uint8_t DATA_MASK = 1;
 
   switch (zone)
     {
     case CONFIG_ZONE:
-      zone_data = get_config_zone (fd);
-      param1 = 0;
+      param1 |= CONFIG_MASK;
       break;
     case DATA_ZONE:
     case OTP_ZONE:
-      param1 = 0b10000000;
-      assert (false);
+      param1 |= DATA_MASK;
       break;
     default:
       assert (false);
-
     }
-
-  crc = calculate_crc16 (zone_data.ptr, zone_data.len);
-  memcpy (param2, &crc, sizeof (param2));
 
   struct Command_ATSHA204 c = make_command ();
 
@@ -955,8 +951,12 @@ bool is_otp_read_only_mode (int fd)
 
 
 }
-bool set_otp_zone (int fd)
+
+
+bool set_otp_zone (int fd, struct octet_buffer *otp_zone)
 {
+
+  assert (NULL != otp_zone);
 
   const unsigned int SIZE_OF_WRITE = 32;
   /* The device must be using an OTP read only mode */
@@ -1002,35 +1002,18 @@ bool set_otp_zone (int fd)
   if (success)
     success = write32 (fd, OTP_ZONE, SIZE_OF_WRITE / sizeof (uint32_t), buf);
 
+  /* Lastly, copy the OTP zone into one contiguous buffer.
+     Ironically, the OTP can't be read while unlocked. */
+  if (success)
+    {
+      otp_zone->len = SIZE_OF_WRITE * 2;
+      otp_zone->ptr = malloc_wipe (otp_zone->len);
+      memcpy (otp_zone->ptr, part1, SIZE_OF_WRITE);
+      memcpy (otp_zone->ptr + SIZE_OF_WRITE, part2, SIZE_OF_WRITE);
+    }
   return success;
 }
 
-void write_keys (int fd)
-{
-  struct octet_buffer key;
-
-  uint8_t test[] =
-    {
-
-      0x40, 0x83, 0x6C, 0xA7,
-      0x31, 0x28, 0x45, 0x02,
-      0xD1, 0x7B, 0x34, 0xA3,
-      0x49, 0xB6, 0x26, 0x67,
-      0x4E, 0x3B, 0x16, 0x71,
-      0x4A, 0xF1, 0x2E, 0xAA,
-      0xDB, 0x58, 0xDB, 0x52,
-      0x79, 0xA6, 0x82, 0x55
-    };
-
-  key.ptr = test;
-  key.len = sizeof (test);
-
-  assert (write32 (fd, DATA_ZONE, 8, key));
-
-  print_hex_string ("Key in address 8", key.ptr, key.len);
-
-
-}
 
 struct octet_buffer get_serial_num (int fd)
 {

@@ -1,4 +1,4 @@
-AC_INIT([hashlet], [0.1], [bugs@cryptotronix.com], [hashlet], [http://www.github.com/cryptotronix/hashlet/])
+AC_INIT([hashlet], [0.1.0], [bugs@cryptotronix.com], [hashlet], [http://www.github.com/cryptotronix/hashlet/])
 AC_PREREQ([2.59])
 AM_INIT_AUTOMAKE([1.10 -Wall no-define])
 AC_CONFIG_HEADERS([config.h])

@@ -104,10 +104,46 @@ enum STATUS_RESPONSE get_status_response (uint32_t rsp);
  */
 struct octet_buffer get_random (int fd, bool update_seed);
 
-
+/**
+ * Read four bytes from the device.
+ *
+ * @param fd The open file descriptor.
+ * @param zone The zone from which to read.  In some configurations,
+ * four byte reads are not allowed.
+ * @param addr The address from which to read.  Consult the data sheet
+ * for address conversions.
+ * @param buf A non-null pointer to the word to fill in.
+ *
+ * @return True if successful other false and buf should not be investigated.
+ */
 bool read4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t *buf);
+
+/**
+ * Write four bytes to the device
+ *
+ * @param fd The open file descriptor
+ * @param zone The zone to which to write
+ * @param addr The address to write to, consult the data sheet for
+ * address conversions.
+ * @param buf The data to write.  Passed by value.
+ *
+ * @return True if successful.
+ */
 bool write4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf);
 
+/**
+ * Write 32 bytes to the device.
+ *
+ * @param fd The open file descriptor.
+ * @param zone The data zone to which to write
+ * @param addr The address to write to.
+ * @param buf The buffer to write, passed by value.  Buf.ptr should be
+ * a valid pointer to the data and buf.len must be 32.
+ *
+ * @return True if successful.
+ */
+bool write32 (int fd, enum DATA_ZONE zone, uint8_t addr,
+              struct octet_buffer buf);
 
 /// Enumerations for the Write config options
 enum WRITE_CONFIG
@@ -199,10 +235,12 @@ bool set_config_zone (int fd);
  * Programs the OTP zone with fixed data
  *
  * @param fd The open file descriptor
+ * @param otp_zone A pointer to an octet buffer that will be malloc'd
+ * and filled in with the OTP Zone contents if successful
  *
  * @return True if the OTP zone has been written.
  */
-bool set_otp_zone (int fd);
+bool set_otp_zone (int fd, struct octet_buffer *otp_zone);
 /**
  * Structure to encode options for the MAC command.
  *
@@ -316,10 +354,11 @@ struct octet_buffer get_otp_zone (int fd);
  * @param fd The open file descriptor
  * @param zone The zone to lock.  Either CONFIG_ZONE or (DATA_ZONE or
  * OTP_ZONE). The later will be locked together
+ * @param crc The crc16 of the respective zone(s)
  *
  * @return True if now locked.
  */
-bool lock (int fd, enum DATA_ZONE zone);
+bool lock (int fd, enum DATA_ZONE zone, uint16_t crc);
 
 /**
  * Print the command structure to the debug log source.
@@ -347,7 +386,7 @@ struct octet_buffer get_serial_num (int fd);
  * @return 32 bytes of data or buf.ptr will be null on an error
  */
 struct octet_buffer read32 (int fd, enum DATA_ZONE zone, uint8_t addr);
-void write_keys (int fd);
+
 
 /**
  * Retrieve the slot configuration for the given slot.  The slot
@@ -363,10 +402,10 @@ struct slot_config get_slot_config (int fd, unsigned int slot);
 
 enum DEVICE_STATE
 {
-  STATE_FACTORY,                /**< Config zone, data and OTP zones
-                                   are unlocked */
-  STATE_INITIALIZED,             /**< Config zone locked, data and OTP
-                                   zones are unlockded */
+  STATE_FACTORY = 0,            /**< Config zone, data and OTP zones
+                                    are unlocked */
+  STATE_INITIALIZED,            /**< Config zone locked, data and OTP
+                                    zones are unlockded */
   STATE_PERSONALIZED            /**< Config, data, and OTP zones are locked */
 };
 

@@ -24,6 +24,21 @@
 #include <stdint.h>
 #include <stdint.h>
 
+struct octet_buffer
+{
+    unsigned char *ptr; /* Pointer to buffer */
+    unsigned int len;   /* Length of data */
+};
+
+/**
+ * Converts an octet buffer into a printable hex string.
+ *
+ * @param buf The octet buffer
+ *
+ * @return A malloc'd character string
+ */
+const char* octet_buffer2hex_string (struct octet_buffer buf);
+
 void print_hex_string(char *str, uint8_t *hex, unsigned int len);
 
 /**
@@ -46,11 +61,7 @@ uint8_t* malloc_wipe(unsigned int len);
 /* Wipes then frees the buffer */
 void free_wipe(unsigned char* buf, unsigned int len);
 
-struct octet_buffer
-{
-  unsigned char *ptr; /* Pointer to buffer */
-  unsigned int len;   /* Length of data */
-};
+
 
 /**
  * Created a malloc'd octet buffer.

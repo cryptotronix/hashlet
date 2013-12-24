@@ -24,6 +24,7 @@
 #include "util.h"
 #include "log.h"
 #include "command.h"
+#include "personalize.h"
 
 /**
  * Sets up the device for communication.

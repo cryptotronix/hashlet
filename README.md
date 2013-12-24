@@ -25,6 +25,12 @@ see `./hashlet --help` for full details.
 
 Currently supported commands:
 
+### personalize
+```bash
+./hashlet /dev/i2c-1 personalize
+```
+On success it will not output anything.  Random keys are loaded into the device and saved to `~/.hashlet` as a backup.  Don't lose that file.
+
 ### random
 ```bash
 ./hashlet /dev/i2c-1 random

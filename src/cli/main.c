@@ -38,6 +38,9 @@ const char *argp_program_bug_address = PACKAGE_BUGREPORT;
 static char doc[] =
   "Hashlet is a program to interface to the Cryptotronix Hashlet.\n\n"
   "Currently implemented Commands:\n\n"
+  "personalize   --  You should run this command first upon receiving your\n"
+  "                  Hashlet.  It will load your keys and save them to\n"
+  "                  ~/.hashlet as a backup\n"
   "random        --  Retrieves 32 bytes of random data from the device.\n"
   "serial-num    --  Retrieves the device's serial number.\n"
   "mac           --  Calculates a SHA-256 digest of your input data and then\n"
@@ -256,6 +259,11 @@ main (int argc, char **argv)
           assert (false);
         }
       printf (result);
+    }
+  else if (COMMAND_CMP ("personalize"))
+    {
+      if (STATE_PERSONALIZED != personalize (fd, STATE_PERSONALIZED, NULL))
+        printf ("Failure\n");
     }
   else
     {

@@ -1068,7 +1068,7 @@ struct slot_config get_slot_config (int fd, unsigned int slot)
   if (slot % 2 != 0)
     raw_slot_data = ~(data << 16);
   else
-    raw_slot_data = raw_slot_data >> 16;
+    raw_slot_data = data >> 16;
 
   return parse_slot_config (raw_slot_data);
 

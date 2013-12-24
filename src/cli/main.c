@@ -279,7 +279,7 @@ main (int argc, char **argv)
         default:
           assert (false);
         }
-      printf (result);
+      printf ("%s", result);
     }
   else if (COMMAND_CMP ("personalize"))
     {

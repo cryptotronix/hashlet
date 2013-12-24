@@ -1,4 +1,4 @@
-/*
+/* -*- mode: c; c-file-style: "gnu" -*-
  * Copyright (C) 2013 Cryptotronix, LLC.
  *
  * This file is part of Hashlet.
@@ -153,17 +153,22 @@ const int ADDR = 0b1100100;
 
 void output_hex (FILE *stream, struct octet_buffer buf)
 {
-  assert (NULL != buf.ptr);
+
   assert (NULL != stream);
 
-  unsigned int i = 0;
-
-  for (i = 0; i < buf.len; i++)
+  if (NULL == buf.ptr)
+    printf ("Command failed\n");
+  else
     {
-      fprintf (stream, "%02X", buf.ptr[i]);
-    }
+      unsigned int i = 0;
 
-  fprintf (stream, "\n");
+      for (i = 0; i < buf.len; i++)
+        {
+          fprintf (stream, "%02X", buf.ptr[i]);
+        }
+
+      fprintf (stream, "\n");
+    }
 
 }
 
@@ -199,6 +204,12 @@ main (int argc, char **argv)
   if (fd < 0)
     exit (fd);
 
+  /* TEST VECTORS */
+  uint8_t test_challenge[32];
+  memset (test_challenge, 0xFF, 32);
+  struct octet_buffer challenge = {test_challenge, 32};
+
+
   if (COMMAND_CMP ("random"))
     {
 
@@ -216,14 +227,24 @@ main (int argc, char **argv)
   }
   else if (COMMAND_CMP ("mac"))
     {
-      uint8_t canned[32];
-      memset (canned, 0xFF, 32);
-      struct octet_buffer challenge = {canned, 32};
-
+      /* For now, used a canned challenge value, which makes testing
+         easier. */
+      /* TODO: The MAC command can only accept 32 bytes (or 20 if used
+      with a nonce, but we'll do that later).  So, in order to handle
+      variable length data, something should SHA256 the data BEFORE
+      sending it to hashlet.  This can be done on the command line via
+      `opensl sha256 something | hashlet /dev/i2c-1 mac`.  But, none
+      of that is coded :) */
       response = perform_mac (fd, arguments.mac_mode,
                              arguments.key_slot, challenge);
       output_hex (stdout, response);
       free_octet_buffer (response);
+    }
+  else if (COMMAND_CMP ("check-mac"))
+    {
+      /* How to test:
+         Generate a MAC with the 'mac' command.  Use that as a
+         fixed challenge-response. */
     }
   else if (COMMAND_CMP ("slot-config"))
     {

@@ -15,7 +15,8 @@ hashlet_SOURCES = src/driver/command.h src/driver/command.c \
 	          src/cli/main.c \
 	          src/driver/hashlet.h \
 		  src/driver/personalize.h src/driver/personalize.c \
-		  src/cli/hash.h src/cli/hash.c
+		  src/cli/hash.h src/cli/hash.c \
+		  src/cli/cli_commands.h src/cli/cli_commands.c
 
 hashlet_CFLAGS = -Wall -Werror
 

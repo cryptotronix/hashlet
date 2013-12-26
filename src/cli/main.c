@@ -18,28 +18,21 @@
  *
  */
 
+/**
+ * @file   main.c
+ * @author Joshua Datko <jbd@cryptotronix.com>
+ * @date   Thu Dec 26 14:48:23 2013
+ *
+ * @brief Entry point for the application.  Parses arguments and then
+ * hands off the command to the dispatcher.
+ *
+ *
+ */
 
-#include <stdlib.h>
 #include <argp.h>
-#include <stdbool.h>
 #include <assert.h>
-#include <string.h>
-#include "../driver/hashlet.h"
-
-#if HAVE_CONFIG_H
+#include "cli_commands.h"
 #include "config.h"
-#endif
-
-#if HAVE_GCRYPT_H
-#include "hash.h"
-#else
-#define NO_GCRYPT "Rebuild with libgcrypt to enable this feature"
-#endif
-
-#define COMMAND_CMP(x) 0 == strcmp (arguments.args[1], x)
-
-#define HASHLET_COMMAND_FAIL -1
-#define HASHLET_COMMAND_SUCCESS 0
 
 
 const char *argp_program_version = PACKAGE_VERSION;
@@ -80,6 +73,7 @@ static struct argp_option options[] = {
   {"verbose",  'v', 0,      0,  "Produce verbose output" },
   {"quiet",    'q', 0,      0,  "Don't produce any output" },
   {"silent",   's', 0,      OPTION_ALIAS },
+  {"address",  'a', "ADDRESS",      0,  "i2c address for the device (in hex)"},
   { 0, 0, 0, 0, "Random Command Options:", 2},
   {"update-seed", OPT_UPDATE_SEED, 0, 0,
      "Updates the random seed.  Only applicable to certain commands"},
@@ -91,19 +85,6 @@ static struct argp_option options[] = {
 };
 
 
-#define NUM_ARGS 2
-
-/* Used by main to communicate with parse_opt. */
-struct arguments
-{
-  char *args[NUM_ARGS];
-  int silent, verbose;
-  bool update_seed;
-  char *output_file;
-  unsigned int key_slot;
-  bool test;
-  struct mac_mode_encoding mac_mode;
-};
 
 /* Parse a single option. */
 static error_t
@@ -113,9 +94,18 @@ parse_opt (int key, char *arg, struct argp_state *state)
      know is a pointer to our arguments structure. */
   struct arguments *arguments = state->input;
   int slot;
+  long int address_arg;
 
   switch (key)
     {
+    case 'a':
+
+      /* TODO: Not working as expected */
+      address_arg = strtol (arg,NULL,16);
+      if (0 != address_arg && isxdigit (address_arg))
+        arguments->address = atoi (arg);
+      else
+        CTX_LOG (INFO, "Address not recognized, using default");
     case 'q': case 's':
       arguments->silent = 1;
       break;
@@ -160,188 +150,17 @@ parse_opt (int key, char *arg, struct argp_state *state)
 /* Our argp parser. */
 static struct argp argp = { options, parse_opt, args_doc, doc };
 
-/* Default ADDR of Hashlet */
-
-const int ADDR = 0b1100100;
-
-
-void output_hex (FILE *stream, struct octet_buffer buf)
-{
-
-  assert (NULL != stream);
-
-  if (NULL == buf.ptr)
-    printf ("Command failed\n");
-  else
-    {
-      unsigned int i = 0;
-
-      for (i = 0; i < buf.len; i++)
-        {
-          fprintf (stream, "%02X", buf.ptr[i]);
-        }
-
-      fprintf (stream, "\n");
-    }
-
-}
-
-int
-main (int argc, char **argv)
+int main (int argc, char **argv)
 {
   struct arguments arguments;
-  struct octet_buffer response;
-  int exit_value = HASHLET_COMMAND_FAIL;
 
-  /* Default values. */
-  arguments.silent = 0;
-  arguments.verbose = 0;
-  arguments.output_file = "-";
-  arguments.update_seed = false;
-  arguments.key_slot = 0;
-
-  /* Default MAC mode */
-  arguments.mac_mode.use_serial_num = false;
-  arguments.mac_mode.use_otp_0_7 = false;
-  arguments.mac_mode.use_otp_0_10 = false;
-  arguments.mac_mode.temp_key_source_flag = false;
-  arguments.mac_mode.use_first_32_temp_key = false;
-  arguments.mac_mode.use_second_32_temp_key = false;
+  /* Sets arguments defaults and the command list */
+  init_cli (&arguments);
 
   /* Parse our arguments; every option seen by parse_opt will
      be reflected in arguments. */
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
-  int fd;
+  exit (dispatch (arguments.args[0], arguments.args[1], &arguments));
 
-  fd = hashlet_setup (arguments.args[0], ADDR);
-
-  if (fd < 0)
-    exit (fd);
-
-  if (COMMAND_CMP ("random"))
-    {
-
-      response = get_random (fd, arguments.update_seed);
-      if (NULL != response.ptr)
-        {
-          output_hex (stdout, response);
-          free_octet_buffer (response);
-          exit_value = HASHLET_COMMAND_SUCCESS;
-        }
-
-
-    }
-  else if (COMMAND_CMP ("serial-num"))
-  {
-      response = get_serial_num (fd);
-
-      output_hex (stdout, response);
-      free_octet_buffer (response);
-  }
-  else if (COMMAND_CMP ("mac"))
-    {
-
-      /* TODO: The MAC command can only accept 32 bytes (or 20 if used
-      with a nonce, but we'll do that later).  So, in order to handle
-      variable length data, something should SHA256 the data BEFORE
-      sending it to hashlet.  This can be done on the command line via
-      `opensl sha256 something | hashlet /dev/i2c-1 mac`.  But, none
-      of that is coded :) */
-#if HAVE_GCRYPT_H
-      struct octet_buffer challenge;
-      challenge = sha256 (stdin);
-      if (NULL != challenge.ptr)
-        {
-          response = perform_mac (fd, arguments.mac_mode,
-                                  arguments.key_slot, challenge);
-
-          if (NULL != response.ptr)
-            {
-              output_hex (stdout, response);
-              free_octet_buffer (response);
-              exit_value = HASHLET_COMMAND_SUCCESS;
-            }
-
-          free_octet_buffer (challenge);
-        }
-#else
-      printf ("%s\n", NO_GCRYPT);
-#endif
-
-    }
-  else if (COMMAND_CMP ("check-mac"))
-    {
-      /* How to test:
-         Generate a MAC with the 'mac' command.  Use that as a
-         fixed challenge-response. */
-    }
-  else if (COMMAND_CMP ("slot-config"))
-    {
-      printf ("TODO\n");
-
-    }
-  else if (COMMAND_CMP ("get-config"))
-    {
-      response = get_config_zone (fd);
-      output_hex (stdout, response);
-      free_octet_buffer (response);
-    }
-  else if (COMMAND_CMP ("test"))
-    {
-      printf ("TODO\n");
-
-    }
-  else if (COMMAND_CMP ("state"))
-    {
-      const char *result;
-      switch (get_device_state (fd))
-        {
-        case STATE_FACTORY:
-          result = "Factory\n";
-          break;
-        case STATE_INITIALIZED:
-          result = "Initialized\n";
-          break;
-        case STATE_PERSONALIZED:
-          result = "Personalized\n";
-          break;
-        default:
-          assert (false);
-        }
-      printf ("%s", result);
-    }
-  else if (COMMAND_CMP ("personalize"))
-    {
-      if (STATE_PERSONALIZED != personalize (fd, STATE_PERSONALIZED, NULL))
-        printf ("Failure\n");
-    }
-  else if (COMMAND_CMP ("hash"))
-    {
-#if HAVE_GCRYPT_H
-      response = sha256 (stdin);
-      output_hex (stdout, response);
-      free_octet_buffer (response);
-#else
-      printf ("%s\n", NO_GCRYPT);
-#endif
-    }
-  else
-    {
-      printf ("Invalid command, exiting.  Try --help\n");
-      hashlet_teardown (fd);
-      exit (1);
-
-
-    }
-
-  /* printf ("ARG1 = %s\nARG2 = %s\nOUTPUT_FILE = %s\n" */
-  /*         "VERBOSE = %s\nSILENT = %s\n", */
-  /*         arguments.args[0], arguments.args[1], */
-  /*         arguments.output_file, */
-  /*         arguments.verbose ? "yes" : "no", */
-  /*         arguments.silent ? "yes" : "no"); */
-
-  hashlet_teardown (fd);
-  exit (exit_value);
 }

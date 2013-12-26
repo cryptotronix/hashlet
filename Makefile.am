@@ -20,3 +20,5 @@ hashlet_CFLAGS = -Wall -Werror
 
 
 dist_noinst_SCRIPTS = autogen.sh
+
+TESTS = src/tests/test_cli.sh

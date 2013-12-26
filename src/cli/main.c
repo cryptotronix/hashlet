@@ -24,11 +24,23 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <string.h>
-#include "config.h"
 #include "../driver/hashlet.h"
 
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#if HAVE_GCRYPT_H
+#include "hash.h"
+#else
+#define NO_GCRYPT "Rebuild with libgcrypt to enable this feature"
+#endif
 
 #define COMMAND_CMP(x) 0 == strcmp (arguments.args[1], x)
+
+#define HASHLET_COMMAND_FAIL -1
+#define HASHLET_COMMAND_SUCCESS 0
+
 
 const char *argp_program_version = PACKAGE_VERSION;
 
@@ -43,9 +55,11 @@ static char doc[] =
   "                  ~/.hashlet as a backup\n"
   "random        --  Retrieves 32 bytes of random data from the device.\n"
   "serial-num    --  Retrieves the device's serial number.\n"
+#if HAVE_GCRYPT_H
   "mac           --  Calculates a SHA-256 digest of your input data and then\n"
   "                  sends that digest to the device to be mac'ed with a key\n"
   "                  other internal data\n"
+#endif
   "get-config    --  Dumps the configuration zone\n"
   "state         --  Returns the device's state.\n"
   "                  Factory -- Random will produced a fixed 0xFFFF0000\n"
@@ -177,6 +191,7 @@ main (int argc, char **argv)
 {
   struct arguments arguments;
   struct octet_buffer response;
+  int exit_value = HASHLET_COMMAND_FAIL;
 
   /* Default values. */
   arguments.silent = 0;
@@ -204,41 +219,56 @@ main (int argc, char **argv)
   if (fd < 0)
     exit (fd);
 
-  /* TEST VECTORS */
-  uint8_t test_challenge[32];
-  memset (test_challenge, 0xFF, 32);
-  struct octet_buffer challenge = {test_challenge, 32};
-
-
   if (COMMAND_CMP ("random"))
     {
 
       response = get_random (fd, arguments.update_seed);
-      print_hex_string ("Random:", response.ptr, response.len);
-      output_hex (stdout, response);
-      free_octet_buffer (response);
+      if (NULL != response.ptr)
+        {
+          output_hex (stdout, response);
+          free_octet_buffer (response);
+          exit_value = HASHLET_COMMAND_SUCCESS;
+        }
+
 
     }
   else if (COMMAND_CMP ("serial-num"))
   {
       response = get_serial_num (fd);
+
       output_hex (stdout, response);
       free_octet_buffer (response);
   }
   else if (COMMAND_CMP ("mac"))
     {
-      /* For now, used a canned challenge value, which makes testing
-         easier. */
+
       /* TODO: The MAC command can only accept 32 bytes (or 20 if used
       with a nonce, but we'll do that later).  So, in order to handle
       variable length data, something should SHA256 the data BEFORE
       sending it to hashlet.  This can be done on the command line via
       `opensl sha256 something | hashlet /dev/i2c-1 mac`.  But, none
       of that is coded :) */
-      response = perform_mac (fd, arguments.mac_mode,
-                             arguments.key_slot, challenge);
-      output_hex (stdout, response);
-      free_octet_buffer (response);
+#if HAVE_GCRYPT_H
+      struct octet_buffer challenge;
+      challenge = sha256 (stdin);
+      if (NULL != challenge.ptr)
+        {
+          response = perform_mac (fd, arguments.mac_mode,
+                                  arguments.key_slot, challenge);
+
+          if (NULL != response.ptr)
+            {
+              output_hex (stdout, response);
+              free_octet_buffer (response);
+              exit_value = HASHLET_COMMAND_SUCCESS;
+            }
+
+          free_octet_buffer (challenge);
+        }
+#else
+      printf ("%s\n", NO_GCRYPT);
+#endif
+
     }
   else if (COMMAND_CMP ("check-mac"))
     {
@@ -286,6 +316,16 @@ main (int argc, char **argv)
       if (STATE_PERSONALIZED != personalize (fd, STATE_PERSONALIZED, NULL))
         printf ("Failure\n");
     }
+  else if (COMMAND_CMP ("hash"))
+    {
+#if HAVE_GCRYPT_H
+      response = sha256 (stdin);
+      output_hex (stdout, response);
+      free_octet_buffer (response);
+#else
+      printf ("%s\n", NO_GCRYPT);
+#endif
+    }
   else
     {
       printf ("Invalid command, exiting.  Try --help\n");
@@ -303,5 +343,5 @@ main (int argc, char **argv)
   /*         arguments.silent ? "yes" : "no"); */
 
   hashlet_teardown (fd);
-  exit (0);
+  exit (exit_value);
 }

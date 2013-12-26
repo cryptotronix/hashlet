@@ -74,6 +74,7 @@ static struct argp_option options[] = {
   {"quiet",    'q', 0,      0,  "Don't produce any output" },
   {"silent",   's', 0,      OPTION_ALIAS },
   {"address",  'a', "ADDRESS",      0,  "i2c address for the device (in hex)"},
+  {"file",     'f', "FILE",         0,  "Read from FILE vs. stdin"},
   { 0, 0, 0, 0, "Random Command Options:", 2},
   {"update-seed", OPT_UPDATE_SEED, 0, 0,
      "Updates the random seed.  Only applicable to certain commands"},
@@ -112,6 +113,9 @@ parse_opt (int key, char *arg, struct argp_state *state)
     case 'v':
       arguments->verbose = 1;
       set_log_level (DEBUG);
+      break;
+    case 'f':
+      arguments->input_file = arg;
       break;
     case 'o':
       arguments->output_file = arg;

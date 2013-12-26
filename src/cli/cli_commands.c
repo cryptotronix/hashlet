@@ -41,6 +41,7 @@ void set_defaults (struct arguments *args)
   args->silent = 0;
   args->verbose = 0;
   args->output_file = "-";
+  args->input_file = NULL;
   args->update_seed = false;
   args->key_slot = 0;
 
@@ -154,6 +155,37 @@ int dispatch (const char *bus, const char *command, struct arguments *args)
 
 }
 
+FILE* get_input_file (struct arguments *args)
+{
+  assert (NULL != args);
+
+  FILE* f;
+
+  if (NULL == args->input_file)
+    {
+      f = stdin;
+    }
+  else
+    {
+      f = fopen (args->input_file, "r");
+    }
+
+  return f;
+}
+
+
+void close_input_file (struct arguments *args, FILE *f)
+{
+  assert (NULL != args);
+  assert (NULL != f);
+
+  /* Only close the file if input file was specified */
+  if (NULL != args->input_file)
+    {
+      if (0 != fclose (f))
+        perror ("Failed to close input file");
+    }
+}
 
 int cli_random (int fd, struct arguments *args)
 {
@@ -246,12 +278,22 @@ int cli_hash (int fd, struct arguments *args)
   assert (NULL != args);
 
 #if HAVE_GCRYPT_H
-  response = sha256 (stdin);
-  if (NULL != response.ptr)
+  FILE *f;
+  if ((f = get_input_file (args)) == NULL)
     {
-      output_hex (stdout, response);
-      free_octet_buffer (response);
-      result = HASHLET_COMMAND_SUCCESS;
+      perror ("Failed to open file");
+    }
+  else
+    {
+      response = sha256 (f);
+      if (NULL != response.ptr)
+        {
+          output_hex (stdout, response);
+          free_octet_buffer (response);
+          result = HASHLET_COMMAND_SUCCESS;
+        }
+
+      close_input_file (args, f);
     }
 #else
   printf ("%s\n", NO_GCRYPT);
@@ -283,20 +325,30 @@ int cli_mac (int fd, struct arguments *args)
 #if HAVE_GCRYPT_H
   struct octet_buffer response;
   struct octet_buffer challenge;
-  challenge = sha256 (stdin);
-  if (NULL != challenge.ptr)
+  FILE *f;
+  if ((f = get_input_file (args)) == NULL)
     {
-      response = perform_mac (fd, args->mac_mode,
-                              args->key_slot, challenge);
+      perror ("Failed to open file");
+    }
+  else
+    {
+      challenge = sha256 (f);
+      if (NULL != challenge.ptr)
+        {
+          response = perform_mac (fd, args->mac_mode,
+                                  args->key_slot, challenge);
 
-        if (NULL != response.ptr)
-          {
-            output_hex (stdout, response);
-            free_octet_buffer (response);
-            result = HASHLET_COMMAND_SUCCESS;
-          }
+          if (NULL != response.ptr)
+            {
+              output_hex (stdout, response);
+              free_octet_buffer (response);
+              result = HASHLET_COMMAND_SUCCESS;
+            }
 
-      free_octet_buffer (challenge);
+        free_octet_buffer (challenge);
+      }
+
+      close_input_file (args, f);
     }
 #else
   printf ("%s\n", NO_GCRYPT);

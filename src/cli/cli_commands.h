@@ -41,6 +41,7 @@ struct arguments
   int silent, verbose;
   bool update_seed;
   char *output_file;
+  char *input_file;
   unsigned int key_slot;
   bool test;
   struct mac_mode_encoding mac_mode;

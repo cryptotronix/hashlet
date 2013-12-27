@@ -24,6 +24,7 @@
 
 #include "cli_commands.h"
 #include "config.h"
+#include "../parser/hashlet_parser.h"
 
 #if HAVE_GCRYPT_H
 #include "hash.h"
@@ -112,6 +113,7 @@ void init_cli (struct arguments *args)
   static const struct command personalize_cmd = {"personalize",
                                                  cli_personalize };
   static const struct command mac_cmd = {"mac", cli_mac };
+  static const struct command print_keys_cmd = {"print-keys", cli_print_keys };
 
   int x = 0;
 
@@ -123,6 +125,7 @@ void init_cli (struct arguments *args)
   x = add_command (hash_cmd, x);
   x = add_command (personalize_cmd, x);
   x = add_command (mac_cmd, x);
+  x = add_command (print_keys_cmd, x);
 
   set_defaults (args);
 
@@ -140,9 +143,13 @@ int dispatch (const char *bus, const char *command, struct arguments *args)
     {
       assert (NULL != cmd->func);
 
-      int fd;
+      int fd = 0;
 
-      if ((fd = hashlet_setup (bus, args->address)) < 0)
+      if (0 == strcmp ("/dev/null", bus))
+        {
+          result = (*cmd->func)(fd, args);
+        }
+      else if ((fd = hashlet_setup (bus, args->address)) < 0)
         perror ("Failed to setup the hashlet");
       else
         {
@@ -384,4 +391,39 @@ int cli_mac (int fd, struct arguments *args)
 #endif
 
   return result;
+}
+
+int cli_print_keys (int fd, struct arguments *args)
+{
+  int result = HASHLET_COMMAND_FAIL;
+  assert (NULL != args);
+
+  FILE *fp;
+
+  if (NULL == args->input_file)
+    fp = stdin;
+  else
+    fp = fopen (args->input_file, "r");
+
+  if (NULL != fp && 0 == parse_file (fp))
+    {
+      int x = 0;
+
+      for (x=0; x < 16; x++)
+        {
+          const char *key;
+          if ((key = get_key (x)) != NULL)
+            printf ("Key %d: %s\n", x, key);
+        }
+
+      result = HASHLET_COMMAND_SUCCESS;
+    }
+  else
+    {
+      fprintf (stderr, "%s", "Invalid file or file failed to parse\n");
+    }
+
+
+  return result;
+
 }

@@ -40,3 +40,6 @@ src/.deps/
 /src/cli/.dirstamp
 /src/driver/.dirstamp
 /src/tests/.dirstamp
+/src/parser/hashlet_bison.c
+/src/parser/hashlet_bison.h
+/src/parser/hashlet_flex.c

@@ -163,4 +163,14 @@ int cli_personalize (int fd, struct arguments *args);
  */
 int cli_mac (int fd, struct arguments *args);
 
+/**
+ * Test function to display the keys in the stored file
+ *
+ * @param fd The open file descriptor
+ * @param args The args
+ *
+ * @return the exit code
+ */
+int cli_print_keys (int fd, struct arguments *args);
+
 #endif /* CLI_COMMANDS_H */

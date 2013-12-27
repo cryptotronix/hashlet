@@ -64,4 +64,12 @@ enum DEVICE_STATE personalize (int fd, enum DEVICE_STATE goal,
 
 bool write_keys (int fd, struct key_container *keys,
                  struct octet_buffer *data_zone);
+
+/**
+ * Returns the filename of the key_store location
+ *
+ *
+ * @return The key_store filename as a malloc'd string
+ */
+const char* get_key_store_name ();
 #endif

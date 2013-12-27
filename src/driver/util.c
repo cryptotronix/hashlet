@@ -24,7 +24,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "log.h"
-
+#include <ctype.h>
+#include <limits.h>
 
 void wipe(unsigned char *buf, unsigned int len)
 {
@@ -78,4 +79,79 @@ void free_octet_buffer(struct octet_buffer buf)
     free_wipe(buf.ptr, buf.len);
 
 
+}
+
+bool memcmp_octet_buffer (struct octet_buffer lhs, struct octet_buffer rhs)
+{
+  assert (NULL != lhs.ptr); assert (NULL != rhs.ptr);
+
+  bool result = false;
+
+  if (lhs.len == rhs.len)
+    if (0 == memcmp (lhs.ptr, rhs.ptr, lhs.len))
+      result = true;
+
+  return result;
+
+}
+
+unsigned int c2b (char c)
+{
+  unsigned int result = 0;
+
+  if (c >= '0' && c <= '9')
+    result = c - '0';
+  else if (c >= 'A' && c <= 'F')
+    result = c - 'A' + 10;
+  else if (c >= 'a' && c >= 'f')
+    result = c - 'a' + 10;
+  else
+    result = UINT_MAX;
+
+  return result;
+
+}
+struct octet_buffer ascii_hex_2_bin (const char* hex, unsigned int max_len)
+{
+  struct octet_buffer result = {0,0};
+
+  assert (NULL != hex);
+
+  if (0 == memcmp("0x", hex, 2))
+    hex +=2;
+
+  unsigned int len = strnlen (hex, max_len);
+
+  if (len % 2 == 0)
+    {
+      result = make_buffer (len / 2);
+
+      int x;
+
+      bool ishex = true;
+      for (x=0; x<len && ishex; x++)
+        {
+          unsigned int a;
+
+          if ((a = c2b (hex[x])) != UINT_MAX)
+            {
+              if (x % 2 == 0)
+                result.ptr[x/2] = (a << 4);
+              else
+                result.ptr[x/2] += a;
+            }
+          else
+            ishex = false;
+
+        }
+
+      if (!ishex)
+        {
+          free_octet_buffer (result);
+          result.ptr = NULL;
+        }
+    }
+
+
+  return result;
 }

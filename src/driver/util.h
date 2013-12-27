@@ -23,6 +23,7 @@
 
 #include <stdint.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 struct octet_buffer
 {
@@ -61,7 +62,15 @@ uint8_t* malloc_wipe(unsigned int len);
 /* Wipes then frees the buffer */
 void free_wipe(unsigned char* buf, unsigned int len);
 
-
+/**
+ * Compares two octet buffers
+ *
+ * @param lhs The left octet buffer
+ * @param rhs The right octet buffer
+ *
+ * @return True if the contents are the same
+ */
+bool memcmp_octet_buffer (struct octet_buffer lhs, struct octet_buffer rhs);
 
 /**
  * Created a malloc'd octet buffer.
@@ -81,5 +90,14 @@ void free_octet_buffer(struct octet_buffer buf);
 
 uint8_t reverse_bits_in_byte(uint8_t b);
 
+/**
+ * Converts an ASCII encoded Hex character string into binary.
+ *
+ * @param hex The null terminated ASCII Hex string
+ * @param max_len The expected max len of the string
+ *
+ * @return The malloc'd binary encoding.  Buf.ptr will be NULL on error
+ */
+struct octet_buffer ascii_hex_2_bin (const char* hex, unsigned int max_len);
 
 #endif /* UTIL_H */

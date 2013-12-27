@@ -38,6 +38,19 @@ unsigned int get_max_keys ()
   return MAX_NUM_DATA_SLOTS;
 }
 
+const char* get_key_store_name ()
+{
+  struct passwd *pw = getpwuid (getuid ());
+  assert (NULL != pw);
+
+  const char *home = pw->pw_dir;
+  unsigned int filename_len = strlen (home) + strlen (KEY_STORE) + 1;
+  char *filename = (char *)malloc_wipe (filename_len);
+  strcpy (filename, home);
+  strcat (filename, KEY_STORE);
+
+  return filename;
+}
 
 bool record_keys (struct key_container *keys)
 {

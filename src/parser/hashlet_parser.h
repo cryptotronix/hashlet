@@ -40,6 +40,12 @@ void put_key (unsigned int slot, const char* key);
 const char* get_key (unsigned int slot);
 
 /**
+ * Free the parsed key table
+ *
+ */
+void free_parsed_keys (void);
+
+/**
  * Parse the given file stream
  *
  * @param fp The open file pointer

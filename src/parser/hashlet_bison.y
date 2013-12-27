@@ -34,10 +34,10 @@ int yylex(void);
 }
 
 %token KEYSLOT
-%token NUMBER
+%token KEY_NUMBER
 %token HEX
 
-%type<num> NUMBER
+%type<num> KEY_NUMBER
 %type<hex> HEX
 
 %%
@@ -49,7 +49,7 @@ key_file: key_entry { CTX_LOG (DEBUG, "%s", "key_file -> key_entry");}
         | key_file key_entry { CTX_LOG (DEBUG, "%s", "key_file -> key_file key_entry");}
         ;
 
-key_entry: KEYSLOT NUMBER HEX { put_key ($2, $3); }
+key_entry: KEYSLOT KEY_NUMBER HEX { put_key ($2, $3); }
          ;
 
 %%

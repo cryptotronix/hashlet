@@ -34,4 +34,26 @@
  */
 struct octet_buffer sha256 (FILE *fp);
 
+/**
+ * Perform a SHA 256 on a fixed data block
+ *
+ * @param data The data to hash
+ *
+ * @return The digest
+ */
+struct octet_buffer sha256_buffer (struct octet_buffer data);
+
+/**
+ * Performs an offline verification of a MAC using the default settings.
+ *
+ * @param challenge The 32 Byte challenge
+ * @param challenge_rsp The 32 Byte challenge response
+ * @param key The 32 byte key
+ * @param key_slot The key slot used
+ *
+ * @return True if matched, otherwise false
+ */
+bool verify_hash_defaults (struct octet_buffer challenge,
+                           struct octet_buffer challenge_rsp,
+                           struct octet_buffer key, unsigned int key_slot);
 #endif /* HASH_H */

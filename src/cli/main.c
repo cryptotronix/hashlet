@@ -33,6 +33,7 @@
 #include <assert.h>
 #include "cli_commands.h"
 #include "config.h"
+#include <string.h>
 
 
 const char *argp_program_version = PACKAGE_VERSION;
@@ -52,6 +53,14 @@ static char doc[] =
   "mac           --  Calculates a SHA-256 digest of your input data and then\n"
   "                  sends that digest to the device to be mac'ed with a key\n"
   "                  other internal data\n"
+  "offline-verify -- Offline verify will compute a MAC in the same manner as\n"
+  "                  the Hashlet, but the physical device is not needed.\n"
+  "                  It compares the challenge response with the offline\n"
+  "                  challenge.\n"
+  "                  Returns an exit code of 0 if successful, otherwise prints\n"
+  "                  an error.\n"
+  "                  The example incantation is:\n"
+  "                  hashlet /dev/null offline-verify -c XXX... -r XXX...\n"
 #endif
   "get-config    --  Dumps the configuration zone\n"
   "state         --  Returns the device's state.\n"
@@ -82,6 +91,11 @@ static struct argp_option options[] = {
   {"key-slot", 'k', "SLOT",      0,  "The internal key slot to use."},
   {"output",   'o', "FILE", 0,
    "Output to FILE instead of standard output" },
+  { 0, 0, 0, 0, "Offline Verify Mac Options:", 4},
+  {"challenge", 'c', "CHALLENGE",      0,
+   "The 32 byte challenge (64 bytes of ASCII Hex)"},
+  {"challenge-response", 'r', "CHALLENGE_RESPONSE",      0,
+   "The 32 byte challenge response (64 bytes of ASCII Hex)"},
   { 0 }
 };
 
@@ -129,6 +143,24 @@ parse_opt (int key, char *arg, struct argp_state *state)
         argp_usage (state);
 
       arguments->key_slot = slot;
+      break;
+    case 'c':
+      if (64 != strnlen (arg, 65))
+        {
+          fprintf (stderr, "%s\n", "Invalid Challenge length");
+          argp_usage (state);
+        }
+      else
+        arguments->challenge = arg;
+      break;
+    case 'r':
+      if (64 != strnlen (arg, 65))
+        {
+          fprintf (stderr, "%s\n", "Invalid Challenge Response length");
+          argp_usage (state);
+        }
+      else
+        arguments->challenge_rsp = arg;
       break;
     case ARGP_KEY_ARG:
       if (state->arg_num > NUM_ARGS)

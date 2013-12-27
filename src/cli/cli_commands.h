@@ -46,6 +46,9 @@ struct arguments
   bool test;
   struct mac_mode_encoding mac_mode;
   uint8_t address;
+  const char *challenge;
+  const char *challenge_rsp;
+
 };
 
 struct command
@@ -172,5 +175,16 @@ int cli_mac (int fd, struct arguments *args);
  * @return the exit code
  */
 int cli_print_keys (int fd, struct arguments *args);
+
+/**
+ * Verifies a MAC from a Hashlet (without needing the hardware)
+ *
+ * @param fd The open file descriptor
+ * @param args The args
+ *
+ * @return the exit code
+ */
+int cli_verify_mac (int fd, struct arguments *args);
+
 
 #endif /* CLI_COMMANDS_H */

@@ -25,6 +25,7 @@
 #include "cli_commands.h"
 #include "config.h"
 #include "../parser/hashlet_parser.h"
+#include "../driver/personalize.h"
 
 #if HAVE_GCRYPT_H
 #include "hash.h"
@@ -53,6 +54,9 @@ void set_defaults (struct arguments *args)
   args->mac_mode.temp_key_source_flag = false;
   args->mac_mode.use_first_32_temp_key = false;
   args->mac_mode.use_second_32_temp_key = false;
+
+  args->challenge = NULL;
+  args->challenge_rsp = NULL;
 
   args->address = 0b1100100;
 
@@ -114,6 +118,8 @@ void init_cli (struct arguments *args)
                                                  cli_personalize };
   static const struct command mac_cmd = {"mac", cli_mac };
   static const struct command print_keys_cmd = {"print-keys", cli_print_keys };
+  static const struct command offline_verify_cmd =
+    {"offline-verify", cli_verify_mac };
 
   int x = 0;
 
@@ -126,6 +132,7 @@ void init_cli (struct arguments *args)
   x = add_command (personalize_cmd, x);
   x = add_command (mac_cmd, x);
   x = add_command (print_keys_cmd, x);
+  x = add_command (offline_verify_cmd, x);
 
   set_defaults (args);
 
@@ -413,8 +420,16 @@ int cli_print_keys (int fd, struct arguments *args)
         {
           const char *key;
           if ((key = get_key (x)) != NULL)
-            printf ("Key %d: %s\n", x, key);
+            {
+              printf ("Key %d: %s\n", x, key);
+              struct octet_buffer bkey;
+              bkey = ascii_hex_2_bin (key, 64);
+              print_hex_string ("Binary Key", bkey.ptr, bkey.len);
+              free_octet_buffer (bkey);
+            }
         }
+
+      close_input_file (args, fp);
 
       result = HASHLET_COMMAND_SUCCESS;
     }
@@ -424,6 +439,74 @@ int cli_print_keys (int fd, struct arguments *args)
     }
 
 
+  return result;
+
+}
+const char* get_key_from_store (unsigned int slot)
+{
+  FILE *fp;
+  const char *key = NULL;
+  const char *filename = get_key_store_name ();
+  assert (NULL != filename);
+
+  fp = fopen (filename, "r");
+
+  if (NULL != fp && 0 == parse_file (fp))
+    {
+      key = get_key (slot);
+    }
+
+  fclose (fp);
+
+  return key;
+
+}
+int cli_verify_mac (int fd, struct arguments *args)
+{
+  int result = HASHLET_COMMAND_FAIL;
+  assert (NULL != args);
+#if HAVE_GCRYPT_H
+  const char* key;
+  struct octet_buffer challenge;
+  struct octet_buffer challenge_rsp;
+  struct octet_buffer key_buf;
+  const unsigned int SIZE_OF_256_BITS_ASCII = 64;
+
+  if (NULL == args->challenge_rsp)
+    fprintf (stderr, "%s\n", "Challenge Response is blank");
+  else if (NULL == args->challenge)
+    fprintf (stderr, "%s\n", "Challenge is blank");
+  else if (NULL == args->challenge && NULL == args->input_file)
+    fprintf (stderr, "%s\n", "No challenge specified on command line or file");
+  else if ((key = get_key_from_store (args->key_slot)) == NULL)
+    fprintf (stderr, "%s\n", "Invalid file or file failed to parse");
+  else
+    {
+      challenge = ascii_hex_2_bin (args->challenge, SIZE_OF_256_BITS_ASCII);
+      challenge_rsp = ascii_hex_2_bin
+        (args->challenge_rsp, SIZE_OF_256_BITS_ASCII);
+      key_buf = ascii_hex_2_bin (key, SIZE_OF_256_BITS_ASCII);
+
+      if (challenge.ptr != NULL && challenge_rsp.ptr != NULL &&
+          key_buf.ptr != NULL)
+        {
+          if (verify_hash_defaults (challenge, challenge_rsp, key_buf,
+              args->key_slot))
+            {
+              result = HASHLET_COMMAND_SUCCESS;
+            }
+          else
+            fprintf (stderr, "%s\n", "Verify MAC failed");
+        }
+
+      free_octet_buffer (challenge);
+      free_octet_buffer (challenge_rsp);
+      free_octet_buffer (key_buf);
+      free_parsed_keys ();
+    }
+#else
+  printf ("%s\n", NO_GCRYPT);
+#endif
   return result;
 
 }

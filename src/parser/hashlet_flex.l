@@ -31,7 +31,7 @@
 [ \t\n] ;    /* ignore whitespace */
 ^[#]+.*$      {  } /* ignore comments */
 "key_slot_"   { return KEYSLOT; }
-[0-9]+        { yylval.num = atoi (yytext); return NUMBER; }
+[0-9][0-9]    { yylval.num = atoi (yytext); return KEY_NUMBER; }
 [A-Fa-f0-9]+  { yylval.hex = strdup (yytext); return HEX; }
 .    return yytext[0];
 %%

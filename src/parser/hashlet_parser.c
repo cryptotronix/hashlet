@@ -20,23 +20,40 @@
 
 #include "hashlet_parser.h"
 #include <assert.h>
+#include <string.h>
+#include "../driver/util.h"
 
 extern FILE *yyin;
 
-const char* keys [16] = {0};
+#define NUM_KEYS 16
+
+const char* keys [NUM_KEYS] = {0};
 
 void put_key (unsigned int slot, const char* key)
 {
 
-  if (slot < 16)
+  if (slot < NUM_KEYS)
     keys[slot] = key;
 
 }
 
 const char* get_key (unsigned int slot)
 {
-  assert (slot < 16);
+  assert (slot < NUM_KEYS);
   return keys[slot];
+}
+
+void free_parsed_keys (void)
+{
+  int x;
+
+  for (x=0; x< NUM_KEYS; x++)
+    {
+      if (NULL != keys[x])
+        free_wipe ((uint8_t *)keys[x], strnlen (keys[x], 64));
+
+    }
+
 }
 
 int parse_file (FILE *fp)

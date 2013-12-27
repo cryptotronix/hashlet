@@ -107,6 +107,7 @@ void init_cli (struct arguments *args)
   static const struct command serial_cmd = {"serial-num", cli_get_serial_num };
   static const struct command state_cmd = {"state", cli_get_state };
   static const struct command config_cmd = {"get-config", cli_get_config_zone };
+  static const struct command otp_cmd = {"get-otp", cli_get_otp_zone };
   static const struct command hash_cmd = {"hash", cli_hash };
   static const struct command personalize_cmd = {"personalize",
                                                  cli_personalize };
@@ -118,6 +119,7 @@ void init_cli (struct arguments *args)
   x = add_command (serial_cmd, x);
   x = add_command (state_cmd, x);
   x = add_command (config_cmd, x);
+  x = add_command (otp_cmd, x);
   x = add_command (hash_cmd, x);
   x = add_command (personalize_cmd, x);
   x = add_command (mac_cmd, x);
@@ -264,6 +266,33 @@ int cli_get_config_zone (int fd, struct arguments *args)
       free_octet_buffer (response);
       result = HASHLET_COMMAND_SUCCESS;
     }
+
+  return result;
+
+
+}
+
+int cli_get_otp_zone (int fd, struct arguments *args)
+{
+  struct octet_buffer response;
+  int result = HASHLET_COMMAND_FAIL;
+  assert (NULL != args);
+
+  if (STATE_PERSONALIZED != get_device_state (fd))
+    {
+      fprintf (stderr, "%s\n" ,"Can only read OTP zone when personalized");
+      return result;
+    }
+
+  response = get_otp_zone (fd);
+
+  if (NULL != response.ptr)
+    {
+      output_hex (stdout, response);
+      free_octet_buffer (response);
+      result = HASHLET_COMMAND_SUCCESS;
+    }
+
 
   return result;
 

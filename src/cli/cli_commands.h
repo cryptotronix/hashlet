@@ -123,6 +123,15 @@ int cli_get_state (int fd, struct arguments *args);
 int cli_get_config_zone (int fd, struct arguments *args);
 
 /**
+ * Retrieves the entire OTP Zone
+ *
+ * @param fd the open file descriptor
+ * @param args the argument structure
+ *
+ * @return the exit code
+ */
+int cli_get_otp_zone (int fd, struct arguments *args);
+/**
  * Performs a straight SHA256 of data, meant for testing purposes
  *
  * @param fd The open file descriptor

@@ -1,3 +1,4 @@
+/* -*- mode: c; c-file-style: "gnu" -*- */
 /*
  * Copyright (C) 2013 Cryptotronix, LLC.
  *
@@ -285,7 +286,7 @@ struct octet_buffer read32 (int fd, enum DATA_ZONE zone, uint8_t addr)
   const unsigned int LENGTH_OF_RESPONSE = 32;
   struct octet_buffer buf = make_buffer (LENGTH_OF_RESPONSE);
 
-  if (!process_command (fd, &c, buf.ptr, LENGTH_OF_RESPONSE))
+  if (RSP_SUCCESS != process_command (fd, &c, buf.ptr, LENGTH_OF_RESPONSE))
     {
       free_wipe (buf.ptr, LENGTH_OF_RESPONSE);
       buf.ptr = NULL;
@@ -879,6 +880,41 @@ struct octet_buffer get_config_zone (fd)
     }
 
   return buf;
+}
+
+struct octet_buffer get_otp_zone (fd)
+{
+    const unsigned int SIZE_OF_OTP_ZONE = 64;
+    const unsigned int SIZE_OF_READ = 32;
+    const unsigned int SIZE_OF_WORD = 4;
+    const unsigned int SECOND_WORD = (SIZE_OF_READ / SIZE_OF_WORD);
+
+    struct octet_buffer buf = make_buffer (SIZE_OF_OTP_ZONE);
+    struct octet_buffer half;
+
+    int x = 0;
+
+    for (x=0; x < 2; x++ )
+      {
+        int addr = x * SECOND_WORD;
+        int offset = x * SIZE_OF_READ;
+
+        half = read32 (fd, OTP_ZONE, addr);
+        if (NULL != half.ptr)
+          {
+            memcpy (buf.ptr + offset, half.ptr, SIZE_OF_READ);
+            free_octet_buffer (half);
+          }
+        else
+          {
+            free_octet_buffer (buf);
+            buf.ptr = NULL;
+            return buf;
+          }
+
+      }
+
+    return buf;
 }
 
 bool lock (int fd, enum DATA_ZONE zone, uint16_t crc)

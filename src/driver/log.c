@@ -45,7 +45,7 @@ void set_log_level(enum LOG_LEVEL lvl)
 
 }
 
-void print_hex_string(char *str, uint8_t *hex, unsigned int len)
+void print_hex_string(const char *str, const uint8_t *hex, unsigned int len)
 {
 
   if (CURRENT_LOG_LEVEL < DEBUG)

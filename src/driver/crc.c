@@ -88,7 +88,7 @@ uint16_t update_crc16_8005( uint16_t crc, char c )
   return update_crc16_reflected(crc_tab_8005_normal,crc,c);
 }
 
-uint16_t calculate_crc16(uint8_t p[], unsigned int length)
+uint16_t calculate_crc16(const uint8_t *p, unsigned int length)
 {
   uint16_t crc;
   uint16_t hibyte;
@@ -113,8 +113,8 @@ uint16_t calculate_crc16(uint8_t p[], unsigned int length)
   return  lobyte << 8 | hibyte;
 }
 
-bool is_crc_16_valid(uint8_t *data, unsigned int data_len,
-                     uint8_t *crc)
+bool is_crc_16_valid(const uint8_t *data, unsigned int data_len,
+                     const uint8_t *crc)
 {
 
 

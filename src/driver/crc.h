@@ -27,9 +27,9 @@
 #define CRC_16_LEN  2
 #define POLYNOMIAL 0x8005
 
-bool is_crc_16_valid (uint8_t *data, unsigned int data_len,
-                      uint8_t *crc);
+bool is_crc_16_valid (const uint8_t *data, unsigned int data_len,
+                      const uint8_t *crc);
 
-uint16_t calculate_crc16 (uint8_t p[], unsigned int length);
+uint16_t calculate_crc16 (const uint8_t *p, unsigned int length);
 
 #endif /* CRC_H */

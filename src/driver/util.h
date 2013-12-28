@@ -40,7 +40,7 @@ struct octet_buffer
  */
 const char* octet_buffer2hex_string (struct octet_buffer buf);
 
-void print_hex_string(char *str, uint8_t *hex, unsigned int len);
+void print_hex_string(const char *str, const uint8_t *hex, unsigned int len);
 
 /**
  * Wipes the buffer with zeroes.

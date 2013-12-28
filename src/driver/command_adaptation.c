@@ -112,7 +112,7 @@ enum STATUS_RESPONSE send_and_receive (int fd, uint8_t *send_buf,
             }
           while ((rsp = read_and_validate (fd, recv_buf, recv_buf_len))
                  == RSP_NAK);
-          CTX_LOG (DEBUG, status_to_string (rsp));
+          CTX_LOG (DEBUG, "Command Response: %s", status_to_string (rsp));
         }
       else
         {
@@ -187,7 +187,7 @@ enum STATUS_RESPONSE read_and_validate (int fd, uint8_t *buf, unsigned int len)
   bool crc_valid;
   unsigned int crc_offset;
   int read_bytes;
-  const unsigned int ERROR_RSP = 4;
+  const unsigned int STATUS_RSP = 4;
 
   assert (NULL != buf);
 
@@ -201,8 +201,17 @@ enum STATUS_RESPONSE read_and_validate (int fd, uint8_t *buf, unsigned int len)
 
   read_bytes = i2c_read (fd, tmp, recv_buf_len);
 
-  /* First case: We received the expected message length */
-  if (read_bytes == recv_buf_len && tmp[0] == recv_buf_len)
+  /* First Case: We've read the buffer and it's a status packet */
+
+  if (read_bytes == recv_buf_len && tmp[0] == STATUS_RSP)
+  {
+      print_hex_string ("Status RSP", tmp, tmp[0]);
+      status = get_status_response (tmp);
+      CTX_LOG (DEBUG, status_to_string (status));
+  }
+
+  /* Second case: We received the expected message length */
+  else if (read_bytes == recv_buf_len && tmp[0] == recv_buf_len)
     {
       print_hex_string ("Received RSP", tmp, recv_buf_len);
 
@@ -220,15 +229,6 @@ enum STATUS_RESPONSE read_and_validate (int fd, uint8_t *buf, unsigned int len)
           perror ("CRC FAIL!\n");
         }
     }
-  /* Second Case: We've read the buffer, but it's an error response */
-
-  else if (read_bytes == recv_buf_len && tmp[0] == ERROR_RSP)
-    {
-      print_hex_string ("Error RSP", tmp, tmp[0]);
-      status = get_status_response (*(uint32_t *) tmp);
-      CTX_LOG (DEBUG, status_to_string (status));
-    }
-
   else
     {
       CTX_LOG (DEBUG,"Read failed, retrying");

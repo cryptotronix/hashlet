@@ -34,6 +34,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "defs.h"
+#include "util.h"
 
 /**
  * Generate a Nonce from the device
@@ -90,7 +91,7 @@ enum STATUS_RESPONSE
     RSP_NAK = 0xAA,     /**< Response was NAKed and a retry should occur */
   };
 
-enum STATUS_RESPONSE get_status_response (uint32_t rsp);
+enum STATUS_RESPONSE get_status_response (const uint8_t *rsp);
 
 /* Random Commands */
 
@@ -305,6 +306,14 @@ uint8_t serialize_check_mac_mode (struct check_mac_encoding c);
  */
 uint8_t serialize_mac_mode (struct mac_mode_encoding m);
 
+struct mac_response
+{
+  bool status;                  /**< The status of the mac response */
+  struct octet_buffer mac;      /**< The 32 byte MAC response */
+  struct octet_buffer meta;; /**< The 13 byte meta data, needed
+                                    for check mac commands */
+};
+
 /**
  *
  *
@@ -314,9 +323,10 @@ uint8_t serialize_mac_mode (struct mac_mode_encoding m);
  * @param challenge If use_second_32_temp_key is false, include a 32
  * byte challenge.  Otherwise, ignored
  *
- * @return 32 Bytes of a SHA-256 digest
+ * @return If the Mac_response status is true, ti returns malloc'd
+ * buffers of the mac and meta data.
  */
-struct octet_buffer perform_mac (int fd, struct mac_mode_encoding m,
+struct mac_response perform_mac (int fd, struct mac_mode_encoding m,
                                  unsigned int data_slot,
                                  struct octet_buffer challenge);
 
@@ -418,5 +428,36 @@ enum DEVICE_STATE
  * @return The devie state
  */
 enum DEVICE_STATE get_device_state (int fd);
+
+/**
+ * Generates the "other data" as its known in the data sheet that is
+ * used in the check mac command.
+ *
+ * @param fd the open file descriptor
+ * @param m The same mac mode encoding used to produced the mac
+ * @param data_slot the same data slot (key) used in the mac
+ *
+ * @return the serialized, malloc'd, meta data.  Buf.ptr will be null on error.
+ */
+struct octet_buffer get_check_mac_meta_data (int fd, struct mac_mode_encoding m,
+                                             unsigned int data_slot);
+
+/**
+ * Performs the check mac operation
+ *
+ * @param fd the open file descriptor
+ * @param cm The encoding of the check mac options
+ * @param data_slot the data slot used for the mac (key slot)
+ * @param challenge the challenge sent to the mac command
+ * @param challenge_response the response generated from the mac command
+ * @param other_data The other meta data generated from get_check_mac_meta_data
+ *
+ * @return True if a match, otherwise false
+ */
+bool check_mac (int fd, struct check_mac_encoding cm,
+                unsigned int data_slot,
+                struct octet_buffer challenge,
+                struct octet_buffer challenge_response,
+                struct octet_buffer other_data);
 
 #endif /* COMMAND_H */

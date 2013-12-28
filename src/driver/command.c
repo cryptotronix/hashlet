@@ -165,16 +165,19 @@ void print_command (struct Command_ATSHA204 *c)
 
 }
 
-enum STATUS_RESPONSE get_status_response(uint32_t rsp)
+enum STATUS_RESPONSE get_status_response(const uint8_t *rsp)
 {
-  uint8_t *rsp_ptr = (uint8_t*) &rsp;
   const unsigned int OFFSET_TO_CRC = 2;
   const unsigned int OFFSET_TO_RSP = 1;
+  const unsigned int STATUS_LENGTH = 4;
 
-  if (!is_crc_16_valid (rsp_ptr, sizeof(rsp), rsp_ptr + OFFSET_TO_CRC))
-    return RSP_COMM_ERROR;
+  if (!is_crc_16_valid (rsp, STATUS_LENGTH - CRC_16_LEN, rsp + OFFSET_TO_CRC))
+    {
+      CTX_LOG (DEBUG, "CRC Fail in status response");
+      return RSP_COMM_ERROR;
+    }
 
-  return *(rsp_ptr + OFFSET_TO_RSP);
+  return *(rsp + OFFSET_TO_RSP);
 
 }
 
@@ -708,12 +711,13 @@ uint8_t serialize_mac_mode (struct mac_mode_encoding m)
 
 }
 
-struct octet_buffer perform_mac (int fd, struct mac_mode_encoding m,
-                                unsigned int data_slot,
+struct mac_response perform_mac (int fd, struct mac_mode_encoding m,
+                                 unsigned int data_slot,
                                 struct octet_buffer challenge)
 {
   const unsigned int recv_len = 32;
-  struct octet_buffer response = {NULL, recv_len};
+  struct mac_response rsp = {0};
+  rsp.status = false;
   uint8_t param1 = serialize_mac_mode (m);
   uint8_t param2[2] = {0};
 
@@ -726,7 +730,7 @@ struct octet_buffer perform_mac (int fd, struct mac_mode_encoding m,
   param2[0] = data_slot;
   param2[1] = 0;
 
-  response.ptr = malloc_wipe (recv_len);
+  rsp.mac = make_buffer (recv_len);
 
   struct Command_ATSHA204 c = make_command ();
 
@@ -737,23 +741,79 @@ struct octet_buffer perform_mac (int fd, struct mac_mode_encoding m,
   set_data (&c, challenge.ptr, challenge.len);
   set_execution_time (&c, 0, MAC_AVG_EXEC);
 
-  if (RSP_SUCCESS == process_command (fd, &c, response.ptr, recv_len))
+  if (RSP_SUCCESS == process_command (fd, &c, rsp.mac.ptr, recv_len))
     {
-      /* Everything is already set */
+      /* Perform a check mac to ensure we have the data correct */
+      rsp.meta = get_check_mac_meta_data (fd, m, data_slot);
+      struct check_mac_encoding cm = {0};
+
+      rsp.status = check_mac (fd,  cm, data_slot, challenge, rsp.mac, rsp.meta);
+
     }
   else
     {
-      free_wipe (response.ptr, recv_len);
-      response.ptr = NULL;
+      free_octet_buffer (rsp.mac);
+
     }
 
-  return response;
+  return rsp;
 
 
 
 }
 
+struct octet_buffer get_check_mac_meta_data (int fd, struct mac_mode_encoding m,
+                                             unsigned int data_slot)
+{
+  const unsigned int DLEN = 13;
+  struct octet_buffer result = make_buffer (DLEN);
+  uint8_t *p = result.ptr;
 
+  *p++ = COMMAND_MAC;
+  *p++ = serialize_mac_mode (m);
+  *p++ = data_slot;
+  *p++ = 0;
+
+  struct octet_buffer otp_zone = get_otp_zone (fd);
+  struct octet_buffer serial = get_serial_num (fd);
+
+  if (!m.use_serial_num)
+    {
+      unsigned int len = serial.len;
+      free_octet_buffer (serial);
+      serial = make_buffer (len);
+    }
+
+  if (!m.use_otp_0_10)
+    {
+      unsigned int len = otp_zone.len;
+      free_octet_buffer (otp_zone);
+      otp_zone = make_buffer (len);
+    }
+
+  const unsigned int OTP_8_10_LEN = 3;
+  const unsigned int SN_4_7_LEN = 4;
+  const unsigned int SN_2_3_LEN = 2;
+
+  if (NULL != otp_zone.ptr && NULL != serial.ptr)
+    {
+      memcpy (p, &otp_zone.ptr[8], OTP_8_10_LEN);
+      p += OTP_8_10_LEN;
+      memcpy (p, &serial.ptr[4], SN_4_7_LEN);
+      p += SN_4_7_LEN;
+      memcpy (p, &serial.ptr[2], SN_2_3_LEN);
+    }
+  else
+    {
+      free_octet_buffer (result);
+      result.ptr = NULL;
+    }
+
+  free_octet_buffer (otp_zone);
+  free_octet_buffer (serial);
+
+  return result;
+}
 bool check_mac (int fd, struct check_mac_encoding cm,
                 unsigned int data_slot,
                 struct octet_buffer challenge,
@@ -793,7 +853,7 @@ bool check_mac (int fd, struct check_mac_encoding cm,
 
   struct Command_ATSHA204 c = make_command ();
 
-  set_opcode (&c, COMMAND_MAC);
+  set_opcode (&c, COMMAND_CHECK_MAC);
   set_param1 (&c, param1);
   set_param2 (&c, param2);
   set_data (&c, data.ptr, data.len);

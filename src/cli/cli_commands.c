@@ -366,7 +366,7 @@ int cli_mac (int fd, struct arguments *args)
   assert (NULL != args);
 
 #if HAVE_GCRYPT_H
-  struct octet_buffer response;
+  struct mac_response rsp;
   struct octet_buffer challenge;
   FILE *f;
   if ((f = get_input_file (args)) == NULL)
@@ -378,13 +378,15 @@ int cli_mac (int fd, struct arguments *args)
       challenge = sha256 (f);
       if (NULL != challenge.ptr)
         {
-          response = perform_mac (fd, args->mac_mode,
-                                  args->key_slot, challenge);
+          rsp = perform_mac (fd, args->mac_mode,
+                             args->key_slot, challenge);
 
-          if (NULL != response.ptr)
+          if (rsp.status)
             {
-              output_hex (stdout, response);
-              free_octet_buffer (response);
+              output_hex (stdout, rsp.mac);
+              output_hex (stdout, rsp.meta);
+              free_octet_buffer (rsp.mac);
+              free_octet_buffer (rsp.meta);
               result = HASHLET_COMMAND_SUCCESS;
             }
 

@@ -91,15 +91,35 @@ static struct argp_option options[] = {
   {"key-slot", 'k', "SLOT",      0,  "The internal key slot to use."},
   {"output",   'o', "FILE", 0,
    "Output to FILE instead of standard output" },
-  { 0, 0, 0, 0, "Offline Verify Mac Options:", 4},
+  { 0, 0, 0, 0, "Check and Offline-Verify Mac Options:", 4},
   {"challenge", 'c', "CHALLENGE",      0,
    "The 32 byte challenge (64 bytes of ASCII Hex)"},
   {"challenge-response", 'r', "CHALLENGE_RESPONSE",      0,
    "The 32 byte challenge response (64 bytes of ASCII Hex)"},
+  {"meta-data", 'm', "META",      0,
+   "The 13 byte meta data associated with the mac (26 bytes of ASCII Hex)"},
   { 0 }
 };
 
+bool is_expected_len (const char* arg, unsigned int len)
+{
+  assert (NULL != arg);
 
+  bool result = false;
+  if (len == strnlen (arg, len+1))
+    result = true;
+
+  return result;
+
+}
+
+bool is_hex_arg (const char* arg, unsigned int len)
+{
+  if (is_expected_len (arg, len) && is_all_hex (arg, len))
+    return true;
+  else
+    return false;
+}
 
 /* Parse a single option. */
 static error_t
@@ -117,8 +137,11 @@ parse_opt (int key, char *arg, struct argp_state *state)
 
       /* TODO: Not working as expected */
       address_arg = strtol (arg,NULL,16);
-      if (0 != address_arg && isxdigit (address_arg))
-        arguments->address = atoi (arg);
+      if (0 != address_arg)
+        {
+          arguments->address = address_arg;
+          CTX_LOG (DEBUG, "Using address %u", address_arg);
+        }
       else
         CTX_LOG (INFO, "Address not recognized, using default");
     case 'q': case 's':
@@ -145,22 +168,31 @@ parse_opt (int key, char *arg, struct argp_state *state)
       arguments->key_slot = slot;
       break;
     case 'c':
-      if (64 != strnlen (arg, 65))
+      if (!is_hex_arg (arg, 64))
         {
-          fprintf (stderr, "%s\n", "Invalid Challenge length");
+          fprintf (stderr, "%s\n", "Invalid Challenge.");
           argp_usage (state);
         }
       else
         arguments->challenge = arg;
       break;
     case 'r':
-      if (64 != strnlen (arg, 65))
+      if (!is_hex_arg (arg, 64))
         {
-          fprintf (stderr, "%s\n", "Invalid Challenge Response length");
+          fprintf (stderr, "%s\n", "Invalid Challenge Response.");
           argp_usage (state);
         }
       else
         arguments->challenge_rsp = arg;
+      break;
+    case 'm':
+      if (!is_hex_arg (arg, 26))
+        {
+          fprintf (stderr, "%s\n", "Invalid Meta Data.");
+          argp_usage (state);
+        }
+      else
+        arguments->meta = arg;
       break;
     case ARGP_KEY_ARG:
       if (state->arg_num > NUM_ARGS)

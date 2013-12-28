@@ -713,7 +713,7 @@ uint8_t serialize_mac_mode (struct mac_mode_encoding m)
 
 struct mac_response perform_mac (int fd, struct mac_mode_encoding m,
                                  unsigned int data_slot,
-                                struct octet_buffer challenge)
+                                 struct octet_buffer challenge)
 {
   const unsigned int recv_len = 32;
   struct mac_response rsp = {0};

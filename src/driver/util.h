@@ -100,4 +100,14 @@ uint8_t reverse_bits_in_byte(uint8_t b);
  */
 struct octet_buffer ascii_hex_2_bin (const char* hex, unsigned int max_len);
 
+/**
+ * Returns true if the string is all hex
+ *
+ * @param hex The hex string to test
+ * @param max_len the expected len of the string
+ *
+ * @return True if the string is all hex
+ */
+bool is_all_hex (const char* hex, unsigned int max_len);
+
 #endif /* UTIL_H */

@@ -155,3 +155,17 @@ struct octet_buffer ascii_hex_2_bin (const char* hex, unsigned int max_len)
 
   return result;
 }
+
+bool is_all_hex (const char* hex, unsigned int max_len)
+{
+  struct octet_buffer bin = ascii_hex_2_bin (hex, max_len);
+  bool ishex = false;
+
+  if (NULL != bin.ptr)
+    {
+      ishex = true;
+      free_octet_buffer (bin);
+    }
+
+  return ishex;
+}

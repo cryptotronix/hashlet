@@ -48,7 +48,7 @@ struct arguments
   uint8_t address;
   const char *challenge;
   const char *challenge_rsp;
-
+  const char *meta;
 };
 
 struct command
@@ -83,7 +83,7 @@ int dispatch (const char *bus, const char *command, struct arguments *args);
  */
 void init_cli (struct arguments * args);
 
-#define NUM_CLI_COMMANDS 10
+#define NUM_CLI_COMMANDS 11
 
 /**
  * Gets random from the device
@@ -186,5 +186,14 @@ int cli_print_keys (int fd, struct arguments *args);
  */
 int cli_verify_mac (int fd, struct arguments *args);
 
-
+/**
+ * Uses the hashlet to verify a mac.  Either a MAC file must be
+ * provided or the options: challenge, mac, and meta-data must be set.
+ *
+ * @param fd The open file descriptor
+ * @param args The args
+ *
+ * @return the exit code
+ */
+int cli_check_mac (int fd, struct arguments *args);
 #endif /* CLI_COMMANDS_H */

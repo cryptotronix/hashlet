@@ -47,17 +47,23 @@ On success it will not output anything.  Random keys are loaded into the device 
 ### mac
 ```bash
 ./hashlet /dev/i2c-1 mac --file test.txt
-FB19B1C63161B6C34CA9D291D1CD16F98247BBA9A298775F795161BEB95BB6EF
+mac       : C3466ABB8640B50938B260E17D86489D0EBB3F9C8009024683CB225FFFD3B4E4
+challenge : 9F0751C90770E6B40E34BA8E06EFE453FAA46B5FB26925FFBD664FAF951D000A
+meta      : 08000000000000000000000000
 ```
-On success it will simply output an exit code of 0.
 
-### hash
+On success it will output three parameters:
+
+1. mac: (aka challenge response) The result of the operation
+2. challenge: This is the input to the Hashlet, after a SHA256 digest
+3. meta: Meta data that must accompany the result
+
+### check-mac
 ```bash
-./hashlet /dev/null hash --file test.txt
-322B3FFC3BE16B4CC5B445F8E666D0BA5C5E676D00FABD2308AD51243FA0B067
+./hashlet /dev/i2c-1 check-mac -r C3466ABB8640B50938B260E17D86489D0EBB3F9C8009024683CB225FFFD3B4E4 -c 9F0751C90770E6B40E34BA8E06EFE453FAA46B5FB26925FFBD664FAF951D000A -m 08000000000000000000000000
 ```
 
-Performs a SHA256 of the file, this is the challenge input into `offline-verify`.
+Checks the MAC that was produced by the Hashlet.  On success, it will with an exit value of 0.
 
 ### offline-verify
 ```bash
@@ -69,9 +75,8 @@ On success, it will output an exit code of 0, otherwise it will fail.  The point
 The workflow goes like this:
 
 1. Mac some data to produce a challenge response.
-2. Hash the same data to produce the challenge.
-3. Send the Hash and MAC to the remote server, which has the key_store.
-4. Perform offline-verify on the remote server.
+2. Send the challenge and MAC to the remote server, which has the key store file.
+3. Perform offline-verify on the remote server.
 
 ### serial-num
 ```bash

@@ -57,6 +57,7 @@ void set_defaults (struct arguments *args)
 
   args->challenge = NULL;
   args->challenge_rsp = NULL;
+  args->meta = NULL;
 
   args->address = 0b1100100;
 
@@ -120,6 +121,7 @@ void init_cli (struct arguments *args)
   static const struct command print_keys_cmd = {"print-keys", cli_print_keys };
   static const struct command offline_verify_cmd =
     {"offline-verify", cli_verify_mac };
+  static const struct command check_mac_cmd = {"check-mac", cli_check_mac };
 
   int x = 0;
 
@@ -133,6 +135,7 @@ void init_cli (struct arguments *args)
   x = add_command (mac_cmd, x);
   x = add_command (print_keys_cmd, x);
   x = add_command (offline_verify_cmd, x);
+  x = add_command (check_mac_cmd, x);
 
   set_defaults (args);
 
@@ -360,6 +363,23 @@ int cli_personalize (int fd, struct arguments *args)
 
 }
 
+void print_mac_result (FILE *fp,
+                       struct octet_buffer challenge,
+                       struct octet_buffer mac,
+                       struct octet_buffer meta)
+{
+  assert (NULL != fp);
+  fprintf (fp, "%s : ", "mac      ");
+  output_hex (fp, mac);
+
+  fprintf (fp, "%s : ", "challenge");
+  output_hex (fp, challenge);
+
+  fprintf (fp, "%s : ", "meta     ");
+  output_hex (fp, meta);
+
+}
+
 int cli_mac (int fd, struct arguments *args)
 {
   int result = HASHLET_COMMAND_FAIL;
@@ -383,8 +403,8 @@ int cli_mac (int fd, struct arguments *args)
 
           if (rsp.status)
             {
-              output_hex (stdout, rsp.mac);
-              output_hex (stdout, rsp.meta);
+              print_mac_result (stdout, challenge, rsp.mac, rsp.meta);
+
               free_octet_buffer (rsp.mac);
               free_octet_buffer (rsp.meta);
               result = HASHLET_COMMAND_SUCCESS;
@@ -510,5 +530,47 @@ int cli_verify_mac (int fd, struct arguments *args)
   printf ("%s\n", NO_GCRYPT);
 #endif
   return result;
+
+}
+
+
+int cli_check_mac (int fd, struct arguments *args)
+{
+
+  int result = HASHLET_COMMAND_FAIL;
+  bool mac_cmp = false;
+  assert (NULL != args);
+
+  /* TODO: parse encoding from meta data */
+  struct check_mac_encoding cm = {0};
+
+  if (NULL == args->challenge)
+    fprintf (stderr, "%s\n", "Challenge can't be empty");
+  if (NULL == args->challenge_rsp)
+    fprintf (stderr, "%s\n", "Challenge Response can't be empty");
+  if (NULL == args->meta)
+    fprintf (stderr, "%s\n", "Meta data can't be empty");
+
+  if (NULL == args->challenge || NULL == args->challenge_rsp ||
+      NULL == args->meta)
+    return result;
+
+  struct octet_buffer challenge = ascii_hex_2_bin (args->challenge, 64);
+  struct octet_buffer challenge_rsp = ascii_hex_2_bin (args->challenge_rsp, 64);
+  struct octet_buffer meta = ascii_hex_2_bin (args->meta, 26);
+
+  mac_cmp = check_mac (fd,  cm, args->key_slot, challenge, challenge_rsp, meta);
+
+  free_octet_buffer (challenge);
+  free_octet_buffer (challenge_rsp);
+  free_octet_buffer (meta);
+
+  if (mac_cmp)
+    result = HASHLET_COMMAND_SUCCESS;
+  else
+    fprintf (stderr, "%s\n", "Mac miscompare");
+
+  return result;
+
 
 }

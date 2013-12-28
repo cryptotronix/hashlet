@@ -310,8 +310,8 @@ struct mac_response
 {
   bool status;                  /**< The status of the mac response */
   struct octet_buffer mac;      /**< The 32 byte MAC response */
-  struct octet_buffer meta;; /**< The 13 byte meta data, needed
-                                    for check mac commands */
+  struct octet_buffer meta;     /**< The 13 byte meta data, needed
+                                   for check mac commands */
 };
 
 /**

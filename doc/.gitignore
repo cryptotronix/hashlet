@@ -1,0 +1,7 @@
+Makefile
+*.in
+*.info
+*.tex
+version.texi
+stamp-vti
+mdate-sh

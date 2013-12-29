@@ -43,3 +43,6 @@ src/.deps/
 /src/parser/hashlet_bison.c
 /src/parser/hashlet_bison.h
 /src/parser/hashlet_flex.c
+/m4
+
+*.dirstamp

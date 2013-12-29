@@ -47,6 +47,7 @@ This manual is for Hashlet (version @value{VERSION}, @value{UPDATED}).
 
 @menu
 * Preface::
+* Hardware Overview::
 * Invoking sample::
 * GNU Free Documentation License::
 * Index::

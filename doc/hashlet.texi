@@ -1,16 +1,16 @@
 \input texinfo   @c -*-texinfo-*-
 @comment $Id@w{$}
 @comment %**start of header
-@setfilename sample.info
+@setfilename hashlet.info
 @include version.texi
-@settitle GNU Sample @value{VERSION}
+@settitle Hashlet @value{VERSION}
 @syncodeindex pg cp
 @comment %**end of header
 @copying
-This manual is for GNU Sample (version @value{VERSION}, @value{UPDATED}),
-which is an example in the Texinfo documentation.
+This manual is for Hashlet (version @value{VERSION}, @value{UPDATED}),
+which is a command line application for the Cryptotronix Hashlet.
 
-Copyright @copyright{} 2013 Free Software Foundation, Inc.
+Copyright @copyright{} 2013 Cryptotronix, LLC.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -28,9 +28,9 @@ Texts.  A copy of the license is included in the section entitled
 @end direntry
 
 @titlepage
-@title GNU Sample
+@title Hashlet
 @subtitle for version @value{VERSION}, @value{UPDATED}
-@author A.U. Thor (@email{bug-sample@@gnu.org})
+@author Josh Datko (@email{bugs@@cryptotronix.com})
 @page
 @vskip 0pt plus 1filll
 @insertcopying
@@ -40,17 +40,61 @@ Texts.  A copy of the license is included in the section entitled
 
 @ifnottex
 @node Top
-@top GNU Sample
+@top Hashlet
 
-This manual is for GNU Sample (version @value{VERSION}, @value{UPDATED}).
+This manual is for Hashlet (version @value{VERSION}, @value{UPDATED}).
 @end ifnottex
 
 @menu
+* Preface::
 * Invoking sample::
 * GNU Free Documentation License::
 * Index::
 @end menu
 
+
+@node Preface
+@unnumbered Preface
+@pindex preface
+
+Welcome to the Cryptotronix Hashlet Manual!  This manual is meant for
+end users of the Hashlet, an authentication device designed for the
+@acronym{BBB, BeagleBone Black}.  It is expected that readers of this
+manual have some familiarity with the BBB and installing and running
+software on GNU/Linux platforms.
+
+@node Hardware Overview
+@chapter Hardware Overview
+
+The Hashlet device as shipped from Cryptotronix, is fully assembled and
+does not require any end-user assembly.  The mini-cape (capelet) is
+designed to sit on the P9 header of the BBB. @xref{fig:bbb}.  It uses
+pins P9_19 and P9_20 for the I2C protocol.  I2C test points are
+available on the Hashlet for convenient access and debugging.
+
+@float Figure,fig:bbb
+@image{hashlet_bbb,6in}
+@caption{Hashlet installed on a BBB using optional test points}
+@end float
+
+The @acronym{IC, Integrated Circuit} on the Hashlet is the Atmel
+ATSHA204@footnote{ATSHA204 Datasheet:
+@url{http://www.atmel.com/Images/Atmel-8740-CryptoAuth-ATSHA204-Datasheet.pdf}}.
+The key features of the ATSHA204 used by the Hashlet are:
+
+@itemize
+@item Hardware random number generator.
+@item Lockable configuration, @acronym{OTP, One Time Programmable}, and
+Data zones
+@item Slots for 16 keys (14 of which are user keys, 2 are test keys)
+@item Hardware @acronym{MAC, Message Authentication Code} using SHA256
+and internal data unique to the device.
+@item Hardware verification of MACs generated on the device.
+@end itemize
+
+The Hashlet, while designed for a BBB, is 5 Volt compatible and can be
+used on other platforms like a Raspberry Pi or Arduino.  However, the
+Hashlet software requires a GNU/Linux compatible operating system.
 
 @node Invoking sample
 @chapter Invoking sample

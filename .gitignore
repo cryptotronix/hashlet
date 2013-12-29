@@ -46,3 +46,20 @@ src/.deps/
 /m4
 
 *.dirstamp
+/doc/hashlet.aux
+/doc/hashlet.cp
+/doc/hashlet.cps
+/doc/hashlet.fn
+/doc/hashlet.ky
+/doc/hashlet.log
+/doc/hashlet.pg
+/doc/hashlet.toc
+/doc/hashlet.tp
+/doc/hashlet.vr
+/libtool
+/ltmain.sh
+/test-driver
+/ylwrap
+/config.guess
+/config.sub
+/doc/hashlet.pdf

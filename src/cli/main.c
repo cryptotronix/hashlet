@@ -89,8 +89,6 @@ static struct argp_option options[] = {
      "Updates the random seed.  Only applicable to certain commands"},
   { 0, 0, 0, 0, "Mac Command Options:", 3},
   {"key-slot", 'k', "SLOT",      0,  "The internal key slot to use."},
-  {"output",   'o', "FILE", 0,
-   "Output to FILE instead of standard output" },
   { 0, 0, 0, 0, "Check and Offline-Verify Mac Options:", 4},
   {"challenge", 'c', "CHALLENGE",      0,
    "The 32 byte challenge (64 bytes of ASCII Hex)"},
@@ -153,9 +151,6 @@ parse_opt (int key, char *arg, struct argp_state *state)
       break;
     case 'f':
       arguments->input_file = arg;
-      break;
-    case 'o':
-      arguments->output_file = arg;
       break;
     case OPT_UPDATE_SEED:
       arguments->update_seed = true;

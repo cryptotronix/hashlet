@@ -24,6 +24,16 @@
 #include "defs.h"
 #include "util.h"
 
+#define WRITE_CONFIG_ALWAYS_MASK   0b00000000
+#define WRITE_CONFIG_NEVER_MASK    0b00100000
+#define WRITE_CONFIG_ENCRYPT_MASK  0b01000000
+
+#define CHECK_ONLY_MASK     0b00010000
+#define SINGLE_USE_MASK     0b00100000
+#define ENCRYPTED_READ_MASK 0b01000000
+#define IS_SECRET_MASK      0b10000000
+
+
 /// Enumerations for the Write config options
 enum WRITE_CONFIG
   {
@@ -136,5 +146,23 @@ struct slot_config get_slot_config (int fd, unsigned int slot);
  */
 uint8_t get_slot_addr (enum config_slots slot);
 
+/**
+ * Convert the slot config structure to the ready-to-send bit order.
+ *
+ * @param s The slot config to serialize
+ * @param slot The pointer to two bytes which will be filled in with
+ * the appropriate slot config representation
+ *
+ */
+void serialize_slot_config (struct slot_config *s, uint8_t *slot);
 
+/**
+ * Parse the raw bit representation of the slot config to the
+ * structure representation.
+ *
+ * @param raw The raw bits in the slot config
+ *
+ * @return The populated slot config structure
+ */
+struct slot_config parse_slot_config (uint8_t *raw);
 #endif

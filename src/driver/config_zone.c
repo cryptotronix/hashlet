@@ -47,102 +47,137 @@ struct slot_config make_slot_config (unsigned int read_key, bool check_only,
 
 }
 
-void serialize_slot_config (struct slot_config *s, uint8_t *buf)
+void serialize_slot_config (struct slot_config *s, uint8_t *config)
 {
-
-  uint8_t temp;
-
   assert (NULL != s);
-  assert (NULL != buf);
+  assert (NULL != config);
 
-  buf[0] = 0;
-  buf[1] = 0;
+  uint8_t *p = config;
 
-  /* Place read key in the first four bits */
-  temp = s->read_key;
-  temp = temp << 4;
-  buf[0] = buf[0] | temp;
+  /* Bit 0 is the right most bit */
+  p++;
+
+  const unsigned int MAX_KEYS = 16;
+  /* Place read key in the last four bits */
+  assert (s->read_key < MAX_KEYS);
+  assert (s->write_key < MAX_KEYS);
+
+  *p = s->read_key;
 
   if (s->check_only)
     {
-      buf[0] = buf[0] | CHECK_ONLY_MASK;
+      *p |= CHECK_ONLY_MASK;
       CTX_LOG (DEBUG, "Check only set on slot config");
     }
 
 
   if (s->single_use)
-    buf[0] = buf[0] | SINGLE_USE_MASK;
+    {
+      *p |= SINGLE_USE_MASK;
+      CTX_LOG (DEBUG, "Single use set on slot config");
+    }
 
   if (s->encrypted_read)
     {
-      buf[0] = buf[0] | ENCRYPTED_READ_MASK;
+      *p |= ENCRYPTED_READ_MASK;
       CTX_LOG (DEBUG, "Encrypted read set on slot conifg");
     }
 
   if (s->is_secret)
     {
-      buf[0] = buf[0] | IS_SECRET_MASK;
+      *p |= IS_SECRET_MASK;
       CTX_LOG (DEBUG, "Is Secret set on slot config");
     }
 
   /* The first byte has now been set */
+  p--;
 
-  temp = s->write_key;
-  temp = temp << 4;
-  buf[1] = temp;
+  *p = s->write_key;
 
   switch (s->write_config)
     {
     case ALWAYS:
-      buf[1] = buf[1] | WRITE_CONFIG_ALWAYS_MASK;
+      *p |= WRITE_CONFIG_ALWAYS_MASK;
+      CTX_LOG (DEBUG, "Write config always set");
       break;
     case NEVER:
-      buf[1] = buf[1] | WRITE_CONFIG_NEVER_MASK;
+      *p |= WRITE_CONFIG_NEVER_MASK;
+      CTX_LOG (DEBUG, "Write config NEVER set");
       break;
     case ENCRYPT:
-      buf[1] = buf[1] | WRITE_CONFIG_ENCRYPT_MASK;
+      *p |= WRITE_CONFIG_ENCRYPT_MASK;
+      CTX_LOG (DEBUG, "Write config ENCRYPT set");
       break;
     default:
       assert (false);
 
     }
 
-  CTX_LOG (DEBUG, "Slot Config set: 0x%02X 0x%02X", buf[0], buf[1]);
+  CTX_LOG (DEBUG, "Slot Config set: %02x %02x", config[0], config[1] );
 
 }
 
-struct slot_config parse_slot_config (uint16_t raw)
+struct slot_config parse_slot_config (uint8_t *raw)
 {
-  struct slot_config parsed = {};
-  uint8_t * ptr = (uint8_t *)&raw;
+  assert (NULL != raw);
+  struct slot_config parsed = {0};
+  uint8_t * ptr = &raw[1];
 
-  const uint16_t READ_KEY_MASK = ~7;
+  /* Start with the LSB */
+  const uint16_t READ_KEY_MASK = 15;
 
-  parsed.read_key = raw & READ_KEY_MASK;
-  parsed.check_only = ((*ptr & CHECK_ONLY_MASK) == CHECK_ONLY_MASK)
-    ? true : false;
-  parsed.single_use = ((*ptr & SINGLE_USE_MASK) == SINGLE_USE_MASK)
-    ? true : false;
-  parsed.encrypted_read = ((*ptr & ENCRYPTED_READ_MASK) ==
-                           ENCRYPTED_READ_MASK) ? true : false;
-  parsed.is_secret = ((*ptr & IS_SECRET_MASK) == IS_SECRET_MASK)
-    ? true : false;
+  parsed.read_key = *ptr & READ_KEY_MASK;
 
-  const uint8_t WRITE_KEY_MASK = ~7;
+  if ((*ptr & CHECK_ONLY_MASK) == CHECK_ONLY_MASK)
+    {
+      parsed.check_only = true;
+      CTX_LOG (DEBUG, "Slot config Check only set");
+    }
 
-  parsed.write_key = *(ptr+1) & WRITE_KEY_MASK;
+  if ((*ptr & SINGLE_USE_MASK) == SINGLE_USE_MASK)
+    {
+      parsed.single_use = true;
+      CTX_LOG (DEBUG, "Single use slot config set");
+    }
 
-  const uint8_t WRITE_MASK = 7;
-  const uint8_t ENCRYPT_MASK = 2;
+  if ((*ptr & ENCRYPTED_READ_MASK) == ENCRYPTED_READ_MASK)
+    {
+      parsed.encrypted_read = true;
+      CTX_LOG (DEBUG, "Encrypted read slot config set");
+    }
 
-  uint8_t write_config = *(ptr+1) & WRITE_MASK;
+  if ((*ptr & IS_SECRET_MASK) == IS_SECRET_MASK)
+    {
+      parsed.is_secret = true;
+      CTX_LOG (DEBUG, "Is Secret slot config set");
+    }
 
-  if (0 == write_config)
-    parsed.write_config = ALWAYS;
-  else if (ENCRYPT_MASK == (write_config & ENCRYPT_MASK))
-    parsed.write_config = ENCRYPT;
+  /* Now parse the MSB */
+  const uint8_t WRITE_KEY_MASK = 15;
+  ptr = raw;
+
+  parsed.write_key = *ptr & WRITE_KEY_MASK;
+
+  CTX_LOG (DEBUG, "Slot config Write Key %u", parsed.write_key);
+
+  uint8_t write_config = *ptr & ~WRITE_KEY_MASK;
+
+  if (0 == (~7 & write_config))
+    {
+      parsed.write_config = ALWAYS;
+      CTX_LOG (DEBUG, "Slot Config ALWAYS set");
+    }
+  else if (WRITE_CONFIG_ENCRYPT_MASK == (write_config &
+                                         WRITE_CONFIG_ENCRYPT_MASK))
+    {
+      parsed.write_config = ENCRYPT;
+      CTX_LOG (DEBUG, "Slot Config ENCRYPT set");
+    }
   else
-    parsed.write_config = NEVER;
+    {
+      parsed.write_config = NEVER;
+      CTX_LOG (DEBUG, "Slot Config NEVER set");
+    }
 
   return parsed;
 
@@ -203,20 +238,17 @@ bool write_slot_configs (int fd, enum config_slots slot,
 {
 
   uint8_t addr = get_slot_addr (slot);
-
-  const unsigned int SIZE_OF_SLOT_BYTES = 2;
-
   uint32_t to_send;
-  uint8_t *send_ptr = (uint8_t *)&to_send;
-
+  uint8_t *p = (uint8_t *)&to_send;
   bool result = false;
 
   assert (NULL != s1);
   assert (NULL != s2);
 
 
-  serialize_slot_config (s1, send_ptr);
-  serialize_slot_config (s2, send_ptr + SIZE_OF_SLOT_BYTES);
+  serialize_slot_config (s1, p);
+  p += 2;
+  serialize_slot_config (s2, p);
 
   result = write4 (fd, CONFIG_ZONE, addr, to_send);
 
@@ -265,8 +297,8 @@ struct slot_config get_slot_config (int fd, unsigned int slot)
 
   assert (slot < NUM_SLOTS);
 
-  uint32_t data;
-  uint16_t raw_slot_data;
+  uint32_t data = 0;
+  uint8_t *p = (uint8_t *)&data;
 
   const uint32_t OFFSET_TO_SLOT_CONFIGS = 5;
   uint8_t addr = slot;
@@ -281,11 +313,13 @@ struct slot_config get_slot_config (int fd, unsigned int slot)
   printf ("Raw data %x\n", data);
 
   if (slot % 2 != 0)
-    raw_slot_data = ~(data << 16);
+    {
+      data &= 0xFFFF;
+    }
   else
-    raw_slot_data = data >> 16;
+    data = data >> 16;
 
-  return parse_slot_config (raw_slot_data);
+  return parse_slot_config (p);
 
 
 }

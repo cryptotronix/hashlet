@@ -49,6 +49,7 @@ This manual is for Hashlet (version @value{VERSION}, @value{UPDATED}).
 * Preface::
 * Hardware Overview::
 * Invoking sample::
+* Key Slot Configuration::
 * GNU Free Documentation License::
 * Index::
 @end menu
@@ -107,6 +108,118 @@ This is a sample manual.  There is no sample program to
 invoke, but if there were, you could see its basic usage
 and command line options here.
 
+@node Key Slot Configuration
+@appendix Key Slot Configuration
+
+During the personalization process, the key usage fields are set in the
+configuration zone.  For each of the 16 data slots, there is a
+corresponding slot configuration that describes how that data slot is
+used. There are several attributes that control various aspects about
+the data slot.  @xref{tab:slot_config_settings}.
+
+@float Table,tab:slot_config_settings
+@table @samp
+@item ReadKey
+The corresponding slot that is used for encrypted reads.
+
+@item CheckOnly
+If set, this slot can only be used in CheckMac operations.
+
+@item SingleUse
+If set, this key slot has a limited amount of uses
+
+@item EncryptedRead
+If set, encrypted reads are required for this slot
+
+@item IsSecret
+If set, encrypted reads and writes are required for this slot
+
+@item WriteKey
+The slot of the key used for encrypted writes.
+
+@item DeriveKey
+If set, this slot may be written to with the Derive Key command
+
+@item WriteAlways
+If set, non-encrypted writes are always allowed
+
+@item WriteNever
+If set, writes are never permitted once the Data zone is locked
+
+@item WriteEncrypt
+If set, only encrypted writes are permitted.
+@end table
+@end float
+
+If @samp{IsSecret} is set and @samp{EncryptedRead} is not, the slot can
+never be read.  Likewise, if @samp{WriteNever} is set, the data slot can
+not be written.
+
+To alleviate the burden of the user from deciding how to configure their
+devices, Cryptotronix has picked the following
+defaults. @xref{tab:slot_config}.  These settings are set during
+personalization.  If a property is mentioned, it is set, otherwise it is
+off (not set).
+
+Keys 0-7 can be used for keyed hashing applications.  Keys 8-11 are
+reserved for password checking features.  Slots 12 and 13 allow write
+and read access and therefore are available for data storage.  Key
+storage in these slots is not recommended.  Key slots 14 and 15 are used
+as fixed test keys and can be read but not written after personalization.
+
+@float Table,tab:slot_config
+@table @samp
+@item Data Slot 0
+@samp{IsSecret}, @samp{WriteNever}
+
+@item Data Slot 1
+@samp{IsSecret}, @samp{WriteNever}, @samp{DeriveKey}
+
+@item Data Slot 2
+@samp{IsSecret}, @samp{WriteNever}
+
+@item Data Slot 3
+@samp{IsSecret}, @samp{WriteNever}, @samp{DeriveKey}
+
+@item Data Slot 4
+@samp{IsSecret}, @samp{WriteNever}
+
+@item Data Slot 5
+@samp{IsSecret}, @samp{WriteNever}, @samp{DeriveKey}
+
+@item Data Slot 6
+@samp{IsSecret}, @samp{WriteNever}
+
+@item Data Slot 7
+@samp{IsSecret}, @samp{WriteNever}, @samp{DeriveKey}
+
+@item Data Slot 8
+@samp{IsSecret}, @samp{WriteNever}
+
+@item Data Slot 9
+@samp{IsSecret}, @samp{WriteNever}
+
+@item Data Slot 10
+@samp{IsSecret}, @samp{WriteNever}
+
+@item Data Slot 11
+@samp{IsSecret}, @samp{WriteNever}
+
+@item Data Slot 12
+@samp{WriteAlways}
+
+@item Data Slot 13
+@samp{WriteAlways}
+
+@item Data Slot 14
+@samp{WriteNever}
+
+@item Data Slot 15
+@samp{WriteNever}
+
+
+@end table
+@end float
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License

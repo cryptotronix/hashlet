@@ -43,7 +43,6 @@ src/.deps/
 /src/parser/hashlet_bison.c
 /src/parser/hashlet_bison.h
 /src/parser/hashlet_flex.c
-/m4
 
 *.dirstamp
 /doc/hashlet.aux
@@ -63,3 +62,4 @@ src/.deps/
 /config.guess
 /config.sub
 /doc/hashlet.pdf
+m4/

@@ -1,4 +1,4 @@
-/*
+/* -*- mode: c; c-file-style: "gnu" -*-
  * Copyright (C) 2013 Cryptotronix, LLC.
  *
  * This file is part of Hashlet.
@@ -42,6 +42,9 @@ const char* status_to_string (enum STATUS_RESPONSE rsp)
       rsp_string = "Response CheckMac Miscompare";
       break;
     case RSP_PARSE_ERROR:
+      rsp_string = "Response Parse Error";
+      break;
+    case RSP_EXECUTION_ERROR:
       rsp_string = "Response Execution Error";
       break;
     case RSP_AWAKE:

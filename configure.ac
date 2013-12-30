@@ -18,7 +18,7 @@
 AC_INIT([hashlet], [0.1.0], [bugs@cryptotronix.com], [hashlet], [http://www.github.com/cryptotronix/hashlet/])
 AC_PREREQ([2.59])
 AM_INIT_AUTOMAKE([1.10 -Wall no-define])
-AC_CONFIG_MACRO_DIR([m4])
+#AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 AC_CHECK_HEADERS([linux/i2c-dev.h sys/ioctl.h fcntl.h gcrypt.h])
 AC_PROG_CC

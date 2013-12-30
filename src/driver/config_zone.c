@@ -24,10 +24,12 @@
 #include <string.h>
 #include "log.h"
 #include "command.h"
+#include <stdlib.h>
 
 struct slot_config make_slot_config (unsigned int read_key, bool check_only,
                                      bool single_use, bool encrypted_read,
                                      bool is_secret, unsigned int write_key,
+                                     bool derive_key,
                                      enum WRITE_CONFIG write_config)
 {
   struct slot_config s;
@@ -41,6 +43,7 @@ struct slot_config make_slot_config (unsigned int read_key, bool check_only,
   s.encrypted_read = encrypted_read;
   s.is_secret = is_secret;
   s.write_key = write_key;
+  s.derive_key = derive_key;
   s.write_config = write_config;
 
   return s;
@@ -94,6 +97,12 @@ void serialize_slot_config (struct slot_config *s, uint8_t *config)
 
   *p = s->write_key;
 
+  if (s->derive_key)
+    {
+      *p |= WRITE_CONFIG_DERIVEKEY_MASK;
+      CTX_LOG (DEBUG, "Derive Key set on slot config");
+    }
+
   switch (s->write_config)
     {
     case ALWAYS:
@@ -123,6 +132,7 @@ struct slot_config parse_slot_config (uint8_t *raw)
   struct slot_config parsed = {0};
   uint8_t * ptr = &raw[1];
 
+  CTX_LOG (DEBUG, "*** PARSING SLOT CONFIG ***");
   /* Start with the LSB */
   const uint16_t READ_KEY_MASK = 15;
 
@@ -160,6 +170,12 @@ struct slot_config parse_slot_config (uint8_t *raw)
 
   CTX_LOG (DEBUG, "Slot config Write Key %u", parsed.write_key);
 
+  if ((*ptr & WRITE_CONFIG_DERIVEKEY_MASK) == WRITE_CONFIG_DERIVEKEY_MASK)
+    {
+      parsed.derive_key = true;
+      CTX_LOG (DEBUG, "Derive Key slot config set");
+    }
+
   uint8_t write_config = *ptr & ~WRITE_KEY_MASK;
 
   if (0 == (~7 & write_config))
@@ -178,6 +194,8 @@ struct slot_config parse_slot_config (uint8_t *raw)
       parsed.write_config = NEVER;
       CTX_LOG (DEBUG, "Slot Config NEVER set");
     }
+
+  CTX_LOG (DEBUG, "*** END PARSING ***");
 
   return parsed;
 
@@ -257,19 +275,115 @@ bool write_slot_configs (int fd, enum config_slots slot,
 
 }
 
+struct slot_config** build_slot_configs (void)
+{
+  const unsigned int NUM_SLOTS = 16;
+
+  struct slot_config **config = (struct slot_config **)
+    malloc_wipe (NUM_SLOTS * sizeof(struct slot_config *));
+
+  int x = 0;
+
+  for (x=0; x<NUM_SLOTS; x++)
+    {
+      config[x] = (struct slot_config *)
+        malloc_wipe (sizeof (struct slot_config));
+    }
+
+  /* Set up each slot */
+
+  /* Slots 0 -7 should be used for keyed hashed applications */
+  *config[0] =  make_slot_config (0,     /* Slot for Encrypted Reads */
+                                  false, /* Check Only */
+                                  false, /* Single Use */
+                                  false, /* Encrypted Read */
+                                  true,  /* Is secret */
+                                  0,     /* Slot for encrypted writes*/
+                                  false, /* Derive Key */
+                                  NEVER);/* Write configuration */
+
+  *config[1] =  make_slot_config (0, false, false, false,
+                                  true, 0, true, NEVER);
+
+  *config[2] =  make_slot_config (0, false, false, false,
+                                  true, 0, false, NEVER);
+
+  *config[3] =  make_slot_config (0, false, false, false,
+                                  true, 0, true, NEVER);
+
+  *config[4] =  make_slot_config (0, false, false, false,
+                                  true, 0, false, NEVER);
+
+  *config[5] =  make_slot_config (0, false, false, false,
+                                  true, 0, true, NEVER);
+
+  *config[6] =  make_slot_config (0, false, false, false,
+                                  true, 0, false, NEVER);
+
+  *config[7] =  make_slot_config (0, false, false, false,
+                                  true, 0, true, NEVER);
+
+  /* Slots 8 - 11 Are reserved for password checking */
+  *config[8] =  make_slot_config (0, false, false, false,
+                                  true, 0, false, NEVER);
+
+  *config[9] =  make_slot_config (0, false, false, false,
+                                  true, 0, false, NEVER);
+
+  *config[10] =  make_slot_config (0, false, false, false,
+                                   true, 0, false, NEVER);
+
+  *config[11] =  make_slot_config (0, false, false, false,
+                                   true, 0, false, NEVER);
+
+  /* Slots 12 - 13 should be used for user storage */
+  *config[12] =  make_slot_config (0, false, false, false,
+                                   false, 0, false, ALWAYS);
+
+  *config[13] =  make_slot_config (0, false, false, false,
+                                   false, 0, false, ALWAYS);
+
+  /* Slots 14 and 15 are fixed test keys */
+  *config[14] =  make_slot_config (0, false, false, false,
+                                   false, 0, false, NEVER);
+
+  *config[15] =  make_slot_config (0, false, false, false,
+                                   false, 0, false, NEVER);
+
+  return config;
+
+
+}
+
+void free_slot_configs (struct slot_config **slots)
+{
+  assert (NULL != slots);
+
+  const unsigned int NUM_SLOTS = 16;
+
+  int x = 0;
+
+  for (x=0; x<NUM_SLOTS; x++)
+    {
+      assert (NULL != slots[x]);
+      free (slots[x]);
+    }
+
+  free (slots);
+}
+
 bool set_config_zone (int fd)
 {
+  bool result = false;
+
   if (is_config_locked (fd))
-    return true;;
+    return true;
 
   enum config_slots slots[CONFIG_SLOTS_NUM_SLOTS] = {slot0, slot2, slot4,
                                                      slot6, slot8, slot10,
                                                      slot12, slot14};
 
-  struct slot_config s1 = make_slot_config (0, true, false, false, true, 0,
-                                            ALWAYS);
-  struct slot_config s2 = make_slot_config (0, false, false, false, true, 0,
-                                            ALWAYS);
+  struct slot_config ** configs = build_slot_configs();
 
   int x = 0;
 
@@ -280,14 +394,18 @@ bool set_config_zone (int fd)
   uint32_t to_send = 0;
   memcpy (&to_send, &I2C_ADDR_OTP_MODE_SELECTOR_MODE, sizeof (to_send));
 
-  assert (write4 (fd, CONFIG_ZONE, I2C_ADDR_ETC_WORD,to_send));
+  result = write4 (fd, CONFIG_ZONE, I2C_ADDR_ETC_WORD,to_send);
 
-  for (x=0; x < CONFIG_SLOTS_NUM_SLOTS; x++)
+  for (x=0; x < CONFIG_SLOTS_NUM_SLOTS && result; x++)
     {
-      assert (write_slot_configs (fd, slots[x], &s1, &s2));
+      int slot = 2 * x;
+      result = write_slot_configs (fd, slots[x],
+                                   configs[slot], configs[slot+1]);
     }
 
-  return true;
+  free_slot_configs (configs);
+
+  return result;
 
 }
 
@@ -321,5 +439,23 @@ struct slot_config get_slot_config (int fd, unsigned int slot)
 
   return parse_slot_config (p);
 
+
+}
+
+bool cmp_slot_config (struct slot_config lhs, struct slot_config rhs)
+{
+  bool result = false;
+
+  if (lhs.read_key == rhs.read_key)
+    if (lhs.check_only == rhs.check_only)
+      if (lhs.single_use == rhs.single_use)
+        if (lhs.encrypted_read == rhs.encrypted_read)
+          if (lhs.is_secret == rhs.is_secret)
+            if (lhs.write_key == rhs.write_key)
+              if (lhs.derive_key == rhs.derive_key)
+                if (lhs.write_config == rhs.write_config)
+                  result = true;
+
+  return result;
 
 }

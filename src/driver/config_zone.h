@@ -24,9 +24,10 @@
 #include "defs.h"
 #include "util.h"
 
-#define WRITE_CONFIG_ALWAYS_MASK   0b00000000
-#define WRITE_CONFIG_NEVER_MASK    0b00100000
-#define WRITE_CONFIG_ENCRYPT_MASK  0b01000000
+#define WRITE_CONFIG_ALWAYS_MASK     0b00000000
+#define WRITE_CONFIG_NEVER_MASK      0b10000000
+#define WRITE_CONFIG_ENCRYPT_MASK    0b01000000
+#define WRITE_CONFIG_DERIVEKEY_MASK  0b00100000
 
 #define CHECK_ONLY_MASK     0b00010000
 #define SINGLE_USE_MASK     0b00100000
@@ -61,31 +62,30 @@ enum config_slots
 
 struct slot_config
 {
-  unsigned int read_key; /* Slot of key to used for encrypted reads
-                            If 0x0, this slot can be used as source
-                            for CheckMac copy
-                         */
-  bool check_only;       /* false = can be used for all crypto
-                            commands
-                            true = can bue used for CheckMac and
-                            GenDig followed by CheckMac
-                         */
-  bool single_use;       /* false = no limit on the usage.
-                            true = limit the number of usages based on
-                            the UseFlag or last key used.
-                         */
-  bool encrypted_read;   /* false = clear reads are permitted.
-                            true = Requires the slot to secret.
-                         */
-  bool is_secret;        /* false = the slot is not secret and
-                            requires clear read, write, no MAC check,
-                            and no Derivekey command.
-                            true = The slot is secret and requires
-                            encrypted reads and/or writes
-                         */
-  unsigned int write_key; /* Slot of key to be used to validate
-                             encrypted writes
-                          */
+  unsigned int read_key;        /**< Slot of key to used for encrypted
+                                   reads If 0x0, this slot can be used
+                                   as source for CheckMac copy */
+  bool check_only;              /**< false = can be used for all
+                                   crypto commands true = can bue used
+                                   for CheckMac and GenDig followed by
+                                   CheckMac */
+  bool single_use;              /**< false = no limit on the usage.
+                                   true = limit the number of usages
+                                   based on the UseFlag or last key
+                                   used.  */
+  bool encrypted_read;          /**< false = clear reads are
+                                   permitted.  true = Requires the
+                                   slot to secret. */
+  bool is_secret;               /**< false = the slot is not secret
+                                   and requires clear read, write, no
+                                   MAC check, and no Derivekey
+                                   command.  true = The slot is secret
+                                   and requires encrypted reads and/or
+                                   writes */
+  unsigned int write_key;       /**< Slot of key to be used to
+                                   validate encrypted writes */
+  bool derive_key;              /**< True if key slot can be used in
+                                   derive key commands */
   enum WRITE_CONFIG write_config;
 
 };
@@ -109,6 +109,7 @@ struct slot_config
 struct slot_config make_slot_config (unsigned int read_key, bool check_only,
                                      bool single_use, bool encrypted_read,
                                      bool is_secret, unsigned int write_key,
+                                     bool derive_key,
                                      enum WRITE_CONFIG write_config);
 
 /**
@@ -165,4 +166,30 @@ void serialize_slot_config (struct slot_config *s, uint8_t *slot);
  * @return The populated slot config structure
  */
 struct slot_config parse_slot_config (uint8_t *raw);
+
+/**
+ * Build the slot config attributes
+ *
+ *
+ * @return A malloc'd array of malloc'd slot config pointers, each set
+ * appropriately.
+ */
+struct slot_config** build_slot_configs (void);
+
+/**
+ * Frees the slot config array
+ *
+ * @param slots The malloc'd slot config array form build_slot_configs
+ */
+void free_slot_configs (struct slot_config **slots);
+
+/**
+ * Returns true if the slot configs match
+ *
+ * @param lhs The left hand side
+ * @param rhs The right hand side
+ *
+ * @return True if same
+ */
+bool cmp_slot_config (struct slot_config lhs, struct slot_config rhs);
 #endif

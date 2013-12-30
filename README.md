@@ -6,7 +6,7 @@ Cryptotronix Hashlet
 Status
 ---
 
-As of 16 December, 2013 this software is in an alpha state.  The code can certainly be a lot cleaner.  Feel free to look around but I'd recommend waiting to jump in until the Beta release.  This is because there are certain one-way operations on the device that can't be undone once set.  This may leave the device in a undesirable state.
+As of 30 December, 2013 this software is in Beta.  The Beta release is version 0.1.0.  It has been tested on a BeagleBone Black, rev 5AC running Debian Wheezy.  It *should* work with Angstrom, but has not been tested.  Beta testers are welcome!
 
 Building
 ----
@@ -16,6 +16,7 @@ This project uses Autotools and you need that installed to configure and build t
 If you pull this repo (i.e. a non-release), you will need the following dependencies:
 - autotools (i.e. automake, autconf, and libtool)
 - Flex and Bison
+- texinfo (for the documentation if you so desire)
 
 The run time dependencies are:
 - libgcrypt (Hashlet will compile without it, but you will lose features)
@@ -34,11 +35,20 @@ see `./hashlet --help` for full details.
 
 Currently supported commands:
 
+### state
+```bash
+./hashlet /dev/i2c-1 state
+Factory
+```
+
+This is the first command you should run and verify it's in the Factory state.  This provides the assurance that the device has not been tampered during transit.
+
 ### personalize
 ```bash
 ./hashlet /dev/i2c-1 personalize
 ```
-On success it will not output anything.  Random keys are loaded into the device and saved to `~/.hashlet` as a backup.  Don't lose that file.
+
+This is the second command you should run.  On success it will not output anything.  Random keys are loaded into the device and saved to `~/.hashlet` as a backup.  Don't lose that file.
 
 ### random
 ```bash
@@ -87,12 +97,12 @@ The workflow goes like this:
 ```
 X's indicate the unique serial number.
 
-### state
-```bash
-./hashlet /dev/i2c-1 state
-Factory
-```
-Factory indicates that the device is in it's original factory state.
+Options
+---
+
+Options are listed in the `--help` command, but a useful one, if there are issues, is the `-v` option.  This will dump all the data that
+travels across the I2C bus with the device.
+
 
 Design
 ---

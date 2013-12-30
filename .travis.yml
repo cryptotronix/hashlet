@@ -3,4 +3,4 @@ compiler:
   - gcc
   - clang
 # Change this to your needs
-script: autoreconf -i && ./configure && make
+script: ./configure && make

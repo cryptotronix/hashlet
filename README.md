@@ -1,7 +1,7 @@
 Cryptotronix Hashlet
 =====
 
-[![Build Status](https://travis-ci.org/[jbdatko]/[hashlet].png)](https://travis-ci.org/[jbdatko]/[hashlet])
+[![Build Status](https://travis-ci.org/jbdatko/hashlet.png)](https://travis-ci.org/jbdatko/hashlet)
 
 Status
 ---

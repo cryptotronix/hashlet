@@ -133,10 +133,13 @@ bool write_keys (int fd, struct key_container *keys,
   bool free_keys = false;
 
 #define KEY_LEN 32
-  static const uint8_t TEST_KEY_14[KEY_LEN] = { 0xAA };
-  static const uint8_t TEST_KEY_15[KEY_LEN] = { 0xBB };
   const unsigned int TEST_KEY_1 = 14;
   const unsigned int TEST_KEY_2 = 15;
+
+  struct octet_buffer test_key_14 = make_buffer (KEY_LEN);
+  memset(test_key_14.ptr, 0xAA, KEY_LEN);
+  struct octet_buffer test_key_15 = make_buffer (KEY_LEN);
+  memset(test_key_15.ptr, 0xBB, KEY_LEN);
 
   int x = 0;
   /* If there are no keys, which is the case when we are personalizing
@@ -148,13 +151,11 @@ bool write_keys (int fd, struct key_container *keys,
         {
           if (TEST_KEY_1 == x)
             {
-              keys->keys[x].ptr = (uint8_t *)TEST_KEY_14;
-              keys->keys[x].len = KEY_LEN;
+              keys->keys[x] = test_key_14;
             }
           else if (TEST_KEY_2 == x)
             {
-              keys->keys[x].ptr = (uint8_t *)TEST_KEY_15;
-              keys->keys[x].len = KEY_LEN;
+              keys->keys[x] = test_key_15;
             }
           else
             {

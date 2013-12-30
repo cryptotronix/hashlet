@@ -1,4 +1,4 @@
-/*
+/* -*- mode: c; c-file-style: "gnu" -*-
  * Copyright (C) 2013 Cryptotronix, LLC.
  *
  * This file is part of Hashlet.
@@ -32,6 +32,7 @@
 #include "personalize.h"
 #include "crc.h"
 #include <pwd.h>
+#include "config_zone.h"
 
 unsigned int get_max_keys ()
 {
@@ -131,6 +132,12 @@ bool write_keys (int fd, struct key_container *keys,
   assert (STATE_INITIALIZED == get_device_state (fd));
   bool free_keys = false;
 
+#define KEY_LEN 32
+  static const uint8_t TEST_KEY_14[KEY_LEN] = { 0xAA };
+  static const uint8_t TEST_KEY_15[KEY_LEN] = { 0xBB };
+  const unsigned int TEST_KEY_1 = 14;
+  const unsigned int TEST_KEY_2 = 15;
+
   int x = 0;
   /* If there are no keys, which is the case when we are personalizing
      a device from scratch, create some new keys */
@@ -139,7 +146,20 @@ bool write_keys (int fd, struct key_container *keys,
       keys = make_key_container ();
       for (x=0; x < get_max_keys (); x++)
         {
-          keys->keys[x] = get_random (fd, false);
+          if (TEST_KEY_1 == x)
+            {
+              keys->keys[x].ptr = (uint8_t *)TEST_KEY_14;
+              keys->keys[x].len = KEY_LEN;
+            }
+          else if (TEST_KEY_2 == x)
+            {
+              keys->keys[x].ptr = (uint8_t *)TEST_KEY_15;
+              keys->keys[x].len = KEY_LEN;
+            }
+          else
+            {
+              keys->keys[x] = get_random (fd, false);
+            }
         }
 
       free_keys = true;

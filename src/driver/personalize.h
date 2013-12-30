@@ -1,4 +1,4 @@
-/*
+/* -*- mode: c; c-file-style: "gnu" -*-
  * Copyright (C) 2013 Cryptotronix, LLC.
  *
  * This file is part of Hashlet.
@@ -62,6 +62,19 @@ void free_key_container (struct key_container *keys);
 enum DEVICE_STATE personalize (int fd, enum DEVICE_STATE goal,
                                struct key_container *keys);
 
+/**
+ * Writes random keys to the data slots.  Test keys (hard coded) are
+ * written to slots 14 and 15.  These slots should not be used in a
+ * security critical application.
+ *
+ * @param fd The open file descriptor
+ * @param keys If not null, load the keys passed in.  This is a way to
+ * import keys and to clone a device
+ * @param data_zone If return is true, this will point to a malloc'd
+ * buffer containing the contents of the data zone.
+ *
+ * @return
+ */
 bool write_keys (int fd, struct key_container *keys,
                  struct octet_buffer *data_zone);
 
@@ -72,4 +85,6 @@ bool write_keys (int fd, struct key_container *keys,
  * @return The key_store filename as a malloc'd string
  */
 const char* get_key_store_name ();
+
+
 #endif

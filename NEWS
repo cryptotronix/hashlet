@@ -1,0 +1,46 @@
+Hashlet NEWS -- history of user-visible changes
+
+Copyright (C) 2013 Cryptotronix, LLC.
+
+* Hashlet 0.1.0 - Beta Release - December 2013
+
+The initial release of Hashlet is concerned a Beta release.
+
+** Features
+
+*** Command line interface
+
+The following commands are supported:
+
+**** personalize
+**** random
+**** mac
+**** check-mac
+**** offline-verify
+**** serial-num
+**** state
+
+*** Sets Defaults Key Usage
+
+See the documentation for further details.
+
+--------------------------------------------------------------------
+This file is part of Hashlet.
+
+Hashlet is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+Hashlet is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Hashlet.  If not, see <http://www.gnu.org/licenses/>.
+
+Local variables:
+mode: outline
+paragraph-separate: "[ 	]*$"
+end:

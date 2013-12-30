@@ -1,0 +1,2 @@
+Image of a BeagleBone Black with a Hashlet installed on the P9 header
+with a logic analyzer connected.

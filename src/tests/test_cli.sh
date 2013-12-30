@@ -16,11 +16,24 @@
 # You should have received a copy of the GNU General Public License
 # along with Hashlet.  If not, see <http://www.gnu.org/licenses/>.
 
+test_exit(){
+    if [[ $? == $1 ]]; then
+        echo $2 passed
+    else
+        echo $2 failed
+        exit 1
+    fi
+}
+
+SUCCESS=0
+FAIL=1
 
 BUS=/dev/i2c-1
 EXE=./hashlet
 
 STATE=$($EXE $BUS state)
+
+#These tests are for a personalized hashlet
 
 if [[ $STATE == "Personalized" ]] || [[ $STATE == "Initialized" ]] || \
    [[$STATE == "Factory"]]; then
@@ -38,3 +51,43 @@ else
     echo Random length failed
     exit 1
 fi
+
+RSP=$($EXE /dev/i2c-4 random)
+test_exit 1 "Wrong Bus"
+
+RSP=$($EXE $BUS mac -f ChangeLog)
+
+echo $RSP
+
+mac=$(echo $RSP| awk '{print $3}')
+chal=$(echo $RSP| awk '{print $6}')
+meta=$(echo $RSP| awk '{print $9}')
+
+RSP=$($EXE $BUS check-mac -r $mac -c $chal -m $meta)
+
+test_exit $SUCCESS check-mac
+
+
+# Negative testing on MAC command
+RSP=$($EXE $BUS check-mac -r $mac -c $chal)
+
+test_exit $FAIL check-mac
+RSP=$($EXE $BUS check-mac -r $mac  -m $meta)
+test_exit $FAIL check-mac
+RSP=$($EXE $BUS check-mac -m $meta -c $chal)
+test_exit $FAIL check-mac
+
+RSP=$($EXE $BUS serial-num)
+test_exit $SUCCESS serial-num
+
+if [ "${#RSP}" == 18 ]; then
+    echo Serial length passed
+else
+    echo Serial length failed
+    exit 1
+fi
+
+#test offline feature
+RSP=$($EXE /dev/null offline-verify -r $mac -c $chal)
+
+test_exit $SUCCESS offline-verify

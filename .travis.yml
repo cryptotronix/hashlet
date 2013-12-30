@@ -4,4 +4,4 @@ compiler:
   - clang
 # Change this to your needs
 before_install: sudo apt-get install texinfo
-script: mkdir m4 && autoreconf -i && ./configure && make
+script: ./autogen.sh

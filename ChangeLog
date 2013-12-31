@@ -1,16 +1,304 @@
- Copyright (C) 2013 Cryptotronix, LLC.
+2013-12-30  Josh Datko  <jbd@cryptotronix.com>
 
- This file is part of Hashlet.
+	Updates INSTALL from recent version of autotools.
 
- Hashlet is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- any later version.
+	Adds check to exit successfully if not on a system with /dev/i2c-1.
 
- Hashlet is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+	Removes dvi target to prevent make distcheck failures.
 
- You should have received a copy of the GNU General Public License
- along with Hashlet.  If not, see <http://www.gnu.org/licenses/>.
+	Adds test_cli to EXTRA_DIST
+
+2013-12-30  Josh Datko  <jbdatko@gmail.com>
+
+	Updates documentation to indicate Beta status.
+
+	Updates NEWS file for 0.1.0 release.
+
+	Add useful script to convert git-logs to the ChangeLog
+
+	Removes output file option as that is currently not implemented.
+
+	Adds test cases for personalized hashlets.  Resolves #14.
+
+	Adds text file for documentation.
+
+	Adds missing switch case.
+
+	Fixes config zone per documentation.  Closes #19, closes #13, closes #15.
+
+	Adds documentation on config_zone.
+
+	Adds aback AC_CONFIG_MACRO_DIR
+
+	Moves scripts into autogen.sh
+
+2013-12-29  Josh Datko  <jbdatko@gmail.com>
+
+	Fixing url... again.
+
+	Fixes image url.
+
+	Adds Travis CI status image.
+
+	Adds install of texinfo to travis ci.
+
+	Create m4 directory manually
+
+	Modifies travis ci script.
+
+	Comments out AC_LOCAL_MACRO_DIR.  Experimenting with Travis CI.
+
+	Attempt at fixing travis.
+
+	Adds Travis CI hook.
+
+	Fixs config zone setting and parsing for issue #19.
+
+	Fixes the fixed value of keys 14 and 15
+
+	Moves all configuration zone operations to config_zone.c and config_zone.h
+
+	Adds node info to prevent compile error.
+
+	Adds initial documentation.
+
+	Adds gitignore
+
+	Adds licenses to files.
+
+	Merge branch 'master' of github.com:cryptotronix/hashlet
+
+	Adds doc target to build with sample documentation
+
+	Adds script to pull 20,000 bits of random data for rng-tool tests.
+
+2013-12-27  Josh Datko  <jbdatko@gmail.com>
+
+	Adds check-mac from command line.  Closes #11.
+
+	Adds check mac internals for issue #11.
+	The MAC command now automatically performs a check mac to verify the
+	mac (and meta data) are accurate.
+
+	Adds const qualifiers on util functions.
+
+	Fixes order of status packet checking for issue #13.
+	Needs verification test.
+
+	Adds offline-verify command.
+	Adds the ability to verify a MAC produced on a Hashlet, without the
+	hardware.  This is useful when a remote server wants to verify the MAC,
+	but doesn't have an attached hashlet.
+
+2013-12-26  Josh Datko  <jbd@cryptotronix.com>
+
+	Adds parsing feature for key files.
+	Adds parsing feature for generated and stored key_slot_files.  Uses the
+	grammar defined in the flex and bison files to parse key files.  Changes
+	the autotools setup files to accommodate flex and bison files.  Adds a
+	print_keys command, which may not make it in the final release, to test
+	the parsing.
+
+	The parser will be eventually needed in order to verify a MAC or HMAC on
+	a system that does not have a Hashlet (i.e. a remote server).
+
+2013-12-26  Josh Datko  <jbdatko@gmail.com>
+
+	Adds command for retrieving the OPT zone.
+	Now supports retrieving otp zone via "get-otp" from the CLI.
+
+2013-12-26  Josh Datko  <jbdatko@gmail.com>
+
+	Add option to read input from file.
+	Adds input file option, good suggestion.  I picked '-f' though [1],
+	although I have seen '-i' before.
+
+	[1] http://www.faqs.org/docs/artu/ch10s05.html
+
+2013-12-26  Josh Datko  <jbdatko@gmail.com>
+
+	Refactored command line dispatcher.
+
+	Added the MAC command to take in an arbitrary length file.  This depends on libgcrypt to guarantee a 32 byte available.  Another way to do this is to not directly depend on an external hash implementation, but to take in 32 bytes directly.  I think it's easier for the user to not have to pipe an external command first.
+	If libgcrypt is not available, this feature will be not be enabled.
+
+2013-12-25  Josh Datko  <jbdatko@gmail.com>
+
+	Added initial unit tests for #14.
+
+2013-12-24  Josh Datko  <jbd@cryptotronix.com>
+
+	Fixed compile errors from compiling on a 64 bit Ubuntu machine.
+
+2013-12-24  Josh Datko  <jbdatko@gmail.com>
+
+	Added placeholders for mac and check-mac for issue #11.
+
+2013-12-23  Josh Datko  <jbdatko@gmail.com>
+
+	Personalization appears complete.  Need to test with a fresh device. Resloves #4.
+
+	Implemented get-state command.
+
+	Removed tests that required GnuTLS.  Perhaps a better way is to make a test app that builds with GnuTLS only with make check.  Resolves #9.
+
+	Refactored i2c send and receive command which should resolve #3.
+
+	Formatting changes.
+
+	Whitespace changes.
+
+	More whitespace changes.
+
+	Whitespace changes.
+
+	Fixed formatting to the correct style.
+
+	Fixed formatting.
+
+2013-12-22  Josh Datko  <jbdatko@gmail.com>
+
+	Added check for gnutls version for issue #9
+
+	Formatting changes only.
+
+	Moved tests to their own directory.
+
+	Added check_mac function, but untested!
+
+	Formatting changes.
+
+2013-12-21  Josh Datko  <jbdatko@gmail.com>
+
+	Added macro for repeated code.  Added get-config zone command.
+
+	Added cflags.  I'm still not sure why these are carried forward from configure.ac
+
+	Refactored directory structure
+
+2013-12-20  Josh Datko  <jbdatko@gmail.com>
+
+	Left blank TODO for slot-config.
+
+	Added parse slot config.
+
+	Added check on malloc.
+
+	I need to default this buffer to not auto-fill...
+
+	Added disclaimer about the state of the software.
+
+	Added link to contributing page.
+
+	Credited the bithacks site for the reverse function.  This code snippet is listed in the public domain on that site.
+
+2013-12-19  Josh Datko  <jbdatko@gmail.com>
+
+	Added command for getting the serial number.
+
+	Markdown tweaks.
+
+	Updated running section with an example.
+
+	Added basic CLI for get random command for issue #6.
+
+	Added read32
+
+	Made the hash test a bit more modular.
+
+	Removed hard coded values in mac and write32.  Fixed Get_serial_num.
+
+	Hardcoded MAC check is working!
+
+	Added basic write32 and writing keys to data section.
+
+2013-12-18  Josh Datko  <jbdatko@gmail.com>
+
+	Refactored get_random
+
+	Added write32 and set OTP zone.
+
+	Added guards around setting the config zone.
+
+	Corrected bit masks.
+
+	Fixed slot config configuration.
+
+	Trying to bend Automake to my will and failing.
+
+	Add .deps directory
+
+2013-12-17  Josh Datko  <jbdatko@gmail.com>
+
+	Fixed compile warnings.
+
+	Set the OTP Mode to Read Only.  Resolves #7.
+
+	Commented out locking the configuration zone.
+
+	Added basic code for setting OTP zone #4.
+
+2013-12-16  Josh Datko  <jbdatko@gmail.com>
+
+	Emacs un-fill destroyed the markup.  Fixed.
+
+	Updated readme.  We are now in Alpha!
+
+	Eliminated compiler warnings.  Resolves #2.
+
+	Added lock command, which is working only for the config section at the moment.
+
+	Added compile to gitignore.
+
+2013-12-14  Josh Datko  <jbdatko@gmail.com>
+
+	Fix autotools message.  Resolves #1.
+
+2013-12-13  Josh Datko  <jbdatko@gmail.com>
+
+	slowly cleaning up debug.
+
+	Added get_config_data.
+
+	Added basic fd check on i2c_open.
+
+	Merged.
+
+	Changed wakeup return value.
+
+	Whitespace cleanup.
+
+	i2c cleanup.
+
+	Added basic logging.
+
+	Add TAGS to .gitignore.  Emacs FTW.
+
+2013-12-11  Josh Datko  <jbdatko@gmail.com>
+
+	Added pdf of schematic.
+
+	Updated ignore with autotools generated files.
+
+	Initial.  It begins...
+
+2013-12-08  Josh  <jbdatko@gmail.com>
+
+	Initial commit
+-------------------------------------------------------------------
+Copyright (C) 2013 Cryptotronix, LLC.
+
+This file is part of Hashlet.
+
+Hashlet is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+Hashlet is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Hashlet.  If not, see <http://www.gnu.org/licenses/>.

@@ -50,3 +50,4 @@ hashlet_CFLAGS = -Wall
 dist_noinst_SCRIPTS = autogen.sh
 
 TESTS = src/tests/test_cli.sh
+EXTRA_DIST = src/tests/test_cli.sh

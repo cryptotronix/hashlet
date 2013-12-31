@@ -25,11 +25,17 @@ test_exit(){
     fi
 }
 
+
 SUCCESS=0
 FAIL=1
 
 BUS=/dev/i2c-1
 EXE=./hashlet
+
+if [[ ! -e $BUS ]]; then
+    echo Tests only make sense on a device with $BUS
+    exit 0
+fi
 
 STATE=$($EXE $BUS state)
 

@@ -30,7 +30,7 @@ Texts.  A copy of the license is included in the section entitled
 @titlepage
 @title Hashlet
 @subtitle for version @value{VERSION}, @value{UPDATED}
-@author Josh Datko (@email{bugs@@cryptotronix.com})
+@author Josh Datko (@email{support@@cryptotronix.com})
 @page
 @vskip 0pt plus 1filll
 @insertcopying
@@ -99,6 +99,22 @@ The Hashlet, while designed for a BBB, is 5 Volt compatible and can be
 used on other platforms like a Raspberry Pi or Arduino.  However, the
 Hashlet software requires a GNU/Linux compatible operating system.
 
+@section Schematic
+
+The Hashlet requires only four supply lines.  @xref{fig:sch}.  On a
+BeagleBone Black, the P9 header supplies all the necessary inputs.  In
+their default configuration, pins P9_19 and P9_20 provide I2C data and
+clock, therefore no extra device tree files are needed to configure the
+pins.
+
+I2C test points are conveniently brought out to jumper J3 which provides
+access to the SDA, SCL, and GND lines.
+
+@float Figure,fig:sch
+@image{hashlet_sch,6in}
+@caption{Hashlet electrical schematic}
+@end float
+
 @node Installation
 @chapter Installation
 
@@ -142,14 +158,17 @@ Once the software is built, one can install the software with @kbd{sudo
 make install}.  The default install location is
 @file{/usr/local/bin/hashlet}.  The hashlet is shipped in a
 @dfn{factory} state.  This means that unique keys have not yet been
-loaded and the device is not ready for cryptographic operation.  The
-first command you should run, to ensure that the device is working and
-is in the correct state is @command{hashlet /dev/i2c-1 state}.  The
-response to this command should be @code{Factory}.  If it's not,
-contact Cryptotronix
-support.@footnote{@email{support@@cryptotronix.com}}.
+loaded and the device is not ready for cryptographic operation.
 
-The next command one should run is @command{hashlet /dev/i2c-1
+Prior to running commands, you should add your user to the @code{i2c}
+group, otherwise you will need to run the commands as @samp{root}, which
+is not recommended.  The first command you should run to ensure that
+the device is working and is in the correct state is @kbd{hashlet
+/dev/i2c-1 state}.  The response to this command should be
+@code{Factory}.  If it's not, contact Cryptotronix
+support@footnote{@email{support@@cryptotronix.com}}.
+
+The next command one should run is @kbd{hashlet /dev/i2c-1
 personalize}.  This will configure the hashlet by populating the key
 slot configuration.  @xref{Key Slot Configuration}.  It will also fill
 in random keys in key slots 0-13 and test keys in 14-15.  The test keys
@@ -170,13 +189,145 @@ Congratulations, you now have a personalized Hashlet!
 
 @node Invoking hashlet
 @chapter Invoking hashlet
-
 @pindex hashlet
 @cindex invoking @command{hashlet}
 
-This is a sample manual.  There is no sample program to
-invoke, but if there were, you could see its basic usage
-and command line options here.
+The command @command{hashlet} requires two positional arguments,
+@command{bus} and @command{command}.  The @command{bus} argument refers
+to the I2C bus on which the hashlet communications.  For offline
+commands, where the device is not used, this argument should be
+@file{/dev/null}.  The second command is the command to run.  Optional
+arguments may be supplied and may be relevant depending on the command.
+
+On a BeagleBone Black, the default I2C bus is @file{/dev/i2c-1}.
+
+@section Online Commands
+
+The following list of commands require the Hashlet to be physically
+attached to the bus in order to succeed.
+
+@deffn Command state
+@kindex state
+
+The @command{state} command returns the state of the device.  The three
+possible results of this command are @code{Factory}, @code{Initialized},
+and @code{Personalized}.
+
+@itemize
+@item @code{Factory}
+This is the device's initial state.  Unique keys have not yet been
+written to the device.
+@item @code{Initialized}
+This is an intermediate state that should not be encountered by users.
+The meaning of this state is that the configuration zone in the device
+has been locked, but the data and @dfn{One Time Programmable Zone}, has
+not.  Thus, key material in the device my be overwritten in this state.
+@item @code{Personalized}
+This is the final state and indicates that the device is ready for
+cryptographic operation.  The configuration and OTP zones may not be
+written to and the data slots may be accessed according to the
+configuration parameters. @xref{Key Slot Configuration}.
+
+@end itemize
+@end deffn
+
+@deffn Command serial-num
+@kindex @command{serial-num}
+
+This command returns the device's serial number.  Each device has a
+non-configurable serial number which is unique.  The serial number is
+always readable in any device state.
+@end deffn
+
+@deffn Command random @option{--update-seed}
+@kindex @command{random}
+
+This command returns 32 bytes of random data from the device.  Until the
+device is in the Personalized state, it will return a fixed pattern.
+The option, @option{--update-seed}, is available for this command.  When
+supplied, this command will also update the internal random seed on the
+device.  This need not be done frequently.
+@end deffn
+
+@deffn Command mac @option{--key-slot} @option{--file}
+@kindex @command{mac}
+
+This command calculates a SHA256 hash with external and internal data to
+produce a @acronym{Message Authentication Code, MAC}.  @xref{lst:mac}.
+The option, @option{--key-slot}, or @option{-k}, specifies which key to
+use in the calculation.  The input can either be provided by
+@command{stdin} or can be specified with the option, @option{--file}, or
+@option{-f}.  In either case, the input is hashed with SHA256 to produce
+a fixed 32 byte @dfn{challenge} to the device.  This calculation is
+performed in software by @command{libgcrypt}.
+
+@float Listing,lst:mac
+@caption{MAC calculation in Hashlet @value{VERSION}}
+@samp{SHA256 (Key | SHA256 (Input) | 0x08 | Mode Byte | Param2 | 00000000 |@*
+      000 | SN[8] | 0000 | SN[0:1] | SN[2:3])}
+@end float
+
+
+The response to this command, upon success, will be the following:
+
+@smallexample
+@code{
+mac       : C3466ABB8640B50938B260E17D86489D0EBB3F9C8009024683CB225FFFD3B4E4
+challenge : 9F0751C90770E6B40E34BA8E06EFE453FAA46B5FB26925FFBD664FAF951D000A
+meta      : 08000000000000000000000000}
+@end smallexample
+
+The @samp{mac} is the result of the calculation.  @samp{Challenge} is
+the SHA256 output of the input and @samp{meta} is associated meta data
+that must accompany the data.  The meta data is required as input into
+the @command{check-mac} operation. @footnote{See the
+@code{get_check_mac_meta_data} function for how the meta data is
+calculated}
+
+This entire response must be saved in order to verify the mac with the
+@command{check-mac} command.
+
+If @option{--key-slot} is not specified, key slot 0 is used.
+
+@end deffn
+
+@kindex @command{check-mac}
+
+@deffn Command check-mac @option{--challenge-response} @option{--challenge} @option{--meta-data}
+@code{check-mac} sends data to the device to test if
+@option{--challenge-response} was produced by @option{--challenge} and
+@option{--meta-data}.  The short versions of these options are
+@option{-r}, @option{-c}, and @option{-r} respectively.  For this
+command, these options are @dfn{required}.  These strings are the output
+from the @command{mac} command.
+
+Upon success, the command will exit silently with an exit code of 0.
+Otherwise, it will display an error and exit with 1.
+@end deffn
+
+@section Offline commands
+
+The following commands may be run without the Hashlet physically
+present.
+
+@kindex @command{offline-verify}
+@deffn Command offline-verify @option{--challenge-response} @option{--challenge} @option{--key-slot}
+
+@code{offline-verify} verifies a MAC produced by the Hashlet.  If
+@option{--key-slot} is not specified, key slot 0 is used.  The options,
+@option{--challenge-response} and @option{--challenge} are
+@dfn{required}.
+
+For this command to work, the backup key file must be located in
+@file{~/.hashlet}.  However, only the key slot used in the calculation
+need be included in that file, other key slot entries can be deleted.
+This calculation works using the fixed values from the @command{mac}
+command.  @xref{lst:mac}.  In future versions, more sophisticated
+options will be enabled.
+
+Upon success, the command will exit silently with an exit code of 0.
+Otherwise, it will display an error and exit with 1.
+@end deffn
 
 @node Key Slot Configuration
 @appendix Key Slot Configuration

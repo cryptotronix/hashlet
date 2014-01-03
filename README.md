@@ -6,7 +6,7 @@ Cryptotronix Hashlet
 Status
 ---
 
-As of 30 December, 2013 this software is in Beta.  The Beta release is version 0.1.0.  It has been tested on a BeagleBone Black, rev 5AC running Debian Wheezy.  It *should* work with Angstrom, but has not been tested.  Beta testers are welcome!
+As of 2 January, 2014 this software is in Beta.  The Beta release is version 0.1.0 and is available on the [release](http://download.savannah.gnu.org/releases/hashlet/) page.  It has been tested on a BeagleBone Black, rev 5AC running Debian Wheezy.  It *should* work with Angstrom, but has not been tested.  Beta testers are welcome!
 
 Building
 ----
@@ -108,6 +108,13 @@ Design
 ---
 
 In the `hardware` folder, one should find the design files for the Hashlet.  The IC on the hashlet is the [Atmel ATSHA204](http://www.atmel.com/Images/Atmel-8740-CryptoAuth-ATSHA204-Datasheet.pdf).
+
+Support
+---
+
+IRC: Join the `#cryptotronix` channel on freenode.
+
+Mailing lists: `hashlet-announce` and `hashlet-users` are open for subscriptions [here](https://savannah.nongnu.org/mail/?group=hashlet).
 
 Contributing
 ---

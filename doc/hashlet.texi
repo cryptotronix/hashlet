@@ -48,6 +48,7 @@ This manual is for Hashlet (version @value{VERSION}, @value{UPDATED}).
 @menu
 * Preface::
 * Hardware Overview::
+* Installation::
 * Invoking sample::
 * Key Slot Configuration::
 * GNU Free Documentation License::
@@ -98,11 +99,80 @@ The Hashlet, while designed for a BBB, is 5 Volt compatible and can be
 used on other platforms like a Raspberry Pi or Arduino.  However, the
 Hashlet software requires a GNU/Linux compatible operating system.
 
-@node Invoking sample
-@chapter Invoking sample
+@node Installation
+@chapter Installation
 
-@pindex sample
-@cindex invoking @command{sample}
+@section Hardware Installation
+
+The Hashlet ships fully assembled and tested.  Remove the device from
+the static-free bag and attached it to the P9 header of the BeagleBone
+Black. @xref{fig:bbb}.  Once attached, the device is ready for use.
+
+@section Software Installation
+
+The latest release for the software is available at
+@url{http://download.savannah.gnu.org/releases/hashlet/}.  The software
+was signed with a GPG key with a fingerprint of
+@code{0xB5919B1AC7135905F4669C847BFA5031BD2EDEA6}, which you can
+download from a key server or from
+Savannah. @footnote{@url{https://savannah.nongnu.org/people/viewgpg.php?user_id=93382}.}
+
+
+After verification, run the typical commands, @command{./configure} and
+@command{make} to build the software.  However, to enable all of the
+features, you should fist install @code{libgcrypt}.  Consult your
+operating system's package manager for documentation.  For Debian, one
+can install @code{libgcrypt} as follows: @kbd{sudo apt-get install
+libgcrypt11-dev}.  If @code{libgcrypt} is not installed,
+@command{configure} will produce a warning. @xref{lst:warning}.
+
+@float Listing,lst:warning
+@caption{Warning messages users can expect if @code{ibgcrypt} is not installed}
+@code{@*
+   ----------------------------------------------------@*
+   Unable to find gcrypt.h on this system.@*
+   Some features are disabled, install libgcrypt and@*
+   rebuild to enable them.@*
+   ----------------------------------------------------}
+@end float
+
+@kindex state
+
+Once the software is built, one can install the software with @kbd{sudo
+make install}.  The default install location is
+@file{/usr/local/bin/hashlet}.  The hashlet is shipped in a
+@dfn{factory} state.  This means that unique keys have not yet been
+loaded and the device is not ready for cryptographic operation.  The
+first command you should run, to ensure that the device is working and
+is in the correct state is @command{hashlet /dev/i2c-1 state}.  The
+response to this command should be @code{Factory}.  If it's not,
+contact Cryptotronix
+support.@footnote{@email{support@@cryptotronix.com}}.
+
+The next command one should run is @command{hashlet /dev/i2c-1
+personalize}.  This will configure the hashlet by populating the key
+slot configuration.  @xref{Key Slot Configuration}.  It will also fill
+in random keys in key slots 0-13 and test keys in 14-15.  The test keys
+should not be used for production use.  Upon successful personalization,
+a backup of all keys will be written to @file{~/.hashlet} in
+un-encrypted form.  The command will silently complete on success, but
+if you want to ensure that it completed succesfuly, you can verify the
+exit code is 0 with @kbd{echo $?}.
+
+With a device now in the @dfn{personalized} state, the output of the
+@command{state} command should now be @code{Personalized}.  Also, if you
+return to the build directory, the @code{make check} target will now
+test the cryptographic operation of the device.
+
+Congratulations, you now have a personalized Hashlet!
+
+
+
+@node Invoking hashlet
+@chapter Invoking hashlet
+
+@pindex hashlet
+@cindex invoking @command{hashlet}
 
 This is a sample manual.  There is no sample program to
 invoke, but if there were, you could see its basic usage
@@ -231,5 +301,6 @@ as fixed test keys and can be read but not written after personalization.
 @unnumbered Index
 
 @printindex cp
+@printindex ky
 
 @bye

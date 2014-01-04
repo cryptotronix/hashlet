@@ -49,7 +49,7 @@ This manual is for Hashlet (version @value{VERSION}, @value{UPDATED}).
 * Preface::
 * Hardware Overview::
 * Installation::
-* Invoking sample::
+* Invoking hashlet::
 * Key Slot Configuration::
 * GNU Free Documentation License::
 * Index::

@@ -196,4 +196,19 @@ int cli_verify_mac (int fd, struct arguments *args);
  * @return the exit code
  */
 int cli_check_mac (int fd, struct arguments *args);
+
+/**
+ * Attempts to write to the key slot specified by the key slot option.
+ *
+ * @param fd The open file descriptor.
+ * @param args The args
+ *
+ * @return the exit code.  This command has a high probability of
+ * failure if a writable key slot is not chosen.
+ */
+int write_to_key_slot (int fd, struct arguments *args);
+
+bool is_expected_len (const char* arg, unsigned int len);
+bool is_hex_arg (const char* arg, unsigned int len);
+
 #endif /* CLI_COMMANDS_H */

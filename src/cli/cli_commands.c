@@ -206,6 +206,27 @@ void close_input_file (struct arguments *args, FILE *f)
     }
 }
 
+bool is_expected_len (const char* arg, unsigned int len)
+{
+  assert (NULL != arg);
+
+  bool result = false;
+  if (len == strnlen (arg, len+1))
+    result = true;
+
+  return result;
+
+}
+
+bool is_hex_arg (const char* arg, unsigned int len)
+{
+  if (is_expected_len (arg, len) && is_all_hex (arg, len))
+    return true;
+  else
+    return false;
+}
+
+
 int cli_random (int fd, struct arguments *args)
 {
 
@@ -572,5 +593,30 @@ int cli_check_mac (int fd, struct arguments *args)
 
   return result;
 
+
+}
+
+int write_to_key_slot (int fd, struct arguments *args)
+{
+
+  int result = HASHLET_COMMAND_FAIL;
+  assert (NULL != args);
+
+  const unsigned int ASCII_KEY_SIZE = 64;
+  const unsigned int BUF_SIZE = ASCII_KEY_SIZE + 2; /* 256 bit key in ASCII,
+                                                       plus null, plus extra
+                                                       byte
+                                                       to determine size */
+
+  char *buf = malloc_wipe (BUF_SIZE);
+
+  if (NULL != fgets (buf, BUF_SIZE, stdin))
+    {
+      if (ASCII_KEY_SIZE == strnlen (buf, ASCII_KEY_SIZE + 1))
+        {
+
+        }
+
+    }
 
 }

@@ -67,7 +67,12 @@ static char doc[] =
   "                  Factory -- Random will produced a fixed 0xFFFF0000\n"
   "                  Initialized -- Configuration is locked, keys may be \n"
   "                                 written\n"
-  "                  Personalized -- Keys are loaded.  Memory is locked\n";
+  "                  Personalized -- Keys are loaded.  Memory is locked\n"
+  "write         --  Writes to one of the sixteen key slots, specified by\n"
+  "                  the option -k.  If key slot is not specified, key slot\n"
+  "                  zero is assumed.  NOTE: not all slots may be written and\n"
+  "                  this command may result in an error.  Check the\n"
+  "                  documentation for which slots may be written.";
 
 
 /* A description of the arguments we accept. */
@@ -87,7 +92,7 @@ static struct argp_option options[] = {
   { 0, 0, 0, 0, "Random Command Options:", 2},
   {"update-seed", OPT_UPDATE_SEED, 0, 0,
      "Updates the random seed.  Only applicable to certain commands"},
-  { 0, 0, 0, 0, "Mac Command Options:", 3},
+  { 0, 0, 0, 0, "Key related command options:", 3},
   {"key-slot", 'k', "SLOT",      0,  "The internal key slot to use."},
   { 0, 0, 0, 0, "Check and Offline-Verify Mac Options:", 4},
   {"challenge", 'c', "CHALLENGE",      0,
@@ -99,25 +104,6 @@ static struct argp_option options[] = {
   { 0 }
 };
 
-bool is_expected_len (const char* arg, unsigned int len)
-{
-  assert (NULL != arg);
-
-  bool result = false;
-  if (len == strnlen (arg, len+1))
-    result = true;
-
-  return result;
-
-}
-
-bool is_hex_arg (const char* arg, unsigned int len)
-{
-  if (is_expected_len (arg, len) && is_all_hex (arg, len))
-    return true;
-  else
-    return false;
-}
 
 /* Parse a single option. */
 static error_t

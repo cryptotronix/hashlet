@@ -377,4 +377,14 @@ bool check_mac (int fd, struct check_mac_encoding cm,
                 struct octet_buffer challenge_response,
                 struct octet_buffer other_data);
 
+/**
+ * Converts the slot number to the correct address byte
+ *
+ * @param zone The zone enumeration
+ * @param slot The slot number
+ *
+ * @return The formatted byte, it will assert a failure if not correct.
+ */
+uint8_t slot_to_addr (enum DATA_ZONE zone, uint8_t slot);
+
 #endif /* COMMAND_H */

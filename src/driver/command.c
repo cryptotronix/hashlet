@@ -928,3 +928,29 @@ enum DEVICE_STATE get_device_state (int fd)
   return state;
 
 }
+
+uint8_t slot_to_addr (enum DATA_ZONE zone, uint8_t slot)
+{
+    switch (zone)
+      {
+      case DATA_ZONE:
+        assert (0 <= slot && slot <= 15);
+        break;
+
+      case OTP_ZONE:
+        assert (0 == slot || 1 == slot);
+        break;
+
+      case CONFIG_ZONE:
+        assert (0 <= slot && slot <= 2);
+        break;
+
+      default:
+        assert (false);
+      }
+
+    slot <<= 3;
+
+    return slot;
+
+}

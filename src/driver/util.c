@@ -1,4 +1,4 @@
-/*
+/* -*- mode: c; c-file-style: "gnu" -*-
  * Copyright (C) 2013 Cryptotronix, LLC.
  *
  * This file is part of Hashlet.

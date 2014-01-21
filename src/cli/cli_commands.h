@@ -49,6 +49,7 @@ struct arguments
   const char *challenge;
   const char *challenge_rsp;
   const char *meta;
+  const char *write_data;
 };
 
 struct command
@@ -83,7 +84,7 @@ int dispatch (const char *bus, const char *command, struct arguments *args);
  */
 void init_cli (struct arguments * args);
 
-#define NUM_CLI_COMMANDS 11
+#define NUM_CLI_COMMANDS 13
 
 /**
  * Gets random from the device
@@ -206,9 +207,20 @@ int cli_check_mac (int fd, struct arguments *args);
  * @return the exit code.  This command has a high probability of
  * failure if a writable key slot is not chosen.
  */
-int write_to_key_slot (int fd, struct arguments *args);
+int cli_write_to_key_slot (int fd, struct arguments *args);
 
 bool is_expected_len (const char* arg, unsigned int len);
 bool is_hex_arg (const char* arg, unsigned int len);
 
+/**
+ * Reads a data (key) slot.  This command will error if the key slot
+ * can't be read.
+ *
+ * @param fd The open file descriptor
+ * @param args The args
+ *
+ * @return exit code.  If a data slot can't be read, this will return
+ * an error.
+ */
+int cli_read_key_slot (int fd, struct arguments *args);
 #endif /* CLI_COMMANDS_H */

@@ -72,7 +72,11 @@ static char doc[] =
   "                  the option -k.  If key slot is not specified, key slot\n"
   "                  zero is assumed.  NOTE: not all slots may be written and\n"
   "                  this command may result in an error.  Check the\n"
-  "                  documentation for which slots may be written.";
+  "                  documentation for which slots may be written."
+  "read          --  Reads one of the sixteen key slots, specified by\n"
+  "                  the option -k.  The default slot is 0.  Some slots can\n"
+  "                  not be read, in which case this command will return an\n"
+  "                  error.  Otherwise it will return the 32 Byte value.\n";
 
 
 /* A description of the arguments we accept. */
@@ -94,6 +98,8 @@ static struct argp_option options[] = {
      "Updates the random seed.  Only applicable to certain commands"},
   { 0, 0, 0, 0, "Key related command options:", 3},
   {"key-slot", 'k', "SLOT",      0,  "The internal key slot to use."},
+  {"write", 'w', "WRITE",      0,
+   "The 32 byte data to write to a slot (64 bytes of ASCII Hex)"},
   { 0, 0, 0, 0, "Check and Offline-Verify Mac Options:", 4},
   {"challenge", 'c', "CHALLENGE",      0,
    "The 32 byte challenge (64 bytes of ASCII Hex)"},
@@ -156,6 +162,15 @@ parse_opt (int key, char *arg, struct argp_state *state)
         }
       else
         arguments->challenge = arg;
+      break;
+    case 'w':
+      if (!is_hex_arg (arg, 64))
+        {
+          fprintf (stderr, "%s\n", "Invalid Data.");
+          argp_usage (state);
+        }
+      else
+        arguments->write_data = arg;
       break;
     case 'r':
       if (!is_hex_arg (arg, 64))

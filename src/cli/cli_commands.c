@@ -58,6 +58,7 @@ void set_defaults (struct arguments *args)
   args->challenge = NULL;
   args->challenge_rsp = NULL;
   args->meta = NULL;
+  args->write_data = NULL;
 
   args->address = 0b1100100;
 
@@ -122,6 +123,8 @@ void init_cli (struct arguments *args)
   static const struct command offline_verify_cmd =
     {"offline-verify", cli_verify_mac };
   static const struct command check_mac_cmd = {"check-mac", cli_check_mac };
+  static const struct command write_key_cmd = {"write", cli_write_to_key_slot };
+  static const struct command read_key_cmd = {"read", cli_read_key_slot };
 
   int x = 0;
 
@@ -136,6 +139,8 @@ void init_cli (struct arguments *args)
   x = add_command (print_keys_cmd, x);
   x = add_command (offline_verify_cmd, x);
   x = add_command (check_mac_cmd, x);
+  x = add_command (write_key_cmd, x);
+  x = add_command (read_key_cmd, x);
 
   set_defaults (args);
 
@@ -596,27 +601,58 @@ int cli_check_mac (int fd, struct arguments *args)
 
 }
 
-int write_to_key_slot (int fd, struct arguments *args)
+int cli_write_to_key_slot (int fd, struct arguments *args)
 {
 
   int result = HASHLET_COMMAND_FAIL;
   assert (NULL != args);
 
   const unsigned int ASCII_KEY_SIZE = 64;
-  const unsigned int BUF_SIZE = ASCII_KEY_SIZE + 2; /* 256 bit key in ASCII,
-                                                       plus null, plus extra
-                                                       byte
-                                                       to determine size */
 
-  char *buf = malloc_wipe (BUF_SIZE);
+  struct octet_buffer key = {0,0};
 
-  if (NULL != fgets (buf, BUF_SIZE, stdin))
+  if (NULL == args->write_data)
+    fprintf (stderr, "%s\n" ,"Pass the key slot data in the -w option");
+
+  else
     {
-      if (ASCII_KEY_SIZE == strnlen (buf, ASCII_KEY_SIZE + 1))
+      key = ascii_hex_2_bin (args->write_data, ASCII_KEY_SIZE);
+      if (NULL != key.ptr)
         {
+          if (write32 (fd, DATA_ZONE,
+                       slot_to_addr (DATA_ZONE, args->key_slot), key))
+            result = HASHLET_COMMAND_SUCCESS;
 
+          free_octet_buffer (key);
         }
-
+      else
+        {
+          fprintf (stderr, "%s\n" ,"Not a valid hex string");
+        }
     }
+
+  return result;
+
+}
+
+int cli_read_key_slot (int fd, struct arguments *args)
+{
+  int result = HASHLET_COMMAND_FAIL;
+  assert (NULL != args);
+
+  struct octet_buffer buf = {0,0};
+  buf = read32 (fd, DATA_ZONE, slot_to_addr (DATA_ZONE, args->key_slot));
+
+  if (NULL != buf.ptr)
+    {
+      result = HASHLET_COMMAND_SUCCESS;
+      output_hex (stdout, buf);
+      free_octet_buffer (buf);
+    }
+  else
+    fprintf (stderr, "%s%d\n" ,"Data can't be read from key slot: ",
+             args->key_slot);
+
+  return result;
 
 }

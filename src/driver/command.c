@@ -319,7 +319,7 @@ bool write4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf)
   set_data (&c, (uint8_t *)&buf, sizeof (buf));
   set_execution_time (&c, 0, 4000000);
 
-  if (RSP_SUCCESS == process_command (fd, &c, &recv, sizeof (recv)));
+  if (RSP_SUCCESS == process_command (fd, &c, &recv, sizeof (recv)))
   {
     if (0 == (int) recv)
       status = true;
@@ -332,16 +332,29 @@ bool write4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf)
 }
 
 bool write32 (int fd, enum DATA_ZONE zone, uint8_t addr,
-              struct octet_buffer buf)
+              struct octet_buffer buf, struct octet_buffer *mac)
 {
 
   assert (NULL != buf.ptr);
   assert (32 == buf.len);
+  if (NULL != mac)
+    assert (NULL != mac->ptr);
 
   bool status = false;
   uint8_t recv = 0;
   uint8_t param2[2] = {0};
   uint8_t param1 = set_zone_bits (zone);
+
+  struct octet_buffer data = {0,0};
+
+  if (NULL != mac)
+    data = make_buffer (buf.len + mac->len);
+  else
+    data = make_buffer (buf.len);
+
+  memcpy (data.ptr, buf.ptr, buf.len);
+  if (NULL != mac && mac->len > 0)
+    memcpy (data.ptr + buf.len, mac->ptr, mac->len);
 
   /* If writing 32 bytes, this bit must be set in param1 */
   uint8_t WRITE_32_MASK = 0b10000000;
@@ -355,14 +368,18 @@ bool write32 (int fd, enum DATA_ZONE zone, uint8_t addr,
   set_opcode (&c, COMMAND_WRITE);
   set_param1 (&c, param1);
   set_param2 (&c, param2);
-  set_data (&c, buf.ptr, buf.len);
+  set_data (&c, data.ptr, data.len);
+
   set_execution_time (&c, 0, WRITE_AVG_EXEC);
 
-  if (RSP_SUCCESS == process_command (fd, &c, &recv, sizeof (recv)));
+  if (RSP_SUCCESS == process_command (fd, &c, &recv, sizeof (recv)))
   {
+    CTX_LOG (DEBUG, "Write 32 successful.");
     if (0 == (int) recv)
       status = true;
   }
+
+  free_octet_buffer (data);
 
   return status;
 
@@ -849,20 +866,22 @@ bool set_otp_zone (int fd, struct octet_buffer *otp_zone)
   buf.len = sizeof (nulls);
 
   /* Fill the OTP zone with blanks from their default FFFF */
-  success = write32 (fd, OTP_ZONE, 0, buf);
+  success = write32 (fd, OTP_ZONE, 0, buf, NULL);
 
   if (success)
-    success = write32 (fd, OTP_ZONE, SIZE_OF_WRITE / sizeof (uint32_t), buf);
+    success = write32 (fd, OTP_ZONE, SIZE_OF_WRITE / sizeof (uint32_t),
+                       buf, NULL);
 
   /* Fill in the data */
   buf.ptr = part1;
   CTX_LOG (DEBUG, "Writing: %s", buf.ptr);
   if (success)
-    success = write32 (fd, OTP_ZONE, 0, buf);
+    success = write32 (fd, OTP_ZONE, 0, buf, NULL);
   buf.ptr = part2;
   CTX_LOG (DEBUG, "Writing: %s", buf.ptr);
   if (success)
-    success = write32 (fd, OTP_ZONE, SIZE_OF_WRITE / sizeof (uint32_t), buf);
+    success = write32 (fd, OTP_ZONE, SIZE_OF_WRITE / sizeof (uint32_t),
+                       buf, NULL);
 
   /* Lastly, copy the OTP zone into one contiguous buffer.
      Ironically, the OTP can't be read while unlocked. */

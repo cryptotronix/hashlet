@@ -140,11 +140,12 @@ bool write4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf);
  * @param addr The address to write to.
  * @param buf The buffer to write, passed by value.  Buf.ptr should be
  * a valid pointer to the data and buf.len must be 32.
+ * @param mac An optional mac for encrypted writes.
  *
  * @return True if successful.
  */
 bool write32 (int fd, enum DATA_ZONE zone, uint8_t addr,
-              struct octet_buffer buf);
+              struct octet_buffer buf, struct octet_buffer *mac);
 
 
 

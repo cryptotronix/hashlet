@@ -320,10 +320,10 @@ struct slot_config** build_slot_configs (void)
   /* Slots 6 -7 are key slots, to which the user can write and change
    *the key. */
   *config[6] =  make_slot_config (0, false, false, false,
-                                  true, 0, false, ALWAYS);
+                                  true, 6, false, ENCRYPT);
 
   *config[7] =  make_slot_config (0, false, false, false,
-                                  true, 0, true, ALWAYS);
+                                  true, 7, false, ENCRYPT);
 
   /* Slots 8 - 11 Are reserved for password checking */
   *config[8] =  make_slot_config (0, false, false, false,

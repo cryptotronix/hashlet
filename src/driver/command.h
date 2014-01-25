@@ -36,22 +36,6 @@
 #include "defs.h"
 #include "util.h"
 
-/**
- * Generate a Nonce from the device
- *
- * @param fd The open file descriptor
- * @param seed_update_flag Determines if the device's random seed
- * should be updated.
- * @param input Must contain a malloced buffer of 32 or 20 bytes.  If
- * 32 bytes, the nonce will act like a pass through the the value will
- * be loaded directly.  If 20, the value will be used in generating
- * the nonce value.
- *
- * @return A malloced buffer that contains 32 bytes of random data.
- */
-struct octet_buffer gen_nonce (int fd, int seed_update_flag,
-                               struct octet_buffer input);
-
 
 
 enum DATA_ZONE
@@ -147,10 +131,30 @@ bool write4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf);
 bool write32 (int fd, enum DATA_ZONE zone, uint8_t addr,
               struct octet_buffer buf, struct octet_buffer *mac);
 
+/**
+ * Performs the nonce operation on the device.  Depending on the data
+ * parameter, this command will either generate a new nonce or combine
+ * an external value.
+ *
+ * @param fd The open file descriptor
+ * @param data If 32 bytes, this command will load the 32 byte data
+ * into the temp key register directly.  If 20 bytes, it will be
+ * combined per the manual and 32 bytes of random data will be returned.
+ *
+ * @return If data is 32 bytes, it will return a buffer of size 1 with
+ * a single 0 byte.  Otherwise, it returns a 32 byte random number.
+ */
+struct octet_buffer gen_nonce (int fd, struct octet_buffer data);
 
-
-
-
+/**
+ * Generates a new nonce from the device.  This will combine the OTP
+ * zone with a random number to generate the nonce.
+ *
+ * @param fd The open file descriptor.
+ *
+ * @return A 32 byte malloc'd buffer if successful.
+ */
+struct octet_buffer get_nonce (int fd);
 
 /**
  * Set the configuration zone based.  This function will setup the

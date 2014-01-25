@@ -125,6 +125,7 @@ void init_cli (struct arguments *args)
   static const struct command check_mac_cmd = {"check-mac", cli_check_mac };
   static const struct command write_key_cmd = {"write", cli_write_to_key_slot };
   static const struct command read_key_cmd = {"read", cli_read_key_slot };
+  static const struct command nonce_cmd = {"nonce", cli_get_nonce };
 
   int x = 0;
 
@@ -141,6 +142,7 @@ void init_cli (struct arguments *args)
   x = add_command (check_mac_cmd, x);
   x = add_command (write_key_cmd, x);
   x = add_command (read_key_cmd, x);
+  x = add_command (nonce_cmd, x);
 
   set_defaults (args);
 
@@ -658,6 +660,27 @@ int cli_read_key_slot (int fd, struct arguments *args)
   else
     fprintf (stderr, "%s%d\n" ,"Data can't be read from key slot: ",
              args->key_slot);
+
+  return result;
+
+}
+
+int cli_get_nonce (int fd, struct arguments *args)
+{
+  int result = HASHLET_COMMAND_FAIL;
+  assert (NULL != args);
+
+  struct octet_buffer nonce = get_nonce (fd);
+
+  if (nonce.len == 32 && nonce.ptr != NULL)
+    {
+      output_hex (stdout, nonce);
+      free_octet_buffer (nonce);
+      result = HASHLET_COMMAND_SUCCESS;
+    }
+  else
+    fprintf (stderr, "%s\n", "Nonce generation failed");
+
 
   return result;
 

@@ -387,60 +387,6 @@ bool write32 (int fd, enum DATA_ZONE zone, uint8_t addr,
 
 }
 
-struct octet_buffer gen_nonce (int fd, int seed_update_flag,
-                              struct octet_buffer input)
-
-{
-
-  uint8_t *recv = NULL;
-  uint8_t param1 = seed_update_flag;
-  uint8_t param2[2] = {0};
-  unsigned int recv_len = 0;
-  struct octet_buffer response = {NULL, 0};
-
-  assert (1 == seed_update_flag || 0 == seed_update_flag);
-  assert (NULL != input.ptr);
-  /* If 32, the nonce is considered a pass through and will be used
-     directly by the system */
-  /* If 20, the nonce will be combined with a random number */
-  assert (32 == input.len || 20 == input.len);
-
-  if (32 == input.len)
-    {
-      recv_len = 1;
-    }
-  else
-    {
-      recv_len = 32;
-    }
-
-  recv = malloc (recv_len);
-  assert (NULL != recv);
-
-
-  struct Command_ATSHA204 c = make_command ();
-
-  set_opcode (&c, COMMAND_NONCE);
-  set_param1 (&c, param1);
-  set_param2 (&c, param2);
-  set_data (&c, input.ptr, input.len);
-  set_execution_time (&c, 0, 22000000); /* avg. 22 msec */
-
-  if (RSP_SUCCESS == process_command (fd, &c, recv, recv_len));
-  {
-    response.ptr = recv;
-    response.len= recv_len;
-  }
-
-  return response;
-
-
-
-}
-
-
-
-
 uint8_t serialize_check_mac_mode (struct check_mac_encoding c)
 {
   /* The serialized result */
@@ -972,4 +918,77 @@ uint8_t slot_to_addr (enum DATA_ZONE zone, uint8_t slot)
 
     return slot;
 
+}
+
+struct octet_buffer gen_nonce (int fd, struct octet_buffer data)
+{
+  const unsigned int EXTERNAL_INPUT_LEN = 32;
+  const unsigned int NEW_NONCE_LEN = 20;
+
+  assert (NULL != data.ptr && (EXTERNAL_INPUT_LEN == data.len ||
+                               NEW_NONCE_LEN == data.len));
+
+  uint8_t param2[2] = {0};
+  uint8_t param1 = 0;
+
+  unsigned int rsp_len = 0;
+
+  if (EXTERNAL_INPUT_LEN == data.len)
+    {
+      const unsigned int PASS_THROUGH_MODE = 3;
+      const unsigned int RSP_LENGTH = 1;
+      param1 = PASS_THROUGH_MODE;
+      rsp_len = RSP_LENGTH;
+    }
+  else
+    {
+      const unsigned int COMBINE_AND_UPDATE_SEED = 0;
+      const unsigned int RSP_LENGTH = 32;
+      param1 = COMBINE_AND_UPDATE_SEED;
+      rsp_len = RSP_LENGTH;
+    }
+
+  struct octet_buffer buf = make_buffer (rsp_len);
+
+  struct Command_ATSHA204 c = make_command ();
+
+  set_opcode (&c, COMMAND_RANDOM);
+  set_param1 (&c, param1);
+  set_param2 (&c, param2);
+  set_data (&c, data.ptr, data.len);
+  set_execution_time (&c, 0, NONCE_AVG_EXEC);
+
+  if (RSP_SUCCESS != process_command (fd, &c, buf.ptr, buf.len))
+    {
+      CTX_LOG (DEBUG, "Nonce command failed");
+      free_octet_buffer (buf);
+      buf.ptr = NULL;
+    }
+
+  return buf;
+
+
+
+}
+
+struct octet_buffer get_nonce (int fd)
+{
+  struct octet_buffer otp;
+  struct octet_buffer nonce = {0, 0};
+  const unsigned int MIX_DATA_LEN = 20;
+
+  otp = get_otp_zone (fd);
+  unsigned int otp_len = otp.len;
+
+  if (otp.len > MIX_DATA_LEN && otp.ptr != NULL)
+    {
+      otp.len = MIX_DATA_LEN;
+      nonce = gen_nonce (fd, otp);
+      otp.len = otp_len;
+
+    }
+
+  free_octet_buffer (otp);
+
+  return nonce;
 }

@@ -84,7 +84,7 @@ int dispatch (const char *bus, const char *command, struct arguments *args);
  */
 void init_cli (struct arguments * args);
 
-#define NUM_CLI_COMMANDS 13
+#define NUM_CLI_COMMANDS 14
 
 /**
  * Gets random from the device
@@ -208,6 +208,16 @@ int cli_check_mac (int fd, struct arguments *args);
  * failure if a writable key slot is not chosen.
  */
 int cli_write_to_key_slot (int fd, struct arguments *args);
+
+/**
+ * Returns a nonce and loads the combined nonce value into tempkey.
+ *
+ * @param fd The open file descriptor
+ * @param args The arguments
+ *
+ * @return The appropriate exit code.
+ */
+int cli_get_nonce (int fd, struct arguments *args);
 
 bool is_expected_len (const char* arg, unsigned int len);
 bool is_hex_arg (const char* arg, unsigned int len);

@@ -72,11 +72,14 @@ static char doc[] =
   "                  the option -k.  If key slot is not specified, key slot\n"
   "                  zero is assumed.  NOTE: not all slots may be written and\n"
   "                  this command may result in an error.  Check the\n"
-  "                  documentation for which slots may be written."
+  "                  documentation for which slots may be written.\n"
   "read          --  Reads one of the sixteen key slots, specified by\n"
   "                  the option -k.  The default slot is 0.  Some slots can\n"
   "                  not be read, in which case this command will return an\n"
-  "                  error.  Otherwise it will return the 32 Byte value.\n";
+  "                  error.  Otherwise it will return the 32 Byte value.\n"
+  "nonce         --  Generates a nonce and loads the value inside the internal\n"
+  "                  tempkey register.  The value that will be return is the\n"
+  "                  32 byte random number, which constitutes part of the nonce\n";
 
 
 /* A description of the arguments we accept. */

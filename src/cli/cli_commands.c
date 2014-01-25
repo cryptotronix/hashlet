@@ -620,8 +620,14 @@ int cli_write_to_key_slot (int fd, struct arguments *args)
       if (NULL != key.ptr)
         {
           if (write32 (fd, DATA_ZONE,
-                       slot_to_addr (DATA_ZONE, args->key_slot), key))
-            result = HASHLET_COMMAND_SUCCESS;
+                       slot_to_addr (DATA_ZONE, args->key_slot), key,
+                       NULL))
+            {
+              CTX_LOG (DEBUG, "Write success");
+              result = HASHLET_COMMAND_SUCCESS;
+            }
+          else
+            fprintf (stderr, "%s\n" ,"Key slot can not be written.");
 
           free_octet_buffer (key);
         }

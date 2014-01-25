@@ -172,7 +172,7 @@ bool write_keys (int fd, struct key_container *keys,
     {
       const unsigned int WORD_OFFSET = 8;
       unsigned int addr = WORD_OFFSET * x;
-      status = write32 (fd, DATA_ZONE, addr, keys->keys[x]);
+      status = write32 (fd, DATA_ZONE, addr, keys->keys[x], NULL);
     }
 
   if (status)

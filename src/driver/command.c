@@ -31,6 +31,7 @@
 #include "command_adaptation.h"
 #include "log.h"
 #include "config.h"
+#include "../cli/hash.h"
 
 struct Command_ATSHA204 make_command ()
 {
@@ -952,7 +953,7 @@ struct octet_buffer gen_nonce (int fd, struct octet_buffer data)
 
   struct Command_ATSHA204 c = make_command ();
 
-  set_opcode (&c, COMMAND_RANDOM);
+  set_opcode (&c, COMMAND_NONCE);
   set_param1 (&c, param1);
   set_param2 (&c, param2);
   set_data (&c, data.ptr, data.len);
@@ -991,4 +992,244 @@ struct octet_buffer get_nonce (int fd)
   free_octet_buffer (otp);
 
   return nonce;
+}
+
+
+struct octet_buffer gen_temp_key_from_nonce (int fd, struct octet_buffer random,
+                                             const struct octet_buffer otp)
+{
+  assert (NULL != random.ptr && 32 == random.len);
+
+  struct octet_buffer result = {0,0};
+
+  const unsigned int MIX_DATA_LEN = 20;
+  const uint8_t OPCODE = 0x16;
+  const uint8_t MODE = 0;
+  const uint8_t PARAM2 = 0; /* only the LSB are used */
+
+  const unsigned int data_len = random.len + MIX_DATA_LEN +
+    sizeof (OPCODE) + sizeof (MODE) + sizeof (PARAM2);
+
+
+  if (otp.len > MIX_DATA_LEN && otp.ptr != NULL)
+    {
+      struct octet_buffer data_to_hash = make_buffer (data_len);
+
+      unsigned int offset = 0;
+
+      offset = copy_buffer (data_to_hash, offset, random);
+
+      offset = copy_to_buffer (data_to_hash, offset, otp.ptr, MIX_DATA_LEN);
+
+      data_to_hash.ptr[offset] = OPCODE;
+      offset += 1;
+
+      data_to_hash.ptr[offset] = MODE;
+      offset += 1;
+
+      data_to_hash.ptr[offset] = PARAM2;
+      offset += 1;
+
+      assert (offset == data_len);
+
+
+      print_hex_string ("Nonce data to hash", data_to_hash.ptr,
+                        data_to_hash.len);
+
+
+      result = sha256_buffer (data_to_hash);
+
+      print_hex_string ("Nonce temp key", result.ptr,
+                        result.len);
+    }
+
+  return result;
+
+}
+
+struct octet_buffer gen_temp_key_from_digest (int fd,
+                                              struct octet_buffer prev_temp_key,
+                                              unsigned int slot,
+                                              struct octet_buffer key)
+{
+  assert (NULL != prev_temp_key.ptr && 32 == prev_temp_key.len);
+  assert (NULL != key.ptr && 32 == key.len);
+  assert (slot <= 15);
+
+  struct octet_buffer result = {0,0};
+
+  const uint8_t OPCODE = COMMAND_GEN_DIG;
+  const uint8_t PARAM1 = 0x02;
+  uint8_t PARAM2[2] = {0};
+  PARAM2[1] = slot;
+
+  const uint8_t sn8 = 0xEE;
+  const uint8_t sn0 = 0x01;
+  const uint8_t sn1 = 0x23;
+  const unsigned int ZERO_25 = 25;
+
+  unsigned int len = key.len + sizeof (OPCODE) + sizeof (PARAM1) +
+    sizeof (PARAM2) + sizeof (sn8) + sizeof (sn0) + sizeof (sn1) + ZERO_25 +
+    prev_temp_key.len;
+
+  struct octet_buffer data_to_hash = make_buffer (len);
+
+  unsigned int offset = 0;
+
+  offset = copy_buffer (data_to_hash, offset, key);
+
+  data_to_hash.ptr[offset] = OPCODE;
+  offset += 1;
+
+  data_to_hash.ptr[offset] = PARAM1;
+  offset += 1;
+
+  offset = copy_to_buffer (data_to_hash, offset, PARAM2, 2);
+
+  data_to_hash.ptr[offset] = sn8;
+  offset += 1;
+
+  data_to_hash.ptr[offset] = sn0;
+  offset += 1;
+
+  data_to_hash.ptr[offset] = sn1;
+  offset += 1;
+
+  struct octet_buffer zeros = make_buffer (ZERO_25);
+
+  offset = copy_buffer (data_to_hash, offset, zeros);
+
+  offset = copy_buffer (data_to_hash, offset, prev_temp_key);
+
+  assert (offset == len);
+
+  print_hex_string ("Temp Key data to hash", data_to_hash.ptr, data_to_hash.len);
+
+  result = sha256_buffer (data_to_hash);
+
+  print_hex_string ("Temp Key", result.ptr, result.len);
+
+  free_octet_buffer (zeros);
+
+  return result;
+
+
+
+
+
+}
+
+struct octet_buffer mac_write (const struct octet_buffer temp_key,
+                               uint8_t opcode,
+                               uint8_t param1, const uint8_t *param2,
+                               const struct octet_buffer data)
+{
+
+  assert (NULL != param2);
+  assert (NULL != temp_key.ptr && temp_key.len == 32);
+  assert (NULL != data.ptr && data.len == 32);
+
+  const uint8_t sn8 = 0xEE;
+  const uint8_t sn0 = 0x01;
+  const uint8_t sn1 = 0x23;
+  const unsigned int ZERO_25 = 25;
+
+  unsigned int len = temp_key.len + sizeof (opcode) + sizeof (param1) + 2 +
+    sizeof (sn8) + sizeof (sn0) + sizeof (sn1) + ZERO_25 + data.len;
+
+  struct octet_buffer data_to_hash = make_buffer (len);
+
+  unsigned int offset = 0;
+
+  offset = copy_buffer (data_to_hash, offset, temp_key);
+
+  data_to_hash.ptr[offset] = opcode;
+  offset += 1;
+
+  data_to_hash.ptr[offset] = param1;
+  offset += 1;
+
+  offset = copy_to_buffer (data_to_hash, offset, param2, 2);
+
+  data_to_hash.ptr[offset] = sn8;
+  offset += 1;
+
+  data_to_hash.ptr[offset] = sn0;
+  offset += 1;
+
+  data_to_hash.ptr[offset] = sn1;
+  offset += 1;
+
+  struct octet_buffer zeros = make_buffer (ZERO_25);
+
+  offset = copy_buffer (data_to_hash, offset, zeros);
+
+  offset = copy_buffer (data_to_hash, offset, data);
+
+  assert (offset == len);
+
+  print_hex_string ("Write mac data to hash", data_to_hash.ptr,
+                    data_to_hash.len);
+
+  struct octet_buffer mac = sha256_buffer (data_to_hash);
+
+  free_octet_buffer (zeros);
+
+  print_hex_string ("Mac'd write", mac.ptr, mac.len);
+
+  return mac;
+
+}
+
+bool gen_digest (int fd, enum DATA_ZONE zone, unsigned int slot)
+{
+
+  bool result = false;
+
+  if (DATA_ZONE == zone)
+    assert (slot <= 15);
+  else
+    assert (slot <= 1);
+
+  uint8_t param2[2] = {0};
+  uint8_t param1 = 0;
+
+  switch (zone)
+    {
+    case DATA_ZONE:
+      param1 = 0x02;
+      break;
+    case OTP_ZONE:
+      param1 = 0x01;
+      break;
+    case CONFIG_ZONE:
+      param1 = 0x00;
+      break;
+    default:
+      assert (false);
+    }
+
+  param2[1] = slot;
+
+
+  uint8_t rsp = 0;
+
+  struct Command_ATSHA204 c = make_command ();
+
+  set_opcode (&c, COMMAND_GEN_DIG);
+  set_param1 (&c, param1);
+  set_param2 (&c, param2);
+  set_data (&c, NULL, 0);
+  set_execution_time (&c, 0, GEN_DIG_AVG_EXEC);
+
+  if (RSP_SUCCESS == process_command (fd, &c, &rsp, sizeof (rsp)))
+    {
+      result = true;
+    }
+
+  return result;
+
+
+
+
 }

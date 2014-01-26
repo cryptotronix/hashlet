@@ -233,4 +233,25 @@ bool is_hex_arg (const char* arg, unsigned int len);
  * an error.
  */
 int cli_read_key_slot (int fd, struct arguments *args);
+
+struct encrypted_write
+{
+  struct octet_buffer mac;
+  struct octet_buffer encrypted;
+};
+
+/**
+ * Prepares the data for an encrypted write operation.
+ *
+ * @param fd The open file descriptor.
+ * @param data The plain text data to write.
+ * @param slot The destination slot.
+ * @param ascii_key The current key value in the slot.
+ *
+ * @return The malloc'd encrypted write structure containing both the
+ * mac and the encrypted data.
+ */
+struct encrypted_write cli_mac_write (int fd, struct octet_buffer data,
+                                      unsigned int slot, const char *ascii_key);
+
 #endif /* CLI_COMMANDS_H */

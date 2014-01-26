@@ -392,4 +392,64 @@ bool check_mac (int fd, struct check_mac_encoding cm,
  */
 uint8_t slot_to_addr (enum DATA_ZONE zone, uint8_t slot);
 
+/**
+ * Calculate the temp key register from the random number produced by
+ * the nonce command.
+ *
+ * @param fd the open file descriptor
+ * @param random The random number returned from get_nonce.
+ * @param otp The otp zone contents
+ *
+ * @return A 32 byte digest matching temp_key or a empty octet buffer.
+ */
+struct octet_buffer gen_temp_key_from_nonce (int fd,
+                                             const struct octet_buffer random,
+                                             const struct octet_buffer otp);
+
+/**
+ * Calculates the mac needed for a key slot write.
+ *
+ * @param temp_key The internal value of temp_key.
+ * @param opcode The opcdoe
+ * @param param1 param1
+ * @param param2 param2
+ * @param data the data to be written
+ *
+ * @return the mac over the above data
+ */
+struct octet_buffer mac_write (const struct octet_buffer temp_key,
+                               uint8_t opcode,
+                               uint8_t param1, const uint8_t *param2,
+                               const struct octet_buffer data);
+
+/**
+ * Generates an internal digest in the chip, into temp key.  Temp key
+ * must be valid (via an nonce command or something similar) prior to
+ * running this command.
+ *
+ * @param fd The open file descriptor.
+ * @param zone If Config or OTP, then slot can be either 0 or 1 to
+ * indicate either the first or second 256 bit zone.  If Data zone,
+ * then slot refers to the data slot.
+ * @param slot The slot according to the zone
+ *
+ * @return true if the digest is set in temp_key
+ */
+bool gen_digest (int fd, enum DATA_ZONE zone, unsigned int slot);
+
+/**
+ * Calculates the value of temp key from the gendig command.
+ *
+ * @param fd The open file descriptor
+ * @param prev_temp_key The current value of tempkey prior to running
+ * the gendig command
+ * @param slot the slot to use
+ * @param key the key (data) in the corresponding slot
+ *
+ * @return the calculated value of temp key
+ */
+struct octet_buffer gen_temp_key_from_digest (int fd,
+                                              const struct octet_buffer prev_temp_key,
+                                              unsigned int slot,
+                                              const struct octet_buffer key);
 #endif /* COMMAND_H */

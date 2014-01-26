@@ -603,6 +603,56 @@ int cli_check_mac (int fd, struct arguments *args)
 
 }
 
+struct encrypted_write cli_mac_write (int fd, struct octet_buffer data,
+                                   unsigned int slot, const char *ascii_key)
+{
+
+  struct encrypted_write result;
+
+  struct octet_buffer key = {0,0};
+
+  if (NULL != ascii_key)
+    {
+      key = ascii_hex_2_bin (ascii_key, 64);
+    }
+  else
+    {
+      CTX_LOG (DEBUG, "Previous key value not provided");
+      return result;
+    }
+
+
+  struct octet_buffer otp = get_otp_zone (fd);
+
+  struct octet_buffer nonce = get_nonce (fd);
+
+  struct octet_buffer nonce_temp_key = gen_temp_key_from_nonce (fd, nonce, otp);
+
+  assert (gen_digest (fd, DATA_ZONE, slot));
+
+  struct octet_buffer temp_key = gen_temp_key_from_digest (fd, nonce_temp_key,
+                                                           slot, key);
+
+  result.encrypted = xor_buffers (temp_key, key);
+
+  const uint8_t opcode = 0x12;
+  const uint8_t param1 = 0b10000010;
+  uint8_t param2[2] = {0};
+
+  param2[0] = slot_to_addr (DATA_ZONE, slot);
+  result.mac = mac_write (temp_key, opcode, param1, param2, data);
+
+  print_hex_string ("OTP", otp.ptr, otp.len);
+
+  free_octet_buffer (otp);
+  free_octet_buffer (nonce);
+  free_octet_buffer (nonce_temp_key);
+  free_octet_buffer (temp_key);
+
+  return result;
+
+}
+
 int cli_write_to_key_slot (int fd, struct arguments *args)
 {
 
@@ -621,15 +671,25 @@ int cli_write_to_key_slot (int fd, struct arguments *args)
       key = ascii_hex_2_bin (args->write_data, ASCII_KEY_SIZE);
       if (NULL != key.ptr)
         {
-          if (write32 (fd, DATA_ZONE,
-                       slot_to_addr (DATA_ZONE, args->key_slot), key,
-                       NULL))
+          struct encrypted_write write = cli_mac_write (fd, key, args->key_slot,
+                                                        args->challenge);
+
+          if (write.mac.ptr != NULL && write.encrypted.ptr != NULL &&
+              write32 (fd, DATA_ZONE,
+                       slot_to_addr (DATA_ZONE, args->key_slot),
+                       write.encrypted,
+                       &write.mac))
             {
               CTX_LOG (DEBUG, "Write success");
               result = HASHLET_COMMAND_SUCCESS;
             }
           else
             fprintf (stderr, "%s\n" ,"Key slot can not be written.");
+
+          if (NULL != write.mac.ptr)
+            free_octet_buffer (write.mac);
+          if (NULL != write.encrypted.ptr)
+            free_octet_buffer (write.encrypted);
 
           free_octet_buffer (key);
         }

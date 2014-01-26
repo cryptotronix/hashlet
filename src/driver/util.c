@@ -169,3 +169,50 @@ bool is_all_hex (const char* hex, unsigned int max_len)
 
   return ishex;
 }
+
+unsigned int copy_buffer (struct octet_buffer dst, unsigned int offset,
+                          const struct octet_buffer src)
+{
+
+  return copy_to_buffer (dst, offset, src.ptr, src.len);
+
+}
+
+
+unsigned int copy_to_buffer (struct octet_buffer buf, unsigned int offset,
+                             const uint8_t *p, unsigned int len)
+{
+
+  assert (NULL != p);
+  assert (buf.ptr != NULL);
+
+  assert (len <= buf.len + offset);
+
+  memcpy (buf.ptr + offset, p, len);
+
+  return offset + len;
+
+}
+
+
+struct octet_buffer xor_buffers (const struct octet_buffer lhs,
+                                 const struct octet_buffer rhs)
+{
+
+  assert (NULL != lhs.ptr && NULL != rhs.ptr);
+  assert (0 != rhs.len && lhs.len == rhs.len);
+
+  int x = 0;
+
+  struct octet_buffer buf = make_buffer (rhs.len);
+
+  for (x=0; x < rhs.len; x++)
+    {
+      buf.ptr[x] = lhs.ptr[x] ^ rhs.ptr[x];
+    }
+
+  print_hex_string ("XOR", buf.ptr, buf.len);
+
+  return buf;
+
+}

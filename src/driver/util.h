@@ -110,4 +110,41 @@ struct octet_buffer ascii_hex_2_bin (const char* hex, unsigned int max_len);
  */
 bool is_all_hex (const char* hex, unsigned int max_len);
 
+/**
+ * Copies the src octet buffer into the dst at the given offset.  This
+ * will assert to make sure the buffer's don't overflow.
+ *
+ * @param dst The destination buffer.
+ * @param offset The offset in the destination buffer.
+ * @param src The source buffer.
+ *
+ * @return The updated offset (offset + dst.len)
+ */
+
+unsigned int copy_buffer (struct octet_buffer dst, unsigned int offset,
+                          const struct octet_buffer src);
+
+/**
+ * Copies p of length len into the octet buffer.
+ *
+ * @param buf The destination buffer
+ * @param offset The offset in the destination buffer.
+ * @param p the pointer to the data
+ * @param len The lengh of the data
+ *
+ * @return The updated offset (offset + len)
+ */
+unsigned int copy_to_buffer (struct octet_buffer buf, unsigned int offset,
+                             const uint8_t *p, unsigned int len);
+
+/**
+ * XOR two buffers.  The buffers must not be zero and must be the same size.
+ *
+ * @param lhs The left buffer.
+ * @param rhs The right buffer.
+ *
+ * @return A malloc'd buffer that is the XOR of the two.
+ */
+struct octet_buffer xor_buffers (const struct octet_buffer lhs,
+                                 const struct octet_buffer rhs);
 #endif /* UTIL_H */

@@ -126,6 +126,7 @@ void init_cli (struct arguments *args)
   static const struct command write_key_cmd = {"write", cli_write_to_key_slot };
   static const struct command read_key_cmd = {"read", cli_read_key_slot };
   static const struct command nonce_cmd = {"nonce", cli_get_nonce };
+  static const struct command hmac_cmd = {"hmac", cli_hmac};
 
   int x = 0;
 
@@ -143,6 +144,7 @@ void init_cli (struct arguments *args)
   x = add_command (write_key_cmd, x);
   x = add_command (read_key_cmd, x);
   x = add_command (nonce_cmd, x);
+  x = add_command (hmac_cmd, x);
 
   set_defaults (args);
 
@@ -744,4 +746,97 @@ int cli_get_nonce (int fd, struct arguments *args)
 
   return result;
 
+}
+
+int cli_hmac (int fd, struct arguments *args)
+{
+  int result = HASHLET_COMMAND_FAIL;
+  assert (NULL != args);
+
+
+  FILE *f = NULL;
+
+  /* The HMAC command requires a valid temp key.  If a file was
+  specified, hash the file (to reduce it to 32 bytes), load that value
+  into tempkey then proceed with the HMAC command.
+
+  If no file was specified, load a random nonce, then proceed with
+  HMAC */
+
+  bool temp_key_loaded = false;
+
+  struct hmac_mode_encoding hm = {0};
+
+  /* Set the defaults for HMAC */
+
+  hm.use_serial_num = true;
+  hm.use_otp_0_10 = true;
+
+  if (NULL == args->input_file)
+    {
+      /* Load a random nonce into tempkey */
+      struct octet_buffer otp = get_otp_zone (fd);
+
+      struct octet_buffer random = get_nonce (fd);
+
+      struct octet_buffer temp_key =
+        gen_temp_key_from_nonce (fd, random, otp);
+
+      print_hex_string ("Temp key for HMAC", temp_key.ptr, temp_key.len);
+
+      free_octet_buffer (otp);
+      free_octet_buffer (random);
+      free_octet_buffer (temp_key);
+      temp_key_loaded = true;
+
+      /* Set the source flag to "random" = 0 */
+      hm.temp_key_source = true;
+    }
+  else if ((f = get_input_file (args)) != NULL)
+    {
+      /* Digest the file then proceed */
+      struct octet_buffer file_digest = {0,0};
+      file_digest = sha256 (f);
+      close_input_file (args, f);
+
+      print_hex_string ("HMAC file digest", file_digest.ptr, file_digest.len);
+
+      if (NULL != file_digest.ptr)
+        {
+          if (load_nonce (fd, file_digest))
+            temp_key_loaded = true;
+        }
+
+      /* Set the source flag to "input" = 1 */
+      hm.temp_key_source = true;
+    }
+  else
+    {
+      /* temp_key_loaded already false */
+    }
+
+  /* temp key should now be valid */
+  if (temp_key_loaded)
+    {
+      struct octet_buffer rsp = perform_hmac (fd, hm, args->key_slot);
+
+      if (NULL != rsp.ptr)
+        {
+          output_hex (stdout, rsp);
+          free_octet_buffer (rsp);
+          result = HASHLET_COMMAND_SUCCESS;
+        }
+      else
+        {
+          fprintf (stderr, "%s\n", "HMAC Command failed.");
+        }
+
+
+    }
+  else
+    {
+      /* do nothing */
+    }
+
+  return result;
 }

@@ -61,6 +61,7 @@ void set_defaults (struct arguments *args)
   args->write_data = NULL;
 
   args->address = 0b1100100;
+  args->bus = "/dev/i2c-1";
 
 
 }
@@ -115,13 +116,13 @@ void init_cli (struct arguments *args)
   static const struct command state_cmd = {"state", cli_get_state };
   static const struct command config_cmd = {"get-config", cli_get_config_zone };
   static const struct command otp_cmd = {"get-otp", cli_get_otp_zone };
-  static const struct command hash_cmd = {"hash", cli_hash };
+  static const struct command hash_cmd = {CMD_HASH, cli_hash };
   static const struct command personalize_cmd = {"personalize",
                                                  cli_personalize };
   static const struct command mac_cmd = {"mac", cli_mac };
   static const struct command print_keys_cmd = {"print-keys", cli_print_keys };
   static const struct command offline_verify_cmd =
-    {"offline-verify", cli_verify_mac };
+    {CMD_OFFLINE_VERIFY, cli_verify_mac };
   static const struct command check_mac_cmd = {"check-mac", cli_check_mac };
   static const struct command write_key_cmd = {"write", cli_write_to_key_slot };
   static const struct command read_key_cmd = {"read", cli_read_key_slot };
@@ -148,11 +149,35 @@ void init_cli (struct arguments *args)
 
 }
 
-int dispatch (const char *bus, const char *command, struct arguments *args)
+bool cmp_commands (const char *input, const char *cmd)
+{
+  if (0 == strncmp (cmd, input, strlen (cmd)))
+    return true;
+  else
+    return false;
+}
+
+bool offline_cmd (const char *command)
+{
+  bool is_offline = false;
+
+  if (NULL == command)
+    assert (false);
+  else if (cmp_commands (command, CMD_OFFLINE_VERIFY))
+    is_offline = true;
+  else if (cmp_commands (command, CMD_HASH))
+    is_offline = true;
+
+  return is_offline;
+}
+
+int dispatch (const char *command, struct arguments *args)
 {
 
   int result = HASHLET_COMMAND_FAIL;
   struct command * cmd = NULL;
+
+  const char *bus = args->bus;
 
   if ((cmd = find_command (command)) == NULL)
     printf ("%s", "Command not found.  Try --help\n");
@@ -162,7 +187,7 @@ int dispatch (const char *bus, const char *command, struct arguments *args)
 
       int fd = 0;
 
-      if (0 == strcmp ("/dev/null", bus))
+      if (offline_cmd (command))
         {
           result = (*cmd->func)(fd, args);
         }

@@ -83,7 +83,7 @@ static char doc[] =
 
 
 /* A description of the arguments we accept. */
-static char args_doc[] = "i2c_bus command";
+static char args_doc[] = "command";
 
 #define OPT_UPDATE_SEED 300
 
@@ -94,6 +94,7 @@ static struct argp_option options[] = {
   {"verbose",  'v', 0,      0,  "Produce verbose output" },
   {"quiet",    'q', 0,      0,  "Don't produce any output" },
   {"silent",   's', 0,      OPTION_ALIAS },
+  {"bus",      'b', "BUS",  0,  "I2C bus: defaults to /dev/i2c-1"},
   {"address",  'a', "ADDRESS",      0,  "i2c address for the device (in hex)"},
   {"file",     'f', "FILE",         0,  "Read from FILE vs. stdin"},
   { 0, 0, 0, 0, "Random Command Options:", 2},
@@ -137,6 +138,9 @@ parse_opt (int key, char *arg, struct argp_state *state)
         }
       else
         CTX_LOG (INFO, "Address not recognized, using default");
+    case 'b':
+      arguments->bus = arg;
+      break;
     case 'q': case 's':
       arguments->silent = 1;
       break;
@@ -228,6 +232,6 @@ int main (int argc, char **argv)
      be reflected in arguments. */
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
-  exit (dispatch (arguments.args[0], arguments.args[1], &arguments));
+  exit (dispatch (arguments.args[0], &arguments));
 
 }

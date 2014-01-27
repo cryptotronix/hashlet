@@ -31,13 +31,25 @@ The Hashlet is 3.3V and 5V friendly. The headers are setup for BeagleBone but on
 Running
 ---
 
-see `./hashlet --help` for full details.
+see `./hashlet --help` for full details.  The default I2C bus is `/dev/i2c-1` and this can be changed with the `-b` option.
+
+Root
+---
+
+You'll need to run as root to access `/dev/i2c*` initially.  You can change this by adding your user to the `i2c` group with:
+
+`sudo usermod -aG i2c user`
+
+Or:
+
+`sudo chmod o+rw /dev/i2c*`
+
 
 Currently supported commands:
 
 ### state
 ```bash
-./hashlet /dev/i2c-1 state
+./hashlet state
 Factory
 ```
 
@@ -45,20 +57,20 @@ This is the first command you should run and verify it's in the Factory state.  
 
 ### personalize
 ```bash
-./hashlet /dev/i2c-1 personalize
+./hashlet personalize
 ```
 
 This is the second command you should run.  On success it will not output anything.  Random keys are loaded into the device and saved to `~/.hashlet` as a backup.  Don't lose that file.
 
 ### random
 ```bash
-./hashlet /dev/i2c-1 random
+./hashlet random
 62F95589AC76855A8F9204C9C6B8B85F06E6477D17C3888266AEE8E1CBD65319
 ```
 
 ### mac
 ```bash
-./hashlet /dev/i2c-1 mac --file test.txt
+./hashlet mac --file test.txt
 mac       : C3466ABB8640B50938B260E17D86489D0EBB3F9C8009024683CB225FFFD3B4E4
 challenge : 9F0751C90770E6B40E34BA8E06EFE453FAA46B5FB26925FFBD664FAF951D000A
 meta      : 08000000000000000000000000
@@ -72,14 +84,14 @@ On success it will output three parameters:
 
 ### check-mac
 ```bash
-./hashlet /dev/i2c-1 check-mac -r C3466ABB8640B50938B260E17D86489D0EBB3F9C8009024683CB225FFFD3B4E4 -c 9F0751C90770E6B40E34BA8E06EFE453FAA46B5FB26925FFBD664FAF951D000A -m 08000000000000000000000000
+./hashlet check-mac -r C3466ABB8640B50938B260E17D86489D0EBB3F9C8009024683CB225FFFD3B4E4 -c 9F0751C90770E6B40E34BA8E06EFE453FAA46B5FB26925FFBD664FAF951D000A -m 08000000000000000000000000
 ```
 
 Checks the MAC that was produced by the Hashlet.  On success, it will with an exit value of 0.
 
 ### offline-verify
 ```bash
-./hashlet /dev/null offline-verify -c 322B3FFC3BE16B4CC5B445F8E666D0BA5C5E676D00FABD2308AD51243FA0B067 -r FB19B1C63161B6C34CA9D291D1CD16F98247BBA9A298775F795161BEB95BB6EF
+./hashlet offline-verify -c 322B3FFC3BE16B4CC5B445F8E666D0BA5C5E676D00FABD2308AD51243FA0B067 -r FB19B1C63161B6C34CA9D291D1CD16F98247BBA9A298775F795161BEB95BB6EF
 ```
 
 On success, it will output an exit code of 0, otherwise it will fail.  The point of this command is that a remote server can verify the MAC from the Hashlet without a device.  The keys are written to `~/.hashlet` upon personalization and if this file is store on the server, it can verify a MAC.
@@ -92,7 +104,7 @@ The workflow goes like this:
 
 ### serial-num
 ```bash
-./hashlet /dev/i2c-1 serial-num
+./hashlet serial-num
 0123XXXXXXXXXXXXEE
 ```
 X's indicate the unique serial number.

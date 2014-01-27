@@ -37,7 +37,7 @@ if [[ ! -e $BUS ]]; then
     exit 0
 fi
 
-STATE=$($EXE $BUS state)
+STATE=$($EXE state)
 
 #These tests are for a personalized hashlet
 
@@ -49,7 +49,7 @@ else
     exit 1
 fi
 
-RSP=$($EXE $BUS random)
+RSP=$($EXE random)
 
 if [ "${#RSP}" == 64 ]; then
     echo Random length passed
@@ -58,10 +58,10 @@ else
     exit 1
 fi
 
-RSP=$($EXE /dev/i2c-4 random)
+RSP=$($EXE -b /dev/i2c-4 random)
 test_exit 1 "Wrong Bus"
 
-RSP=$($EXE $BUS mac -f ChangeLog)
+RSP=$($EXE mac -f ChangeLog)
 
 echo $RSP
 
@@ -69,21 +69,21 @@ mac=$(echo $RSP| awk '{print $3}')
 chal=$(echo $RSP| awk '{print $6}')
 meta=$(echo $RSP| awk '{print $9}')
 
-RSP=$($EXE $BUS check-mac -r $mac -c $chal -m $meta)
+RSP=$($EXE check-mac -r $mac -c $chal -m $meta)
 
 test_exit $SUCCESS check-mac
 
 
 # Negative testing on MAC command
-RSP=$($EXE $BUS check-mac -r $mac -c $chal)
+RSP=$($EXE check-mac -r $mac -c $chal)
 
 test_exit $FAIL check-mac
-RSP=$($EXE $BUS check-mac -r $mac  -m $meta)
+RSP=$($EXE check-mac -r $mac  -m $meta)
 test_exit $FAIL check-mac
-RSP=$($EXE $BUS check-mac -m $meta -c $chal)
+RSP=$($EXE check-mac -m $meta -c $chal)
 test_exit $FAIL check-mac
 
-RSP=$($EXE $BUS serial-num)
+RSP=$($EXE serial-num)
 test_exit $SUCCESS serial-num
 
 if [ "${#RSP}" == 18 ]; then
@@ -94,6 +94,6 @@ else
 fi
 
 #test offline feature
-RSP=$($EXE /dev/null offline-verify -r $mac -c $chal)
+RSP=$($EXE offline-verify -r $mac -c $chal)
 
 test_exit $SUCCESS offline-verify

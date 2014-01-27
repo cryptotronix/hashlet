@@ -27,12 +27,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define NUM_ARGS 2
+#define NUM_ARGS 1
 
 #define HASHLET_COMMAND_FAIL EXIT_FAILURE
 #define HASHLET_COMMAND_SUCCESS EXIT_SUCCESS
 
-
+/* Command list */
+#define CMD_OFFLINE_VERIFY "offline-verify"
+#define CMD_HASH "hash"
 
 /* Used by main to communicate with parse_opt. */
 struct arguments
@@ -50,6 +52,7 @@ struct arguments
   const char *challenge_rsp;
   const char *meta;
   const char *write_data;
+  const char *bus;
 };
 
 struct command
@@ -70,13 +73,12 @@ void set_defaults (struct arguments *args);
 /**
  * Dispatch the command for execution.
  *
- * @param bus The i2c bus
  * @param command The command to execute
  * @param args The argument structure
  *
  * @return The exit value of the program
  */
-int dispatch (const char *bus, const char *command, struct arguments *args);
+int dispatch (const char *command, struct arguments *args);
 
 /**
  * Initialize command line options.  This must be called.

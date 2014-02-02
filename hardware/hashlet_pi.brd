@@ -179,6 +179,7 @@ Hashlet Pi</text>
 <wire x1="10.16" y1="3.175" x2="10.16" y2="3.81" width="0.254" layer="22"/>
 <text x="1.27" y="6.985" size="0.8128" layer="22" font="vector" ratio="15" rot="SMR0" align="bottom-right">Cryptotronix
 Hashlet Pi</text>
+<text x="47.625" y="-7.62" size="1.778" layer="21">Cryptotronix</text>
 </plain>
 <libraries>
 <library name="cryptotronix">

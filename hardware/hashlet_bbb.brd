@@ -178,6 +178,7 @@
 <text x="10.16" y="25.4" size="1.016" layer="22" font="vector" ratio="15" rot="SMR90" align="center-right">SCL</text>
 <text x="13.97" y="5.08" size="1.778" layer="21" font="vector" ratio="15" rot="R90">Cryptotronix</text>
 <text x="7.62" y="13.97" size="1.778" layer="21" font="vector" ratio="15" rot="R90" align="center">Hashlet</text>
+<text x="47.625" y="-7.62" size="1.778" layer="21">Cryptotronix</text>
 </plain>
 <libraries>
 <library name="cryptotronix">

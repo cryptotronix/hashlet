@@ -211,6 +211,8 @@ enum STATUS_RESPONSE read_and_validate (int fd, uint8_t *buf, unsigned int len)
       print_hex_string ("Status RSP", tmp, tmp[0]);
       status = get_status_response (tmp);
       CTX_LOG (DEBUG, status_to_string (status));
+      CTX_LOG (DEBUG, "Copying %d into buf", tmp[1]);
+      memcpy (buf, &tmp[1], 1);
   }
 
   /* Second case: We received the expected message length */

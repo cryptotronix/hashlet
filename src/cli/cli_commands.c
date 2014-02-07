@@ -44,7 +44,7 @@ void set_defaults (struct arguments *args)
   args->verbose = 0;
   args->output_file = "-";
   args->input_file = NULL;
-  args->update_seed = false;
+  args->update_seed = true;
   args->key_slot = 0;
 
   /* Default MAC mode */

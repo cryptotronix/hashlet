@@ -1,4 +1,98 @@
-2013-12-30  Josh Datko  <jbd@cryptotronix.com>
+2014-02-07  Joshua Datko  <jbd@cryptotronix.com>
+
+	Updates github documeation.
+
+	libgcrypt is now required to build.
+
+	Updates test to use a file that is available during make distcheck.
+
+	Updated NEWS for release.
+
+2014-02-07  Demo User  <jbd@cryptotronix.com>
+
+	Updates test to use -b option.
+
+	Bumps version.
+
+	Adds check-mac documentation.  Resolves #22.
+
+	Always updates the seed.  Resolves issue #30.
+
+	Copies the response byte.  Resolves issue #24.
+
+	Adds key import feature.  Resolves #15.
+	Allows the option to clone the data zone from another device if the file
+	is specified with the -f option.  Currently the configuration zone is
+	not cloned, just the data zone.
+
+	Adds clarifying error message to failed bus for issue #20.
+
+2014-02-02  Josh Datko  <jbdatko@gmail.com>
+
+	Fixes doc errors and adds section on personalization.  Resolves #26.
+	Fixes minors typos.
+	Adds email to GPG key and short fingerprint.
+	Adds warning to personalization command.
+
+2014-02-02  Josh Datko  <jbd@cryptotronix.com>
+
+	Adds attribution to board files
+
+	adds board and sch files
+
+2014-01-31  Josh Datko  <jbdatko@gmail.com>
+
+	Adds factory tests
+
+2014-01-27  Josh Datko  <jbdatko@gmail.com>
+
+	Defaults bus to /dev/i2c-1
+	Removes the required positional argument for the bus and defaults to
+	/dev/i2c-1.  Resolves issue #20.
+
+2014-01-26  Josh Datko  <jbdatko@gmail.com>
+
+	adds initial (broken) encrypted write feature.
+
+	Adds copy buffer utilities and xor utility.
+
+2014-01-25  Josh Datko  <jbdatko@gmail.com>
+
+	Adds nonce command.  Resolves issue #17.
+
+	Updates signature for new write32.
+
+	Changes key slots 6 and 7 to required encrypted writes.
+
+	Fixes always succeeding write bug.  Adds mac to write32.
+
+	Adds debug around write.
+
+2014-01-21  Josh Datko  <jbdatko@gmail.com>
+
+	Adds read and write commands to data slots.
+
+2014-01-21  Josh Datko  <jbd@cryptotronix.com>
+
+	Adds partial changes to write only key feature.
+
+2014-01-04  Josh Datko  <jbdatko@gmail.com>
+
+	Changes menu chapter to hashlet from sample.
+
+2014-01-03  Josh Datko  <jbdatko@gmail.com>
+
+	Adds schematic to figures.
+
+	Updates initial documentation for version 0.1.0.
+
+	Adds chapter on installing the hardware and software.
+
+	Adds support info and link to releases.
+
+2013-12-31  Josh Datko  <jbd@cryptotronix.com>
+
+	Updates ChangeLog for version 0.1.0
 
 	Updates INSTALL from recent version of autotools.
 
@@ -32,8 +126,6 @@
 
 	Moves scripts into autogen.sh
 
-2013-12-29  Josh Datko  <jbdatko@gmail.com>
-
 	Fixing url... again.
 
 	Fixes image url.
@@ -58,6 +150,8 @@
 
 	Moves all configuration zone operations to config_zone.c and config_zone.h
 
+2013-12-29  Josh Datko  <jbdatko@gmail.com>
+
 	Adds node info to prevent compile error.
 
 	Adds initial documentation.
@@ -72,7 +166,7 @@
 
 	Adds script to pull 20,000 bits of random data for rng-tool tests.
 
-2013-12-27  Josh Datko  <jbdatko@gmail.com>
+2013-12-28  Josh Datko  <jbdatko@gmail.com>
 
 	Adds check-mac from command line.  Closes #11.
 
@@ -85,12 +179,14 @@
 	Fixes order of status packet checking for issue #13.
 	Needs verification test.
 
+2013-12-27  Josh Datko  <jbdatko@gmail.com>
+
 	Adds offline-verify command.
 	Adds the ability to verify a MAC produced on a Hashlet, without the
 	hardware.  This is useful when a remote server wants to verify the MAC,
 	but doesn't have an attached hashlet.
 
-2013-12-26  Josh Datko  <jbd@cryptotronix.com>
+2013-12-27  Josh Datko  <jbd@cryptotronix.com>
 
 	Adds parsing feature for key files.
 	Adds parsing feature for generated and stored key_slot_files.  Uses the
@@ -102,7 +198,7 @@
 	The parser will be eventually needed in order to verify a MAC or HMAC on
 	a system that does not have a Hashlet (i.e. a remote server).
 
-2013-12-26  Josh Datko  <jbdatko@gmail.com>
+2013-12-27  Josh Datko  <jbdatko@gmail.com>
 
 	Adds command for retrieving the OPT zone.
 	Now supports retrieving otp zone via "get-otp" from the CLI.
@@ -122,8 +218,6 @@
 	Added the MAC command to take in an arbitrary length file.  This depends on libgcrypt to guarantee a 32 byte available.  Another way to do this is to not directly depend on an external hash implementation, but to take in 32 bytes directly.  I think it's easier for the user to not have to pipe an external command first.
 	If libgcrypt is not available, this feature will be not be enabled.
 
-2013-12-25  Josh Datko  <jbdatko@gmail.com>
-
 	Added initial unit tests for #14.
 
 2013-12-24  Josh Datko  <jbd@cryptotronix.com>
@@ -134,9 +228,9 @@
 
 	Added placeholders for mac and check-mac for issue #11.
 
-2013-12-23  Josh Datko  <jbdatko@gmail.com>
-
 	Personalization appears complete.  Need to test with a fresh device. Resloves #4.
+
+2013-12-23  Josh Datko  <jbdatko@gmail.com>
 
 	Implemented get-state command.
 
@@ -156,11 +250,11 @@
 
 	Fixed formatting.
 
-2013-12-22  Josh Datko  <jbdatko@gmail.com>
-
 	Added check for gnutls version for issue #9
 
 	Formatting changes only.
+
+2013-12-22  Josh Datko  <jbdatko@gmail.com>
 
 	Moved tests to their own directory.
 
@@ -168,19 +262,19 @@
 
 	Formatting changes.
 
-2013-12-21  Josh Datko  <jbdatko@gmail.com>
-
 	Added macro for repeated code.  Added get-config zone command.
+
+2013-12-21  Josh Datko  <jbdatko@gmail.com>
 
 	Added cflags.  I'm still not sure why these are carried forward from configure.ac
 
 	Refactored directory structure
 
-2013-12-20  Josh Datko  <jbdatko@gmail.com>
-
 	Left blank TODO for slot-config.
 
 	Added parse slot config.
+
+2013-12-20  Josh Datko  <jbdatko@gmail.com>
 
 	Added check on malloc.
 
@@ -192,8 +286,6 @@
 
 	Credited the bithacks site for the reverse function.  This code snippet is listed in the public domain on that site.
 
-2013-12-19  Josh Datko  <jbdatko@gmail.com>
-
 	Added command for getting the serial number.
 
 	Markdown tweaks.
@@ -204,6 +296,8 @@
 
 	Added read32
 
+2013-12-19  Josh Datko  <jbdatko@gmail.com>
+
 	Made the hash test a bit more modular.
 
 	Removed hard coded values in mac and write32.  Fixed Get_serial_num.
@@ -212,13 +306,13 @@
 
 	Added basic write32 and writing keys to data section.
 
-2013-12-18  Josh Datko  <jbdatko@gmail.com>
-
 	Refactored get_random
 
 	Added write32 and set OTP zone.
 
 	Added guards around setting the config zone.
+
+2013-12-18  Josh Datko  <jbdatko@gmail.com>
 
 	Corrected bit masks.
 
@@ -227,8 +321,6 @@
 	Trying to bend Automake to my will and failing.
 
 	Add .deps directory
-
-2013-12-17  Josh Datko  <jbdatko@gmail.com>
 
 	Fixed compile warnings.
 
@@ -301,4 +393,3 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Hashlet.  If not, see <http://www.gnu.org/licenses/>.

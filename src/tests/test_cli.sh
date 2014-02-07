@@ -16,6 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Hashlet.  If not, see <http://www.gnu.org/licenses/>.
 
+arch=uname -a
+
+if [[ "${arch}" != *armv7 ]]; then
+    echo Not building on arm, exiting
+    exit 0
+fi
+
 test_exit(){
     if [[ $? == $1 ]]; then
         echo $2 passed

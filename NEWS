@@ -2,6 +2,27 @@ Hashlet NEWS -- history of user-visible changes
 
 Copyright (C) 2013 Cryptotronix, LLC.
 
+* Hashlet 1.0.0 - Beta Release - February 2014
+
+This is the second Beta release of this software.
+
+** Major Changes from Previous version
+
+- CLI changed to default to /dev/i2c-1.  Other interfaces can be
+  specified with the -b option.
+
+** New Features
+
+- Adds import key feature: personalize -f file.txt, which will allow
+  cloning of keys from one device to the next.
+
+- Changes the key slot configuration such that 2 keys can be updated
+  with the new write command, with valid mac (currently not working).
+
+- 2 Keys are designated as read / write for user data or storage.
+
+- Adds write command to write 32 bytes to supported key slots.
+
 * Hashlet 0.1.0 - Beta Release - December 2013
 
 The initial release of Hashlet is concerned a Beta release.

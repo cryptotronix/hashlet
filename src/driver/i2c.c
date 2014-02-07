@@ -41,7 +41,7 @@ int i2c_setup(const char* bus)
 
   if ((fd = open(bus, O_RDWR)) < 0)
     {
-      perror("Failed to open I2C bus\n");
+      perror("Failed to open I2C bus; Try specifying the bus with -b\n");
       exit(1);
     }
 

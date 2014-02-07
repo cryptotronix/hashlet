@@ -6,7 +6,7 @@ Cryptotronix Hashlet
 Status
 ---
 
-As of 2 January, 2014 this software is in Beta.  The Beta release is version 0.1.0 and is available on the [release](http://download.savannah.gnu.org/releases/hashlet/) page.  It has been tested on a BeagleBone Black, rev 5AC running Debian Wheezy.  It *should* work with Angstrom, but has not been tested.  Beta testers are welcome!
+As of 7 February, 2014 the 1.0.0 release is considered a second Beta release and is available on the [release](http://download.savannah.gnu.org/releases/hashlet/) page.  It has been tested on a BeagleBone Black, rev 5AC running Debian Wheezy and a Raspberry Pi running Raspian.  It *should* work with Angstrom, but has not been tested.  Beta testers are welcome!
 
 Building
 ----
@@ -19,19 +19,22 @@ If you pull this repo (i.e. a non-release), you will need the following dependen
 - texinfo (for the documentation if you so desire)
 
 The run time dependencies are:
-- libgcrypt (Hashlet will compile without it, but you will lose features)
+- libgcrypt
 
 Hardware
 ---
 
-In early January, you will be able to buy the hardware from [Cryptotronix](http://cryptotronix.com/products/hashlet/).  We are an open hardware company, so see the `hardware` folder for the design to make this yourself.
+The hardware is available from [Cryptotronix](http://cryptotronix.com/products/hashlet/).  We are an open hardware company, so see the `hardware` folder for the design to make this yourself.
 
-The Hashlet is 3.3V and 5V friendly. The headers are setup for BeagleBone but one can use it on a Raspberry Pi as well.
+BOM
+---
+
+The chip on the Hashlet is Atmel's ATSHA204.
 
 Running
 ---
 
-see `./hashlet --help` for full details.  The default I2C bus is `/dev/i2c-1` and this can be changed with the `-b` option.
+see `./hashlet --help` for full details.  The default I2C bus is `/dev/i2c-1` and this can be changed with the `-b` option.  On some BBB, the bus is `/dev/i2c-2`.  See this [blog post](http://datko.net/2013/11/03/bbb_i2c/) for further details on BBB I2C.
 
 Root
 ---
@@ -60,7 +63,13 @@ This is the first command you should run and verify it's in the Factory state.  
 ./hashlet personalize
 ```
 
-This is the second command you should run.  On success it will not output anything.  Random keys are loaded into the device and saved to `~/.hashlet` as a backup.  Don't lose that file.
+With the key import feature:
+
+```bash
+./hashlet personalize -f keys.txt
+```
+
+This is the second command you should run.  On success it will not output anything.  Random keys are loaded into the device and saved to `~/.hashlet` as a backup.  Don't lose that file.  Keys from another hashlet can be imported with the `-f` option, where the file is not also named `~/.hashlet`.
 
 ### random
 ```bash

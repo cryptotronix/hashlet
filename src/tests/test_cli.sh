@@ -57,10 +57,11 @@ else
     exit 1
 fi
 
-RSP=$($EXE -b /dev/i2c-4 random)
+RSP=$($EXE random -b /dev/i2c-4)
 test_exit 1 "Wrong Bus"
 
-RSP=$($EXE mac -f ChangeLog -b $BUS)
+RSP=$($EXE mac -f config.log -b $BUS)
+test_exit 0 "Mac command"
 
 echo $RSP
 

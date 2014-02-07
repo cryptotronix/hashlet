@@ -30,11 +30,11 @@ have_gcrypt=no
 AC_SEARCH_LIBS([gcry_md_open], [gcrypt], [have_gcrypt=yes])
 
 if test "x${have_gcrypt}" = xno; then
-   AC_MSG_WARN([
+   AC_MSG_ERROR([
    ----------------------------------------------------
    Unable to find gcrypt.h on this system.
-   Some features are disabled, install libgcrypt and
-   rebuild to enable them.
+   libgcrypt (libgcrypt11-dev) is required, please install
+   and rebuild.
    ----------------------------------------------------])
 fi
 

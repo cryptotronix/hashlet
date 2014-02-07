@@ -19,8 +19,14 @@
 
 result=""
 
+BUS=/dev/i2c-1
+
+if [[ ! -e $BUS ]]; then
+    BUS=/dev/i2c-2
+fi
+
 while [[ ${#result} -lt 5000 ]]; do
-    random=$(./hashlet /dev/i2c-1 random)
+    random=$(./hashlet random -b $BUS)
     result=$result$random
 done
 

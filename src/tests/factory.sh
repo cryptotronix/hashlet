@@ -32,10 +32,16 @@ FAIL=1
 BUS=/dev/i2c-1
 EXE=./hashlet
 
+BUS=/dev/i2c-1
+
+if [[ ! -e $BUS ]]; then
+    BUS=/dev/i2c-2
+fi
+
 echo "Testing I2C"
 for i in {0..20..1}
 do
-    STATE=$($EXE state)
+    STATE=$($EXE state -b $BUS)
     if [[ $STATE != "Factory" ]]; then
         echo State check failed
         exit 1
@@ -45,7 +51,7 @@ done
 echo "I2C Test passed"
 
 #Verify it's factory random data
-RSP=$($EXE random)
+RSP=$($EXE random -b $BUS)
 
 FAC_RANDOM=FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000
 
@@ -56,7 +62,7 @@ fi
 
 echo "Random test passed"
 
-SERIAL=$($EXE serial-num)
+SERIAL=$($EXE serial-num -b $BUS)
 
 echo $SERIAL | sed 's/.\{2\}/& /g'
 echo "Ready to ship!"

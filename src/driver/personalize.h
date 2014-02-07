@@ -86,5 +86,14 @@ bool write_keys (int fd, struct key_container *keys,
  */
 const char* get_key_store_name ();
 
+/**
+ * Imports the key container from a key file.
+ *
+ * @param filename The file name top open.
+ *
+ * @return The malloc'd key container, with malloc'd keys or NULL if
+ * there is an error.
+ */
+struct key_container* import_keys (const char* filename);
 
 #endif

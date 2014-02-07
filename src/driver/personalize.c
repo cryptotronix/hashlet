@@ -33,6 +33,7 @@
 #include "crc.h"
 #include <pwd.h>
 #include "config_zone.h"
+#include "../parser/hashlet_parser.h"
 
 unsigned int get_max_keys ()
 {
@@ -125,6 +126,41 @@ void free_key_container (struct key_container *keys)
 
 }
 
+
+struct key_container* import_keys (const char* filename)
+{
+  assert (NULL != filename);
+  FILE *fp;
+  const char *key = NULL;
+  struct key_container* keys = NULL;
+  const unsigned int SIZE_OF_256_BITS_ASCII = 64;
+  bool key_valid = true;
+
+  fp = fopen (filename, "r");
+
+  if (NULL != fp && 0 == parse_file (fp))
+    {
+      keys = make_key_container();
+      int x = 0;
+
+      for (x = 0; x < MAX_NUM_DATA_SLOTS && key_valid; x++)
+        {
+          key = get_key (x);
+          keys->keys[x] = ascii_hex_2_bin (key, SIZE_OF_256_BITS_ASCII);
+          if (NULL == keys->keys[x].ptr || 32 != keys->keys[x].len)
+            key_valid = false;
+        }
+
+      free_parsed_keys ();
+    }
+
+
+  fclose (fp);
+
+  return keys;
+
+}
+
 bool write_keys (int fd, struct key_container *keys,
                  struct octet_buffer *data_zone)
 {
@@ -159,7 +195,7 @@ bool write_keys (int fd, struct key_container *keys,
             }
           else
             {
-              keys->keys[x] = get_random (fd, false);
+              keys->keys[x] = get_random (fd, true);
             }
         }
 

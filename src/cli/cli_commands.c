@@ -407,8 +407,15 @@ int cli_personalize (int fd, struct arguments *args)
   int result = HASHLET_COMMAND_FAIL;
   assert (NULL != args);
 
-  if (STATE_PERSONALIZED != personalize (fd, STATE_PERSONALIZED, NULL))
-    printf ("Failure\n");
+  struct key_container* keys = NULL;
+
+  if (NULL != args->input_file)
+    keys = import_keys (args->input_file);
+
+  if (NULL != args->input_file && NULL == keys)
+    fprintf (stderr, "Failed to import key file\n");
+  else if (STATE_PERSONALIZED != personalize (fd, STATE_PERSONALIZED, keys))
+    fprintf (stderr, "Failure\n");
   else
     result = HASHLET_COMMAND_SUCCESS;
 

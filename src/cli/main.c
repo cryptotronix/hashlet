@@ -48,6 +48,7 @@ static char doc[] =
   "                  Hashlet.  It will load your keys and save them to\n"
   "                  ~/.hashlet as a backup\n"
   "random        --  Retrieves 32 bytes of random data from the device.\n"
+  "random-bytes  --  Retrieves X bytes of random data from the device.\n"
   "serial-num    --  Retrieves the device's serial number.\n"
 #if HAVE_GCRYPT_H
   "mac           --  Calculates a SHA-256 digest of your input data and then\n"
@@ -98,6 +99,7 @@ static struct argp_option options[] = {
   {"quiet",    'q', 0,      0,  "Don't produce any output" },
   {"silent",   's', 0,      OPTION_ALIAS },
   {"bus",      'b', "BUS",  0,  "I2C bus: defaults to /dev/i2c-1"},
+  {"Bytes",      'B', "Bytes",  0,  "number of bytes to return"},
   {"address",  'a', "ADDRESS",      0,  "i2c address for the device (in hex)"},
   {"file",     'f', "FILE",         0,  "Read from FILE vs. stdin"},
   { 0, 0, 0, 0, "Key related command options:", 3},
@@ -140,6 +142,9 @@ parse_opt (int key, char *arg, struct argp_state *state)
         CTX_LOG (INFO, "Address not recognized, using default");
     case 'b':
       arguments->bus = arg;
+      break;
+    case 'B':
+      arguments->bytes = atoi(arg);
       break;
     case 'q': case 's':
       arguments->silent = 1;

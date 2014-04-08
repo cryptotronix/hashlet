@@ -88,6 +88,16 @@ enum STATUS_RESPONSE get_status_response (const uint8_t *rsp);
  * @return A malloc'ed buffer with random data.
  */
 struct octet_buffer get_random (int fd, bool update_seed);
+/**
+ * Get X bytes of random data from the device
+ *
+ * @param fd The open file descriptor
+ * @param update_seed True updates the seed.  Do this sparingly.
+ * @param bytes number of bytes to return
+ *
+ * @return A malloc'ed buffer with random data.
+ */
+struct octet_buffer get_random_bytes(int fd, bool update_seed, int bytes);
 
 /**
  * Read four bytes from the device.

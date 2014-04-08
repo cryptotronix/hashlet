@@ -216,7 +216,7 @@ struct octet_buffer get_random_bytes (int fd, bool update_seed, int bytes)
   bytes -= 32;
   if (bytes < 0) bytes = 0;
 
-  random = malloc_wipe (bytes + RANDOM_RSP_LENGTH*2);
+  random = malloc_wipe (orig_bytes + RANDOM_RSP_LENGTH);
 
   set_opcode (&c, COMMAND_RANDOM);
   set_param1 (&c, param1);

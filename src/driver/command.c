@@ -40,7 +40,6 @@ struct Command_ATSHA204 make_command ()
                                 .data = NULL, .data_len = 0};
 
   return c;
-
 }
 
 void set_param1 (struct Command_ATSHA204 *c, uint8_t param1)
@@ -48,7 +47,6 @@ void set_param1 (struct Command_ATSHA204 *c, uint8_t param1)
   assert (NULL != c);
 
   c->param1 = param1;
-
 }
 
 void set_param2 (struct Command_ATSHA204 *c, uint8_t *param2)
@@ -58,7 +56,6 @@ void set_param2 (struct Command_ATSHA204 *c, uint8_t *param2)
 
   c->param2[0] = param2[0];
   c->param2[1] = param2[1];
-
 }
 
 void set_opcode (struct Command_ATSHA204 *c, uint8_t opcode)
@@ -66,7 +63,6 @@ void set_opcode (struct Command_ATSHA204 *c, uint8_t opcode)
   assert (NULL != c);
 
   c->opcode = opcode;
-
 }
 
 void set_data (struct Command_ATSHA204 *c, uint8_t *data, uint8_t len)
@@ -74,19 +70,17 @@ void set_data (struct Command_ATSHA204 *c, uint8_t *data, uint8_t len)
   assert (NULL != c);
 
   if (NULL == data || 0 == len)
-    {
+  {
       c->data = NULL;
       c->data_len = 0;
-    }
+  }
   else
-    {
+  {
       c->data = malloc (len);
       assert (NULL != c->data);
       memcpy (c->data, data, len);
       c->data_len = len;
-    }
-
-
+  }
 }
 
 void set_execution_time (struct Command_ATSHA204 *c, unsigned int sec,
@@ -95,7 +89,6 @@ void set_execution_time (struct Command_ATSHA204 *c, unsigned int sec,
   assert (NULL != c);
   c->exec_time.tv_sec = sec;
   c->exec_time.tv_nsec = nano;
-
 }
 
 void print_command (struct Command_ATSHA204 *c)
@@ -110,7 +103,7 @@ void print_command (struct Command_ATSHA204 *c)
   CTX_LOG (DEBUG, "OpCode: 0x%02X", c->opcode);
 
   switch (c->opcode)
-    {
+  {
     case COMMAND_DERIVE_KEY:
       opcode = "Command Derive Key";
       break;
@@ -152,7 +145,7 @@ void print_command (struct Command_ATSHA204 *c)
       break;
     default:
       assert (false);
-    }
+  }
   CTX_LOG (DEBUG,"%s", opcode);
   CTX_LOG (DEBUG,"param1: 0x%02X", c->param1);
   CTX_LOG (DEBUG,"param2: 0x%02X 0x%02X", c->param2[0], c->param2[1]);
@@ -161,9 +154,6 @@ void print_command (struct Command_ATSHA204 *c)
   CTX_LOG (DEBUG,"CRC: 0x%02X 0x%02X", c->checksum[0], c->checksum[1]);
   CTX_LOG (DEBUG,"Wait time: %ld seconds %lu nanoseconds",
           c->exec_time.tv_sec, c->exec_time.tv_nsec);
-
-
-
 }
 
 enum STATUS_RESPONSE get_status_response(const uint8_t *rsp)
@@ -172,11 +162,12 @@ enum STATUS_RESPONSE get_status_response(const uint8_t *rsp)
   const unsigned int OFFSET_TO_RSP = 1;
   const unsigned int STATUS_LENGTH = 4;
 
-  if (!is_crc_16_valid (rsp, STATUS_LENGTH - CRC_16_LEN, rsp + OFFSET_TO_CRC))
-    {
+  if (!is_crc_16_valid \
+	  (rsp, STATUS_LENGTH - CRC_16_LEN, rsp + OFFSET_TO_CRC))
+  {
       CTX_LOG (DEBUG, "CRC Fail in status response");
       return RSP_COMM_ERROR;
-    }
+  }
 
   return *(rsp + OFFSET_TO_RSP);
 
@@ -201,17 +192,14 @@ struct octet_buffer get_random (int fd, bool update_seed)
   set_execution_time (&c, 0, RANDOM_AVG_EXEC);
 
   if (RSP_SUCCESS == process_command (fd, &c, random, RANDOM_RSP_LENGTH))
-    {
+  {
       buf.ptr = random;
       buf.len = RANDOM_RSP_LENGTH;
-    }
+  }
   else
     CTX_LOG (DEBUG, "Random command failed");
 
   return buf;
-
-
-
 }
 
 struct octet_buffer get_random_bytes (int fd, bool update_seed, int bytes)
@@ -236,17 +224,19 @@ struct octet_buffer get_random_bytes (int fd, bool update_seed, int bytes)
   set_execution_time (&c, 0, RANDOM_AVG_EXEC);
 
 
-  while (RSP_SUCCESS == (rc = process_command (fd, &c, &random[i], RANDOM_RSP_LENGTH))) {
-   i += RANDOM_RSP_LENGTH;
-   if( i - (RANDOM_RSP_LENGTH-1) > bytes) break;
-   update_seed = 0; /* No need to keep updating */
-   }
+  while (RSP_SUCCESS == \
+		 (rc = process_command (fd, &c, &random[i], RANDOM_RSP_LENGTH)))
+  {
+      i += RANDOM_RSP_LENGTH;
+      if( i - (RANDOM_RSP_LENGTH-1) > bytes) break;
+      update_seed = 0; /* No need to keep updating */
+  }
 
   if (rc == RSP_SUCCESS)
-    {
+  {
       buf.ptr = random;
       buf.len = bytes + RANDOM_RSP_LENGTH;
-    }
+  }
   else
     CTX_LOG (DEBUG, "Random bytes command failed");
 
@@ -260,7 +250,7 @@ uint8_t set_zone_bits (enum DATA_ZONE zone)
   uint8_t z;
 
   switch (zone)
-    {
+  {
     case CONFIG_ZONE:
       z = 0b00000000;
       break;
@@ -272,11 +262,9 @@ uint8_t set_zone_bits (enum DATA_ZONE zone)
       break;
     default:
       assert (false);
-
-    }
+  }
 
   return z;
-
 }
 
 bool read4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t *buf)
@@ -299,18 +287,17 @@ bool read4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t *buf)
   set_execution_time (&c, 0, 1000000);
 
 
-  if (RSP_SUCCESS == process_command (fd, &c, (uint8_t *)buf, sizeof (uint32_t)))
-    {
+  if (RSP_SUCCESS == \
+	  process_command (fd, &c, (uint8_t *)buf, sizeof (uint32_t)))
+  {
       result = true;
-    }
+  }
 
   return result;
 }
 
 struct octet_buffer read32 (int fd, enum DATA_ZONE zone, uint8_t addr)
 {
-
-
   uint8_t param2[2] = {0};
   uint8_t param1 = set_zone_bits (zone);
 
@@ -332,11 +319,11 @@ struct octet_buffer read32 (int fd, enum DATA_ZONE zone, uint8_t addr)
   struct octet_buffer buf = make_buffer (LENGTH_OF_RESPONSE);
 
   if (RSP_SUCCESS != process_command (fd, &c, buf.ptr, LENGTH_OF_RESPONSE))
-    {
+  {
       free_wipe (buf.ptr, LENGTH_OF_RESPONSE);
       buf.ptr = NULL;
       buf.len = 0;
-    }
+  }
 
   return buf;
 }
@@ -345,7 +332,6 @@ struct octet_buffer read32 (int fd, enum DATA_ZONE zone, uint8_t addr)
 
 bool write4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf)
 {
-
   bool status = false;
   uint8_t recv = 0;
   uint8_t param2[2] = {0};
@@ -363,20 +349,16 @@ bool write4 (int fd, enum DATA_ZONE zone, uint8_t addr, uint32_t buf)
 
   if (RSP_SUCCESS == process_command (fd, &c, &recv, sizeof (recv)))
   {
-    if (0 == (int) recv)
-      status = true;
+      if (0 == (int) recv)
+          status = true;
   }
 
   return status;
-
-
-
 }
 
 bool write32 (int fd, enum DATA_ZONE zone, uint8_t addr,
               struct octet_buffer buf, struct octet_buffer *mac)
 {
-
   assert (NULL != buf.ptr);
   assert (32 == buf.len);
   if (NULL != mac)
@@ -424,9 +406,6 @@ bool write32 (int fd, enum DATA_ZONE zone, uint8_t addr,
   free_octet_buffer (data);
 
   return status;
-
-
-
 }
 
 uint8_t serialize_check_mac_mode (struct check_mac_encoding c)
@@ -449,8 +428,6 @@ uint8_t serialize_check_mac_mode (struct check_mac_encoding c)
     result |= TEMP_KEY_MASK;
 
   return result;
-
-
 }
 
 uint8_t serialize_mac_mode (struct mac_mode_encoding m)
@@ -492,7 +469,6 @@ struct mac_response perform_mac (int fd, struct mac_mode_encoding m,
   uint8_t param1 = serialize_mac_mode (m);
   uint8_t param2[2] = {0};
 
-
   assert (data_slot <= MAX_NUM_DATA_SLOTS);
   if (!m.use_second_32_temp_key)
     assert (NULL != challenge.ptr && recv_len == challenge.len);
@@ -513,27 +489,26 @@ struct mac_response perform_mac (int fd, struct mac_mode_encoding m,
   set_execution_time (&c, 0, MAC_AVG_EXEC);
 
   if (RSP_SUCCESS == process_command (fd, &c, rsp.mac.ptr, recv_len))
-    {
+  {
       /* Perform a check mac to ensure we have the data correct */
       rsp.meta = get_check_mac_meta_data (fd, m, data_slot);
       struct check_mac_encoding cm = {0};
 
-      rsp.status = check_mac (fd,  cm, data_slot, challenge, rsp.mac, rsp.meta);
+      rsp.status = \
+		check_mac (fd,  cm, data_slot, challenge, rsp.mac, rsp.meta);
 
-    }
+  }
   else
-    {
+  {
       free_octet_buffer (rsp.mac);
 
-    }
+  }
 
   return rsp;
-
-
-
 }
 
-struct octet_buffer get_check_mac_meta_data (int fd, struct mac_mode_encoding m,
+struct octet_buffer get_check_mac_meta_data (int fd,
+											 struct mac_mode_encoding m,
                                              unsigned int data_slot)
 {
   const unsigned int DLEN = 13;
@@ -549,42 +524,43 @@ struct octet_buffer get_check_mac_meta_data (int fd, struct mac_mode_encoding m,
   struct octet_buffer serial = get_serial_num (fd);
 
   if (!m.use_serial_num)
-    {
+  {
       unsigned int len = serial.len;
       free_octet_buffer (serial);
       serial = make_buffer (len);
-    }
+  }
 
   if (!m.use_otp_0_10)
-    {
+  {
       unsigned int len = otp_zone.len;
       free_octet_buffer (otp_zone);
       otp_zone = make_buffer (len);
-    }
+  }
 
   const unsigned int OTP_8_10_LEN = 3;
   const unsigned int SN_4_7_LEN = 4;
   const unsigned int SN_2_3_LEN = 2;
 
   if (NULL != otp_zone.ptr && NULL != serial.ptr)
-    {
+  {
       memcpy (p, &otp_zone.ptr[8], OTP_8_10_LEN);
       p += OTP_8_10_LEN;
       memcpy (p, &serial.ptr[4], SN_4_7_LEN);
       p += SN_4_7_LEN;
       memcpy (p, &serial.ptr[2], SN_2_3_LEN);
-    }
+  }
   else
-    {
+  {
       free_octet_buffer (result);
       result.ptr = NULL;
-    }
+  }
 
   free_octet_buffer (otp_zone);
   free_octet_buffer (serial);
 
   return result;
 }
+
 bool check_mac (int fd, struct check_mac_encoding cm,
                 unsigned int data_slot,
                 struct octet_buffer challenge,
@@ -613,7 +589,8 @@ bool check_mac (int fd, struct check_mac_encoding cm,
   data = make_buffer(DATA_LEN);
 
   memcpy (data.ptr, challenge.ptr, CHALLENGE_SIZE);
-  memcpy (data.ptr + CHALLENGE_SIZE, challenge_response.ptr, CHALLENGE_SIZE);
+  memcpy (data.ptr + CHALLENGE_SIZE,
+		  challenge_response.ptr, CHALLENGE_SIZE);
   memcpy (data.ptr + CHALLENGE_SIZE * 2, other_data.ptr, OTHER_DATA_SIZE);
 
 
@@ -631,16 +608,12 @@ bool check_mac (int fd, struct check_mac_encoding cm,
   set_execution_time (&c, 0, CHECK_MAC_AVG_EXEC);
 
   if (RSP_SUCCESS == process_command (fd, &c, &response, sizeof(response)))
-    {
+  {
       if (0 == response)
         result = true;
-    }
-
+  }
 
   return result;
-
-
-
 }
 
 
@@ -656,7 +629,7 @@ bool is_locked (int fd, enum DATA_ZONE zone)
   unsigned int offset = 0;
 
   switch (zone)
-    {
+  {
     case CONFIG_ZONE:
       offset = CONFIG_ZONE_OFFSET;
       break;
@@ -666,17 +639,16 @@ bool is_locked (int fd, enum DATA_ZONE zone)
       break;
     default:
       assert (false);
-
-    }
+  }
 
   if (read4 (fd, CONFIG_ZONE, config_addr, &buf))
-    {
+  {
       ptr = ptr + offset;
       if (UNLOCKED == *ptr)
         result = false;
       else
         result = true;
-    }
+  }
 
   return result;
 }
@@ -704,11 +676,11 @@ struct octet_buffer get_config_zone (fd)
   unsigned int word = 0;
 
   while (word < NUM_OF_WORDS)
-    {
+  {
       addr = word * 4;
       read4 (fd, CONFIG_ZONE, word, (uint32_t*)(write_loc+addr));
       word++;
-    }
+  }
 
   return buf;
 }
@@ -726,31 +698,29 @@ struct octet_buffer get_otp_zone (fd)
     int x = 0;
 
     for (x=0; x < 2; x++ )
-      {
+    {
         int addr = x * SECOND_WORD;
         int offset = x * SIZE_OF_READ;
 
         half = read32 (fd, OTP_ZONE, addr);
         if (NULL != half.ptr)
-          {
+        {
             memcpy (buf.ptr + offset, half.ptr, SIZE_OF_READ);
             free_octet_buffer (half);
-          }
+        }
         else
-          {
+        {
             free_octet_buffer (buf);
             buf.ptr = NULL;
             return buf;
-          }
-
-      }
+        }
+    }
 
     return buf;
 }
 
 bool lock (int fd, enum DATA_ZONE zone, uint16_t crc)
 {
-
   uint8_t param1 = 0;
   uint8_t param2[2];
   uint8_t response;
@@ -765,7 +735,7 @@ bool lock (int fd, enum DATA_ZONE zone, uint16_t crc)
   const uint8_t DATA_MASK = 1;
 
   switch (zone)
-    {
+  {
     case CONFIG_ZONE:
       param1 |= CONFIG_MASK;
       break;
@@ -775,7 +745,7 @@ bool lock (int fd, enum DATA_ZONE zone, uint16_t crc)
       break;
     default:
       assert (false);
-    }
+  }
 
   struct Command_ATSHA204 c = make_command ();
 
@@ -786,17 +756,17 @@ bool lock (int fd, enum DATA_ZONE zone, uint16_t crc)
   set_execution_time (&c, 0, LOCK_AVG_EXEC);
 
   if (RSP_SUCCESS == process_command (fd, &c, &response, sizeof (response)))
-    {
+  {
       if (0 == response)
-        {
+      {
           result = true;
           CTX_LOG (DEBUG, "Lock Successful");
-        }
+      }
       else
-        {
+      {
           CTX_LOG (DEBUG, "Lock Failed");
-        }
-    }
+      }
+  }
 
 
   return result;
@@ -815,8 +785,6 @@ bool is_otp_read_only_mode (int fd)
   const unsigned int OTP_READ_ONLY_MODE = 0xAA;
 
   return OTP_READ_ONLY_MODE == byte[OFFSET_TO_OTP_MODE] ? true : false;
-
-
 }
 
 
@@ -874,12 +842,12 @@ bool set_otp_zone (int fd, struct octet_buffer *otp_zone)
   /* Lastly, copy the OTP zone into one contiguous buffer.
      Ironically, the OTP can't be read while unlocked. */
   if (success)
-    {
+  {
       otp_zone->len = SIZE_OF_WRITE * 2;
       otp_zone->ptr = malloc_wipe (otp_zone->len);
       memcpy (otp_zone->ptr, part1, SIZE_OF_WRITE);
       memcpy (otp_zone->ptr + SIZE_OF_WRITE, part2, SIZE_OF_WRITE);
-    }
+  }
   return success;
 }
 
@@ -938,28 +906,27 @@ enum DEVICE_STATE get_device_state (int fd)
 
 uint8_t slot_to_addr (enum DATA_ZONE zone, uint8_t slot)
 {
-    switch (zone)
-      {
-      case DATA_ZONE:
-        assert (0 <= slot && slot <= 15);
-        break;
+  switch (zone)
+  {
+    case DATA_ZONE:
+      assert (0 <= slot && slot <= 15);
+      break;
 
-      case OTP_ZONE:
-        assert (0 == slot || 1 == slot);
-        break;
+    case OTP_ZONE:
+      assert (0 == slot || 1 == slot);
+      break;
 
-      case CONFIG_ZONE:
-        assert (0 <= slot && slot <= 2);
-        break;
+    case CONFIG_ZONE:
+      assert (0 <= slot && slot <= 2);
+      break;
 
-      default:
-        assert (false);
-      }
+    default:
+      assert (false);
+  }
 
-    slot <<= 3;
+  slot <<= 3;
 
-    return slot;
-
+  return slot;
 }
 
 struct octet_buffer gen_nonce (int fd, struct octet_buffer data)
@@ -976,19 +943,19 @@ struct octet_buffer gen_nonce (int fd, struct octet_buffer data)
   unsigned int rsp_len = 0;
 
   if (EXTERNAL_INPUT_LEN == data.len)
-    {
+  {
       const unsigned int PASS_THROUGH_MODE = 3;
       const unsigned int RSP_LENGTH = 1;
       param1 = PASS_THROUGH_MODE;
       rsp_len = RSP_LENGTH;
-    }
+  }
   else
-    {
+  {
       const unsigned int COMBINE_AND_UPDATE_SEED = 0;
       const unsigned int RSP_LENGTH = 32;
       param1 = COMBINE_AND_UPDATE_SEED;
       rsp_len = RSP_LENGTH;
-    }
+  }
 
   struct octet_buffer buf = make_buffer (rsp_len);
 
@@ -1001,16 +968,13 @@ struct octet_buffer gen_nonce (int fd, struct octet_buffer data)
   set_execution_time (&c, 0, NONCE_AVG_EXEC);
 
   if (RSP_SUCCESS != process_command (fd, &c, buf.ptr, buf.len))
-    {
+  {
       CTX_LOG (DEBUG, "Nonce command failed");
       free_octet_buffer (buf);
       buf.ptr = NULL;
-    }
+  }
 
   return buf;
-
-
-
 }
 
 struct octet_buffer get_nonce (int fd)
@@ -1023,12 +987,12 @@ struct octet_buffer get_nonce (int fd)
   unsigned int otp_len = otp.len;
 
   if (otp.len > MIX_DATA_LEN && otp.ptr != NULL)
-    {
+  {
       otp.len = MIX_DATA_LEN;
       nonce = gen_nonce (fd, otp);
       otp.len = otp_len;
 
-    }
+  }
 
   free_octet_buffer (otp);
 
@@ -1036,7 +1000,8 @@ struct octet_buffer get_nonce (int fd)
 }
 
 
-struct octet_buffer gen_temp_key_from_nonce (int fd, struct octet_buffer random,
+struct octet_buffer gen_temp_key_from_nonce (int fd,
+											 struct octet_buffer random,
                                              const struct octet_buffer otp)
 {
   assert (NULL != random.ptr && 32 == random.len);
@@ -1053,7 +1018,7 @@ struct octet_buffer gen_temp_key_from_nonce (int fd, struct octet_buffer random,
 
 
   if (otp.len > MIX_DATA_LEN && otp.ptr != NULL)
-    {
+  {
       struct octet_buffer data_to_hash = make_buffer (data_len);
 
       unsigned int offset = 0;
@@ -1082,10 +1047,9 @@ struct octet_buffer gen_temp_key_from_nonce (int fd, struct octet_buffer random,
 
       print_hex_string ("Nonce temp key", result.ptr,
                         result.len);
-    }
+  }
 
   return result;
-
 }
 
 struct octet_buffer gen_temp_key_from_digest (int fd,
@@ -1144,7 +1108,8 @@ struct octet_buffer gen_temp_key_from_digest (int fd,
 
   assert (offset == len);
 
-  print_hex_string ("Temp Key data to hash", data_to_hash.ptr, data_to_hash.len);
+  print_hex_string ("Temp Key data to hash",
+					data_to_hash.ptr, data_to_hash.len);
 
   result = sha256_buffer (data_to_hash);
 
@@ -1153,11 +1118,6 @@ struct octet_buffer gen_temp_key_from_digest (int fd,
   free_octet_buffer (zeros);
 
   return result;
-
-
-
-
-
 }
 
 struct octet_buffer mac_write (const struct octet_buffer temp_key,
@@ -1165,7 +1125,6 @@ struct octet_buffer mac_write (const struct octet_buffer temp_key,
                                uint8_t param1, const uint8_t *param2,
                                const struct octet_buffer data)
 {
-
   assert (NULL != param2);
   assert (NULL != temp_key.ptr && temp_key.len == 32);
   assert (NULL != data.ptr && data.len == 32);
@@ -1219,12 +1178,10 @@ struct octet_buffer mac_write (const struct octet_buffer temp_key,
   print_hex_string ("Mac'd write", mac.ptr, mac.len);
 
   return mac;
-
 }
 
 bool gen_digest (int fd, enum DATA_ZONE zone, unsigned int slot)
 {
-
   bool result = false;
 
   if (DATA_ZONE == zone)
@@ -1236,7 +1193,7 @@ bool gen_digest (int fd, enum DATA_ZONE zone, unsigned int slot)
   uint8_t param1 = 0;
 
   switch (zone)
-    {
+  {
     case DATA_ZONE:
       param1 = 0x02;
       break;
@@ -1248,7 +1205,7 @@ bool gen_digest (int fd, enum DATA_ZONE zone, unsigned int slot)
       break;
     default:
       assert (false);
-    }
+  }
 
   param2[1] = slot;
 
@@ -1264,13 +1221,9 @@ bool gen_digest (int fd, enum DATA_ZONE zone, unsigned int slot)
   set_execution_time (&c, 0, GEN_DIG_AVG_EXEC);
 
   if (RSP_SUCCESS == process_command (fd, &c, &rsp, sizeof (rsp)))
-    {
+  {
       result = true;
-    }
+  }
 
   return result;
-
-
-
-
 }

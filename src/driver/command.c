@@ -209,6 +209,7 @@ struct octet_buffer get_random_bytes (int fd, bool update_seed, int bytes)
   uint8_t param1 = update_seed ? 0 : 1;
   int i = 0;
   int rc = 0;
+  int orig_bytes = bytes;
   struct octet_buffer buf = {};
   struct Command_ATSHA204 c = make_command ();
 
@@ -235,7 +236,7 @@ struct octet_buffer get_random_bytes (int fd, bool update_seed, int bytes)
   if (rc == RSP_SUCCESS)
   {
       buf.ptr = random;
-      buf.len = bytes + RANDOM_RSP_LENGTH;
+	  buf.len = orig_bytes;
   }
   else
     CTX_LOG (DEBUG, "Random bytes command failed");

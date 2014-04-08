@@ -221,12 +221,13 @@ struct octet_buffer get_random_bytes (int fd, bool update_seed, int bytes)
   uint8_t param1 = update_seed ? 0 : 1;
   int i = 0;
   int rc = 0;
-
   struct octet_buffer buf = {};
-
-  random = malloc_wipe (bytes + RANDOM_RSP_LENGTH);
-
   struct Command_ATSHA204 c = make_command ();
+
+  bytes -= 32;
+  if (bytes < 0) bytes = 0;
+
+  random = malloc_wipe (bytes + RANDOM_RSP_LENGTH*2);
 
   set_opcode (&c, COMMAND_RANDOM);
   set_param1 (&c, param1);

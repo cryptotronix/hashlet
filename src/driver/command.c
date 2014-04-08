@@ -214,6 +214,46 @@ struct octet_buffer get_random (int fd, bool update_seed)
 
 }
 
+struct octet_buffer get_random_bytes (int fd, bool update_seed, int bytes)
+{
+  uint8_t *random = NULL;
+  uint8_t param2[2] = {0};
+  uint8_t param1 = update_seed ? 0 : 1;
+  int i = 0;
+  int rc = 0;
+
+  struct octet_buffer buf = {};
+
+  random = malloc_wipe (bytes + RANDOM_RSP_LENGTH);
+
+  struct Command_ATSHA204 c = make_command ();
+
+  set_opcode (&c, COMMAND_RANDOM);
+  set_param1 (&c, param1);
+  set_param2 (&c, param2);
+  set_data (&c, NULL, 0);
+  set_execution_time (&c, 0, RANDOM_AVG_EXEC);
+
+
+  while (RSP_SUCCESS == (rc = process_command (fd, &c, &random[i], RANDOM_RSP_LENGTH))) {
+   i += RANDOM_RSP_LENGTH;
+   if( i - (RANDOM_RSP_LENGTH-1) > bytes) break;
+   update_seed = 0; /* No need to keep updating */
+   }
+
+  if (rc == RSP_SUCCESS)
+    {
+      buf.ptr = random;
+      buf.len = bytes + RANDOM_RSP_LENGTH;
+    }
+  else
+    CTX_LOG (DEBUG, "Random bytes command failed");
+
+  return buf;
+
+
+}
+
 uint8_t set_zone_bits (enum DATA_ZONE zone)
 {
   uint8_t z;

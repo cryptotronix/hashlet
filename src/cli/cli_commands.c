@@ -287,7 +287,6 @@ int cli_random_bytes (int fd, struct arguments *args)
   int result = HASHLET_COMMAND_FAIL;
   assert (NULL != args);
 
-  printf("trying to get %d bytes\n", args->bytes);
   response = get_random_bytes (fd, args->update_seed, args->bytes);
   if (NULL != response.ptr)
     {

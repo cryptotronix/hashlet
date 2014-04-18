@@ -47,8 +47,8 @@ static char doc[] =
   "personalize   --  You should run this command first upon receiving your\n"
   "                  Hashlet.  It will load your keys and save them to\n"
   "                  ~/.hashlet as a backup\n"
-  "random        --  Retrieves 32 bytes of random data from the device.\n"
-  "random-bytes  --  Retrieves X bytes of random data from the device.\n"
+  "random        --  Retrieves X bytes of random data from the device, where\n"
+  "                  X is defaulted to 32 and can be specified with the -B flag.\n"
   "serial-num    --  Retrieves the device's serial number.\n"
 #if HAVE_GCRYPT_H
   "mac           --  Calculates a SHA-256 digest of your input data and then\n"

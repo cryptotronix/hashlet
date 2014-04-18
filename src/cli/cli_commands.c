@@ -46,7 +46,8 @@ void set_defaults (struct arguments *args)
   args->input_file = NULL;
   args->update_seed = true;
   args->key_slot = 0;
-  args->bytes = 32;
+  args->bytes = 32; /* The number of bytes returned in each random
+                       call */
 
   /* Default MAC mode */
   args->mac_mode.use_serial_num = false;
@@ -113,7 +114,6 @@ int add_command (const struct command cmd, int loc)
 void init_cli (struct arguments *args)
 {
   static const struct command random_cmd = {"random", cli_random };
-  static const struct command random_bytes_cmd = {"random-bytes", cli_random_bytes };
   static const struct command serial_cmd = {"serial-num", cli_get_serial_num };
   static const struct command state_cmd = {"state", cli_get_state };
   static const struct command config_cmd = {"get-config", cli_get_config_zone };
@@ -133,7 +133,6 @@ void init_cli (struct arguments *args)
   int x = 0;
 
   x = add_command (random_cmd, x);
-  x = add_command (random_bytes_cmd, x);
   x = add_command (serial_cmd, x);
   x = add_command (state_cmd, x);
   x = add_command (config_cmd, x);
@@ -263,24 +262,6 @@ bool is_hex_arg (const char* arg, unsigned int len)
 
 
 int cli_random (int fd, struct arguments *args)
-{
-
-  struct octet_buffer response;
-  int result = HASHLET_COMMAND_FAIL;
-  assert (NULL != args);
-
-  response = get_random (fd, args->update_seed);
-  if (NULL != response.ptr)
-    {
-      output_hex (stdout, response);
-      free_octet_buffer (response);
-      result = HASHLET_COMMAND_SUCCESS;
-    }
-
-  return result;
-}
-
-int cli_random_bytes (int fd, struct arguments *args)
 {
 
   struct octet_buffer response;

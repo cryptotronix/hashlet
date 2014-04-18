@@ -87,7 +87,7 @@ int dispatch (const char *command, struct arguments *args);
  */
 void init_cli (struct arguments * args);
 
-#define NUM_CLI_COMMANDS 15
+#define NUM_CLI_COMMANDS 14
 
 /**
  * Gets random from the device
@@ -99,15 +99,6 @@ void init_cli (struct arguments * args);
  */
 
 int cli_random (int fd, struct arguments *args);
-/**
- * Gets random from the device
- *
- * @param fd The open file descriptor
- * @param args The argument structure
- *
- * @return the exit code
- */
-int cli_random_bytes (int fd, struct arguments *args);
 
 /**
  * Retrieves the device's serial number

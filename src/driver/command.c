@@ -176,33 +176,7 @@ enum STATUS_RESPONSE get_status_response(const uint8_t *rsp)
 
 struct octet_buffer get_random (int fd, bool update_seed)
 {
-  uint8_t *random = NULL;
-  uint8_t param2[2] = {0};
-  uint8_t param1 = update_seed ? 0 : 1;
-  struct octet_buffer buf = {};
-
-  random = malloc_wipe (RANDOM_RSP_LENGTH);
-
-  struct Command_ATSHA204 c = make_command ();
-
-  set_opcode (&c, COMMAND_RANDOM);
-  set_param1 (&c, param1);
-  set_param2 (&c, param2);
-  set_data (&c, NULL, 0);
-  set_execution_time (&c, 0, RANDOM_AVG_EXEC);
-
-  if (RSP_SUCCESS == process_command (fd, &c, random, RANDOM_RSP_LENGTH))
-    {
-      buf.ptr = random;
-      buf.len = RANDOM_RSP_LENGTH;
-    }
-  else
-    {
-      free (random);
-      CTX_LOG (DEBUG, "Random command failed");
-    }
-
-  return buf;
+  return get_random_bytes (fd, update_seed, 32);
 }
 
 struct octet_buffer get_random_bytes (int fd, bool update_seed, int bytes)
@@ -242,7 +216,10 @@ struct octet_buffer get_random_bytes (int fd, bool update_seed, int bytes)
       buf.len = orig_bytes;
     }
   else
-    CTX_LOG (DEBUG, "Random bytes command failed");
+    {
+      free_wipe (random, orig_bytes + RANDOM_RSP_LENGTH);
+      CTX_LOG (DEBUG, "Random bytes command failed");
+    }
 
   return buf;
 

@@ -162,21 +162,21 @@ loaded and the device is not ready for cryptographic operation.
 
 Prior to running commands, you should add your user to the @code{i2c}
 group, otherwise you will need to run the commands as @samp{root}, which
-is not recommended.  The first command you should run to ensure that
-the device is working and is in the correct state is @kbd{hashlet
-/dev/i2c-1 state}.  The response to this command should be
-@code{Factory}.  If it's not, contact Cryptotronix
+is not recommended.  The first command you should run to ensure that the
+device is working and is in the correct state is @kbd{hashlet state}.
+The response to this command should be @code{Factory}.  If it's not,
+contact Cryptotronix
 support@footnote{@email{support@@cryptotronix.com}}.
 
-The next command one should run is @kbd{hashlet /dev/i2c-1
-personalize}.  This will configure the hashlet by populating the key
-slot configuration.  @xref{Key Slot Configuration}.  It will also fill
-in random keys in key slots 0-13 and test keys in 14-15.  The test keys
-should not be used for production use.  Upon successful personalization,
-a backup of all keys will be written to @file{~/.hashlet} in
-un-encrypted form.  The command will silently complete on success, but
-if you want to ensure that it completed succesfuly, you can verify the
-exit code is 0 with @kbd{echo $?}.
+The next command one should run is @kbd{hashlet personalize}.  This will
+configure the hashlet by populating the key slot configuration.
+@xref{Key Slot Configuration}.  It will also fill in random keys in key
+slots 0-13 and test keys in 14-15.  The test keys should not be used for
+production use.  Upon successful personalization, a backup of all keys
+will be written to @file{~/.hashlet} in un-encrypted form.  The command
+will silently complete on success, but if you want to ensure that it
+completed succesfuly, you can verify the exit code is 0 with @kbd{echo
+$?}.
 
 With a device now in the @dfn{personalized} state, the output of the
 @command{state} command should now be @code{Personalized}.  Also, if you
@@ -192,14 +192,12 @@ Congratulations, you now have a personalized Hashlet!
 @pindex hashlet
 @cindex invoking @command{hashlet}
 
-The command @command{hashlet} requires two positional arguments,
-@command{bus} and @command{command}.  The @command{bus} argument refers
-to the I2C bus on which the hashlet communications.  For offline
-commands, where the device is not used, this argument should be
-@file{/dev/null}.  The second command is the command to run.  Optional
+The command @command{hashlet} requires one positional arguments, the
+@command{command}.  The command is the command to run.  Optional
 arguments may be supplied and may be relevant depending on the command.
 
-On a BeagleBone Black, the default I2C bus is @file{/dev/i2c-1}.
+On a BeagleBone Black, the default I2C bus is @file{/dev/i2c-1} but can
+be changed with the @command{-b} option.
 
 @section State Transition Commands
 

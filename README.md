@@ -81,6 +81,8 @@ This is the second command you should run.  On success it will not output anythi
 62F95589AC76855A8F9204C9C6B8B85F06E6477D17C3888266AEE8E1CBD65319
 ```
 
+This command also takes the `-B` parameter which allows you to specify the number of bytes you want back from the random number generator.
+
 ### mac
 ```bash
 ./hashlet mac --file test.txt

@@ -2,6 +2,10 @@ Cryptotronix Hashlet
 =====
 
 [![Build Status](https://travis-ci.org/cryptotronix/hashlet.png)](https://travis-ci.org/cryptotronix/hashlet)
+<a href="https://scan.coverity.com/projects/1908">
+  <img alt="Coverity Scan Build Status"
+       src="https://scan.coverity.com/projects/1908/badge.svg"/>
+</a>
 
 Status
 ---

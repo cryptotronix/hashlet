@@ -1,1 +1,3 @@
 Joshua Datko first version of all files.
+David Taht Contributed patch for get_random_bytes.
+Bob Mottram merged and test the get_random_bytes patch.

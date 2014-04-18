@@ -138,24 +138,27 @@ struct key_container* import_keys (const char* filename)
 
   fp = fopen (filename, "r");
 
-  if (NULL != fp && 0 == parse_file (fp))
+  if (NULL != fp)
     {
-      keys = make_key_container();
-      int x = 0;
-
-      for (x = 0; x < MAX_NUM_DATA_SLOTS && key_valid; x++)
+      if (0 == parse_file (fp))
         {
-          key = get_key (x);
-          keys->keys[x] = ascii_hex_2_bin (key, SIZE_OF_256_BITS_ASCII);
-          if (NULL == keys->keys[x].ptr || 32 != keys->keys[x].len)
-            key_valid = false;
+          keys = make_key_container();
+          int x = 0;
+
+          for (x = 0; x < MAX_NUM_DATA_SLOTS && key_valid; x++)
+            {
+              key = get_key (x);
+              keys->keys[x] = ascii_hex_2_bin (key, SIZE_OF_256_BITS_ASCII);
+              if (NULL == keys->keys[x].ptr || 32 != keys->keys[x].len)
+                key_valid = false;
+            }
+
+          free_parsed_keys ();
         }
 
-      free_parsed_keys ();
+      fclose (fp);
     }
 
-
-  fclose (fp);
 
   return keys;
 

@@ -197,7 +197,10 @@ struct octet_buffer get_random (int fd, bool update_seed)
       buf.len = RANDOM_RSP_LENGTH;
     }
   else
-    CTX_LOG (DEBUG, "Random command failed");
+    {
+      free (random);
+      CTX_LOG (DEBUG, "Random command failed");
+    }
 
   return buf;
 }
@@ -910,7 +913,7 @@ uint8_t slot_to_addr (enum DATA_ZONE zone, uint8_t slot)
   switch (zone)
     {
     case DATA_ZONE:
-      assert (0 <= slot && slot <= 15);
+      assert (slot <= 15);
       break;
 
     case OTP_ZONE:
@@ -918,7 +921,7 @@ uint8_t slot_to_addr (enum DATA_ZONE zone, uint8_t slot)
       break;
 
     case CONFIG_ZONE:
-      assert (0 <= slot && slot <= 2);
+      assert (slot <= 2);
       break;
 
     default:

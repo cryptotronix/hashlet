@@ -440,6 +440,10 @@ int cli_personalize (int fd, struct arguments *args)
   else
     result = HASHLET_COMMAND_SUCCESS;
 
+  if (NULL != keys)
+    {
+      free_key_container (keys);
+    }
   return result;
 
 }
@@ -554,12 +558,16 @@ const char* get_key_from_store (unsigned int slot)
 
   fp = fopen (filename, "r");
 
-  if (NULL != fp && 0 == parse_file (fp))
+  if (NULL != fp)
     {
-      key = get_key (slot);
+      if (0 == parse_file (fp))
+        {
+          key = get_key (slot);
+        }
+      fclose (fp);
     }
 
-  fclose (fp);
+  free ((char *)filename);
 
   return key;
 

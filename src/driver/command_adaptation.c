@@ -69,15 +69,22 @@ enum STATUS_RESPONSE process_command (int fd, struct Command_ATSHA204 *c,
                                       uint8_t* rec_buf, unsigned int recv_len)
 {
   unsigned int c_len = 0;
-  uint8_t *serialized;
+  uint8_t *serialized = NULL;
 
   assert (NULL != c);
   assert (NULL != rec_buf);
 
   c_len = serialize_command (c, &serialized);
 
-  return send_and_receive (fd, serialized, c_len, rec_buf, recv_len,
-                           &c->exec_time);
+  enum STATUS_RESPONSE rsp = send_and_receive (fd, serialized,
+                                               c_len,
+                                               rec_buf,
+                                               recv_len,
+                                               &c->exec_time);
+
+  free (serialized);
+
+  return rsp;
 
 }
 

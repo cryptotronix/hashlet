@@ -9,7 +9,7 @@
  * any later version.
  *
  * Hashlet is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * but WITHOUT ANY WARANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
@@ -140,6 +140,8 @@ parse_opt (int key, char *arg, struct argp_state *state)
         }
       else
         CTX_LOG (INFO, "Address not recognized, using default");
+
+      break;
     case 'b':
       arguments->bus = arg;
       break;
@@ -204,10 +206,14 @@ parse_opt (int key, char *arg, struct argp_state *state)
       break;
     case ARGP_KEY_ARG:
       if (state->arg_num > NUM_ARGS)
-        /* Too many arguments. */
-        argp_usage (state);
-
-      arguments->args[state->arg_num] = arg;
+        {
+          /* Too many arguments. */
+          argp_usage (state);
+        }
+      else
+        {
+          arguments->args[state->arg_num] = arg;
+        }
 
       break;
 

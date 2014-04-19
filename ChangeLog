@@ -1,4 +1,63 @@
+2014-04-19  Josh Datko  <jbd@cryptotronix.com>
+
+	Updates NEWS.
+
+	Bumps version.
+
+	Updates online help.
+
+	Updates tests for new features.
+
+	Adds documentation for HMAC command. #25.
+
+	Adds HMAC command. Resolves #25.
+
+	Merge branch 'hmac' into next
+	Adds skeleton for hmac command.
+
+2014-04-18  Josh Datko  <jbd@cryptotronix.com>
+
+	Updates documentation.
+
+	Updates contributing authors.
+
+2014-04-18  Demo User  <debian@hactar.(none)>
+
+	Merges get-random bytes into the random command.
+	Adds the -B option to the random command so that there is only one
+	random command from the cli.
+
+	Fixes errors found by coverity scan. Resolves #8.
+
+	Reverts to gnu coding style to be consistent with rest of project.
+
+	Adds projectile project file.
+
+	Adds coverity link.
+
+2014-04-08  Bob Mottram  <bob@robotics.uk.to>
+
+	*2 no longer needed
+
+	Can return less than 32 bytes
+
+	Tidying
+
+	Get a minimum of 32 bytes
+
+	Remove extraneous message
+
+	Adds new command to get a specified number of bytes - Dave Taht #31
+
+2014-02-07  Josh Datko  <jbd@cryptotronix.com>
+
+	Adds uname check to prevent running tests on none embedded systems.
+
 2014-02-07  Joshua Datko  <jbd@cryptotronix.com>
+
+	Updates ChangeLog.
+
+2014-02-07  Joshua Datko  <debian@bbb-ada.(none)>
 
 	Updates github documeation.
 
@@ -8,7 +67,7 @@
 
 	Updated NEWS for release.
 
-2014-02-07  Demo User  <jbd@cryptotronix.com>
+2014-02-07  Demo User  <debian@bbb-ada.(none)>
 
 	Updates test to use -b option.
 
@@ -49,6 +108,12 @@
 	Defaults bus to /dev/i2c-1
 	Removes the required positional argument for the bus and defaults to
 	/dev/i2c-1.  Resolves issue #20.
+
+	Adds infrastructure code for HMAC #25.
+	Adds command line interface to route code to HMAC.
+	Adds HMAC mac mode encoding structure.
+	Adds perform_hmac function
+	Adds serialize_hmac_mode function.
 
 2014-01-26  Josh Datko  <jbdatko@gmail.com>
 

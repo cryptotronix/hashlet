@@ -1,6 +1,18 @@
 Hashlet NEWS -- history of user-visible changes
 
-Copyright (C) 2013 Cryptotronix, LLC.
+Copyright (C) 2014 Cryptotronix, LLC.
+
+* Hashlet 1.1.0 - Release - April 2014
+
+This is the fist non-beta release.
+
+** New features
+
+- random now takes as an option, -B, which specifies the number of
+  bytes to return
+
+- Added hmac and offline-hmac to produce a HMAC-256 on the device and
+  to verify it without the device.
 
 * Hashlet 1.0.0 - Beta Release - February 2014
 

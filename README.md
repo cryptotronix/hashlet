@@ -117,6 +117,31 @@ The workflow goes like this:
 2. Send the challenge and MAC to the remote server, which has the key store file.
 3. Perform offline-verify on the remote server.
 
+### hmac
+```bash
+hashlet hmac -f ChangeLog
+CD0765AB1F94698E0EACDE22C10F362E925F4F4017B75FDE5AB3124FCEBE9754
+```
+```bash
+echo test | ./hashlet hmac
+9CAF53A19F4A8D751F9D03ED3991EF648DC9246D2B329D9A650307212D994326
+```
+
+Performs HMAC-256. Your input data is combined with data on the device, so this isn't a pure HMAC-256. Your data will be applied to SHA-256 and then combined, per the datasheet, with device data. That result is fed into HMAC-256.
+
+### offline-hmac
+```bash
+hashlet offline-hmac -r CD0765AB1F94698E0EACDE22C10F362E925F4F4017B75FDE5AB3124FCEBE9754 -f ChangeLog
+echo $?
+0
+```
+```bash
+echo test | ./hashlet offline-hmac -r 9CAF53A19F4A8D751F9D03ED3991EF648DC9246D2B329D9A650307212D994326
+echo $?
+0
+```
+
+Similar to `offline-verify`, verifies the hmac operation using the key file from `~/.hashlet`.
 ### serial-num
 ```bash
 ./hashlet serial-num

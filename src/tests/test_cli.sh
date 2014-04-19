@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Hashlet.  If not, see <http://www.gnu.org/licenses/>.
 
-arch=uname -a
+arch=$(uname -a)
 
-if [[ "${arch}" != *armv7 ]]; then
+if [[ "${arch}" != *arm* ]]; then
     echo Not building on arm, exiting
     exit 0
 fi
@@ -64,6 +64,15 @@ else
     exit 1
 fi
 
+RSP=$($EXE random -b $BUS -B 42)
+
+if [ "${#RSP}" == 84 ]; then
+    echo Variable Random length passed
+else
+    echo Variable Random length failed
+    exit 1
+fi
+
 RSP=$($EXE random -b /dev/i2c-4)
 test_exit 1 "Wrong Bus"
 
@@ -79,6 +88,13 @@ meta=$(echo $RSP| awk '{print $9}')
 RSP=$($EXE check-mac -r $mac -c $chal -m $meta -b $BUS)
 
 test_exit $SUCCESS check-mac
+
+# test HMAC
+RSP=$($EXE hmac -f config.log -b $BUS)
+test_exit 0 "HMAC command"
+
+RSP=$($EXE offline-hmac -r $RSP -f config.log -b $BUS)
+test_exit $SUCCESS offline-hmac
 
 
 # Negative testing on MAC command

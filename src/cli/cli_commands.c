@@ -125,6 +125,8 @@ void init_cli (struct arguments *args)
   static const struct command print_keys_cmd = {"print-keys", cli_print_keys };
   static const struct command offline_verify_cmd =
     {CMD_OFFLINE_VERIFY, cli_verify_mac };
+  static const struct command offline_hmac_verify_cmd =
+    {CMD_OFFLINE_HMAC_VERIFY, cli_verify_hmac };
   static const struct command check_mac_cmd = {"check-mac", cli_check_mac };
   static const struct command write_key_cmd = {"write", cli_write_to_key_slot };
   static const struct command read_key_cmd = {"read", cli_read_key_slot };
@@ -143,6 +145,7 @@ void init_cli (struct arguments *args)
   x = add_command (mac_cmd, x);
   x = add_command (print_keys_cmd, x);
   x = add_command (offline_verify_cmd, x);
+  x = add_command (offline_hmac_verify_cmd, x);
   x = add_command (check_mac_cmd, x);
   x = add_command (write_key_cmd, x);
   x = add_command (read_key_cmd, x);
@@ -168,6 +171,8 @@ bool offline_cmd (const char *command)
   if (NULL == command)
     assert (false);
   else if (cmp_commands (command, CMD_OFFLINE_VERIFY))
+    is_offline = true;
+  else if (cmp_commands (command, CMD_OFFLINE_HMAC_VERIFY))
     is_offline = true;
   else if (cmp_commands (command, CMD_HASH))
     is_offline = true;
@@ -555,6 +560,7 @@ const char* get_key_from_store (unsigned int slot)
   return key;
 
 }
+
 int cli_verify_mac (int fd, struct arguments *args)
 {
   int result = HASHLET_COMMAND_FAIL;
@@ -805,36 +811,9 @@ int cli_hmac (int fd, struct arguments *args)
   If no file was specified, load a random nonce, then proceed with
   HMAC */
 
-  bool temp_key_loaded = false;
-
   struct hmac_mode_encoding hm = {0};
 
-  /* Set the defaults for HMAC */
-
-  hm.use_serial_num = true;
-  hm.use_otp_0_10 = true;
-
-  if (NULL == args->input_file)
-    {
-      /* Load a random nonce into tempkey */
-      struct octet_buffer otp = get_otp_zone (fd);
-
-      struct octet_buffer random = get_nonce (fd);
-
-      struct octet_buffer temp_key =
-        gen_temp_key_from_nonce (fd, random, otp);
-
-      print_hex_string ("Temp key for HMAC", temp_key.ptr, temp_key.len);
-
-      free_octet_buffer (otp);
-      free_octet_buffer (random);
-      free_octet_buffer (temp_key);
-      temp_key_loaded = true;
-
-      /* Set the source flag to "random" = 0 */
-      hm.temp_key_source = true;
-    }
-  else if ((f = get_input_file (args)) != NULL)
+  if ((f = get_input_file (args)) != NULL)
     {
       /* Digest the file then proceed */
       struct octet_buffer file_digest = {0,0};
@@ -846,39 +825,98 @@ int cli_hmac (int fd, struct arguments *args)
       if (NULL != file_digest.ptr)
         {
           if (load_nonce (fd, file_digest))
-            temp_key_loaded = true;
-        }
+            {
+              /* Set the source flag to "input" = 1 */
+              hm.temp_key_source = true;
 
-      /* Set the source flag to "input" = 1 */
-      hm.temp_key_source = true;
+              struct octet_buffer rsp = perform_hmac (fd, hm, args->key_slot);
+
+              if (NULL != rsp.ptr)
+                {
+                  output_hex (stdout, rsp);
+                  free_octet_buffer (rsp);
+                  result = HASHLET_COMMAND_SUCCESS;
+                }
+              else
+                {
+                  fprintf (stderr, "%s\n", "HMAC Command failed.");
+                }
+            }
+        }
     }
   else
     {
       /* temp_key_loaded already false */
     }
 
-  /* temp key should now be valid */
-  if (temp_key_loaded)
-    {
-      struct octet_buffer rsp = perform_hmac (fd, hm, args->key_slot);
 
-      if (NULL != rsp.ptr)
+  return result;
+}
+
+int cli_verify_hmac (int fd, struct arguments *args)
+{
+  int result = HASHLET_COMMAND_FAIL;
+  assert (NULL != args);
+  const char* key;
+  struct octet_buffer challenge = {0,0};
+  struct octet_buffer challenge_rsp = {0,0};
+  struct octet_buffer key_buf = {0,0};
+  const unsigned int SIZE_OF_256_BITS_ASCII = 64;
+
+  if (NULL == args->challenge_rsp)
+    fprintf (stderr, "%s\n", "Challenge Response is blank");
+  else if ((key = get_key_from_store (args->key_slot)) == NULL)
+    fprintf (stderr, "%s\n", "Invalid file or file failed to parse");
+  else
+    {
+      if (NULL != args->input_file)
         {
-          output_hex (stdout, rsp);
-          free_octet_buffer (rsp);
-          result = HASHLET_COMMAND_SUCCESS;
+          FILE *f = NULL;
+          if ((f = get_input_file (args)) == NULL)
+            {
+              perror ("Failed to open file");
+            }
+          else
+            {
+              challenge = sha256 (f);
+            }
         }
       else
         {
-          fprintf (stderr, "%s\n", "HMAC Command failed.");
+          //read the challenge from stdin
+          challenge = sha256 (stdin);
         }
 
+      if (NULL == challenge.ptr)
+        {
+          perror ("Failed to get sha256 of input data\n");
+        }
+      else
+        {
+          challenge_rsp = ascii_hex_2_bin
+            (args->challenge_rsp, SIZE_OF_256_BITS_ASCII);
+          key_buf = ascii_hex_2_bin (key, SIZE_OF_256_BITS_ASCII);
 
-    }
-  else
-    {
-      /* do nothing */
+          if (challenge.ptr != NULL && challenge_rsp.ptr != NULL &&
+              key_buf.ptr != NULL)
+            {
+              if (verify_hmac_defaults (challenge, challenge_rsp, key_buf,
+                                        args->key_slot))
+                {
+                  result = HASHLET_COMMAND_SUCCESS;
+                  CTX_LOG (DEBUG, "HMAC PASSED");
+                }
+              else
+                fprintf (stderr, "%s\n", "Verify MAC failed");
+            }
+
+          free_octet_buffer (challenge);
+          free_octet_buffer (challenge_rsp);
+          free_octet_buffer (key_buf);
+          free_parsed_keys ();
+        }
     }
 
   return result;
+
 }

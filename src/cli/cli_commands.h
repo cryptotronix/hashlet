@@ -34,6 +34,7 @@
 
 /* Command list */
 #define CMD_OFFLINE_VERIFY "offline-verify"
+#define CMD_OFFLINE_HMAC_VERIFY "offline-hmac"
 #define CMD_HASH "hash"
 
 /* Used by main to communicate with parse_opt. */
@@ -87,7 +88,7 @@ int dispatch (const char *command, struct arguments *args);
  */
 void init_cli (struct arguments * args);
 
-#define NUM_CLI_COMMANDS 15
+#define NUM_CLI_COMMANDS 16
 
 /**
  * Gets random from the device
@@ -192,6 +193,16 @@ int cli_print_keys (int fd, struct arguments *args);
 int cli_verify_mac (int fd, struct arguments *args);
 
 /**
+ * Verifies a HMAC from a Hashlet (without needing the hardware)
+ *
+ * @param fd The open file descriptor
+ * @param args The args
+ *
+ * @return the exit code
+ */
+int cli_verify_hmac (int fd, struct arguments *args);
+
+/**
  * Uses the hashlet to verify a mac.  Either a MAC file must be
  * provided or the options: challenge, mac, and meta-data must be set.
  *
@@ -200,6 +211,7 @@ int cli_verify_mac (int fd, struct arguments *args);
  *
  * @return the exit code
  */
+
 int cli_check_mac (int fd, struct arguments *args);
 
 /**

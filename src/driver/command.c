@@ -1223,20 +1223,44 @@ bool gen_digest (int fd, enum DATA_ZONE zone, unsigned int slot)
 
 uint8_t serialize_hmac_mode (struct hmac_mode_encoding hm)
 {
-  printf ("Serialize me!\n");
-  return 0;
+  /* Currently, the only supported mode is hmac of the value loaded
+     from the nonce command, padded with zeros per page 51 of the
+     datasheet. */
+  uint8_t result = 0;
 
+  if (hm.temp_key_source)
+    result = 0x04; /* ...100 matches TempKey.SourceFlag */
 
+  return result;
 }
 struct octet_buffer perform_hmac (int fd, struct hmac_mode_encoding hm,
                                   unsigned int data_slot)
 {
 
-  struct octet_buffer rsp = {0,0};
+  const int RSP_LENGTH = 32;
+
+  assert (data_slot <= MAX_NUM_DATA_SLOTS);
 
   uint8_t param1 = serialize_hmac_mode (hm);
+  uint8_t param2[2] = {data_slot, 0};
 
-  printf ("HMAC HERE!\n");
+  struct octet_buffer rsp = make_buffer (RSP_LENGTH);
+
+  struct Command_ATSHA204 c = make_command ();
+
+  set_opcode (&c, COMMAND_HMAC);
+  set_param1 (&c, param1);
+  set_param2 (&c, param2);
+  set_data (&c, NULL, 0);
+  set_execution_time (&c, 0, HMAC_AVG_EXEC);
+
+
+  if (RSP_SUCCESS != process_command (fd, &c, rsp.ptr, rsp.len))
+    {
+      free_wipe (rsp.ptr, RSP_LENGTH);
+      rsp.ptr = NULL;
+      rsp.len = 0;
+    }
 
   return rsp;
 

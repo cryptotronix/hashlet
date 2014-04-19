@@ -56,4 +56,18 @@ struct octet_buffer sha256_buffer (struct octet_buffer data);
 bool verify_hash_defaults (struct octet_buffer challenge,
                            struct octet_buffer challenge_rsp,
                            struct octet_buffer key, unsigned int key_slot);
+
+/**
+ * Performs an offline verification of HMAC using the default settings.
+ *
+ * @param challenge The 32 Byte challenge
+ * @param challenge_rsp The 32 Byte challenge response
+ * @param key The 32 byte key
+ * @param key_slot The key slot used
+ *
+ * @return True if matched, otherwise false
+ */
+bool verify_hmac_defaults (struct octet_buffer challenge,
+                           struct octet_buffer challenge_rsp,
+                           struct octet_buffer key, unsigned int key_slot);
 #endif /* HASH_H */

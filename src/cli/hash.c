@@ -62,20 +62,55 @@ struct octet_buffer sha256 (FILE *fp)
 }
 
 struct octet_buffer sha256_buffer (struct octet_buffer data)
-  {
-    struct octet_buffer digest;
-    const unsigned int DLEN = gcry_md_get_algo_dlen (GCRY_MD_SHA256);
+{
+  struct octet_buffer digest;
+  const unsigned int DLEN = gcry_md_get_algo_dlen (GCRY_MD_SHA256);
 
-    assert (NULL != data.ptr);
-    /* Init gcrypt */
-    assert (NULL != gcry_check_version (NULL));
+  assert (NULL != data.ptr);
+  /* Init gcrypt */
+  assert (NULL != gcry_check_version (NULL));
 
-    digest = make_buffer (DLEN);
+  digest = make_buffer (DLEN);
 
-    gcry_md_hash_buffer (GCRY_MD_SHA256, digest.ptr, data.ptr, data.len);
+  gcry_md_hash_buffer (GCRY_MD_SHA256, digest.ptr, data.ptr, data.len);
 
-    return digest;
-  }
+  return digest;
+}
+
+struct octet_buffer hmac_buffer (struct octet_buffer data_to_hash,
+                                 struct octet_buffer key)
+{
+  struct octet_buffer digest;
+  const unsigned int DLEN = gcry_md_get_algo_dlen (GCRY_MD_SHA256);
+
+  assert (NULL != data_to_hash.ptr);
+  assert (NULL != key.ptr);
+
+  /* Init gcrypt */
+  assert (NULL != gcry_check_version (NULL));
+
+  digest = make_buffer (DLEN);
+
+  gcry_md_hd_t hd;
+
+  gcry_md_open (&hd, GCRY_MD_SHA256, GCRY_MD_FLAG_HMAC);
+
+  assert (NULL != hd);
+
+  gcry_md_setkey (hd, key.ptr, key.len);
+
+  gcry_md_write (hd, data_to_hash.ptr, data_to_hash.len);
+
+  unsigned char *result = gcry_md_read (hd, GCRY_MD_SHA256);
+
+  assert (NULL != result);
+
+  memcpy (digest.ptr, result, DLEN);
+
+  gcry_md_close (hd);
+
+  return digest;
+}
 
 unsigned int copy_over(uint8_t *dst, const uint8_t *src, unsigned int src_len,
                        unsigned int offset)
@@ -136,6 +171,71 @@ struct octet_buffer perform_hash(struct octet_buffer challenge,
   return digest;
 }
 
+
+struct octet_buffer perform_hmac_256(struct octet_buffer challenge,
+                                     struct octet_buffer key,
+                                     uint8_t mode, uint16_t param2,
+                                     struct octet_buffer otp8,
+                                     struct octet_buffer otp3,
+                                     struct octet_buffer sn4,
+                                     struct octet_buffer sn23)
+{
+
+  assert (NULL != challenge.ptr); assert (32 == challenge.len);
+  assert (NULL != key.ptr); assert (32 == key.len);
+  assert (NULL != otp8.ptr); assert (8 == otp8.len);
+  assert (NULL != otp3.ptr); assert (3 == otp3.len);
+  assert (NULL != sn4.ptr); assert (4 == sn4.len);
+  assert (NULL != sn23.ptr); assert (2 == sn23.len);
+
+  struct octet_buffer zeros = make_buffer (32);
+
+  const uint8_t opcode = {0x11};
+  const uint8_t sn = 0xEE;
+  const uint8_t sn2[] ={0x01, 0x23};
+
+  unsigned int len = zeros.len +
+    challenge.len +
+    sizeof(opcode) +
+    sizeof(mode) +
+    sizeof(param2) +
+    otp8.len +
+    otp3.len +
+    sizeof(sn) +
+    sn4.len +
+    sizeof(sn2) +
+    sn23.len;
+
+  assert (88 == len);
+
+  uint8_t *buf = malloc_wipe(len);
+
+  unsigned int offset = 0;
+  offset = copy_over(buf, zeros.ptr, zeros.len, offset);
+  offset = copy_over(buf, challenge.ptr, challenge.len, offset);
+  offset = copy_over(buf, &opcode, sizeof(opcode), offset);
+  offset = copy_over(buf, &mode, sizeof(mode), offset);
+  offset = copy_over(buf, (uint8_t *)&param2, sizeof(param2), offset);
+  offset = copy_over(buf, otp8.ptr, otp8.len, offset);
+  offset = copy_over(buf, otp3.ptr, otp3.len, offset);
+  offset = copy_over(buf, &sn, sizeof(sn), offset);
+  offset = copy_over(buf, sn4.ptr, sn4.len, offset);
+  offset = copy_over(buf, sn2, sizeof (sn2), offset);
+  offset = copy_over(buf, sn23.ptr, sn23.len, offset);
+
+  print_hex_string("Data to hmac", buf, len);
+  struct octet_buffer data_to_hash = {buf, len};
+  struct octet_buffer digest;
+  digest = hmac_buffer (data_to_hash, key);
+
+  print_hex_string("Result hash", digest.ptr, digest.len);
+
+  free(buf);
+
+  return digest;
+}
+
+
 bool verify_hash_defaults (struct octet_buffer challenge,
                            struct octet_buffer challenge_rsp,
                            struct octet_buffer key, unsigned int key_slot)
@@ -157,6 +257,41 @@ bool verify_hash_defaults (struct octet_buffer challenge,
 
   struct octet_buffer digest;
   digest = perform_hash (challenge, key, mode, param2, otp8, otp3, sn4, sn23);
+
+  free_octet_buffer (otp8);
+  free_octet_buffer (otp3);
+  free_octet_buffer (sn4);
+  free_octet_buffer (sn23);
+
+  result = memcmp_octet_buffer (digest, challenge_rsp);
+
+  free_octet_buffer (digest);
+
+  return result;
+
+}
+
+bool verify_hmac_defaults (struct octet_buffer challenge,
+                           struct octet_buffer challenge_rsp,
+                           struct octet_buffer key, unsigned int key_slot)
+{
+
+  bool result = false;
+
+  struct octet_buffer otp8 = make_buffer (8);
+  struct octet_buffer otp3 = make_buffer (3);
+  struct octet_buffer sn4 = make_buffer (4);
+  struct octet_buffer sn23 = make_buffer (2);
+  uint8_t mode = 0x04;
+  uint16_t param2 = 0;
+
+  uint8_t *p = (uint8_t *)&param2;
+  assert (key_slot < MAX_NUM_DATA_SLOTS);
+  *p = key_slot;
+
+
+  struct octet_buffer digest;
+  digest = perform_hmac_256 (challenge, key, mode, param2, otp8, otp3, sn4, sn23);
 
   free_octet_buffer (otp8);
   free_octet_buffer (otp3);

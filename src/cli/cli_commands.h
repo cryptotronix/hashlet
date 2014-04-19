@@ -87,7 +87,7 @@ int dispatch (const char *command, struct arguments *args);
  */
 void init_cli (struct arguments * args);
 
-#define NUM_CLI_COMMANDS 14
+#define NUM_CLI_COMMANDS 15
 
 /**
  * Gets random from the device
@@ -257,5 +257,16 @@ struct encrypted_write
  */
 struct encrypted_write cli_mac_write (int fd, struct octet_buffer data,
                                       unsigned int slot, const char *ascii_key);
+
+/**
+ * Performs HMAC.  If a file option is specified, it will first hash
+ * that file otherwise a random nonce if loaded.
+ *
+ * @param fd The open file descriptor.
+ * @param args The args
+ *
+ * @return The error code.  On success it will print the HMAC result.
+ */
+int cli_hmac (int fd, struct arguments *args);
 
 #endif /* CLI_COMMANDS_H */

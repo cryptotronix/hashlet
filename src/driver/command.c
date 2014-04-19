@@ -980,6 +980,18 @@ struct octet_buffer get_nonce (int fd)
   return nonce;
 }
 
+bool load_nonce (int fd, struct octet_buffer data)
+{
+  assert (data.ptr != NULL && data.len == 32);
+
+  struct octet_buffer rsp = gen_nonce (fd, data);
+
+  if (NULL == rsp.ptr || *rsp.ptr != 0)
+    return false;
+  else
+    return true;
+
+}
 
 struct octet_buffer gen_temp_key_from_nonce (int fd,
                                              struct octet_buffer random,
@@ -1207,4 +1219,25 @@ bool gen_digest (int fd, enum DATA_ZONE zone, unsigned int slot)
     }
 
   return result;
+}
+
+uint8_t serialize_hmac_mode (struct hmac_mode_encoding hm)
+{
+  printf ("Serialize me!\n");
+  return 0;
+
+
+}
+struct octet_buffer perform_hmac (int fd, struct hmac_mode_encoding hm,
+                                  unsigned int data_slot)
+{
+
+  struct octet_buffer rsp = {0,0};
+
+  uint8_t param1 = serialize_hmac_mode (hm);
+
+  printf ("HMAC HERE!\n");
+
+  return rsp;
+
 }

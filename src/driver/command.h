@@ -167,6 +167,16 @@ struct octet_buffer gen_nonce (int fd, struct octet_buffer data);
 struct octet_buffer get_nonce (int fd);
 
 /**
+ * Loads a 32 byte value into tempkey.
+ *
+ * @param fd The open file descriptor.
+ * @param data 32 bytes of external data
+ *
+ * @return True if the value loaded otherwise false
+ */
+bool load_nonce (int fd, struct octet_buffer data);
+
+/**
  * Set the configuration zone based.  This function will setup the
  * configuration zone, and thus the device, to a fixed configuration.
  *
@@ -462,4 +472,34 @@ struct octet_buffer gen_temp_key_from_digest (int fd,
                                               const struct octet_buffer prev_temp_key,
                                               unsigned int slot,
                                               const struct octet_buffer key);
+
+struct hmac_mode_encoding
+{
+  bool use_serial_num;
+  bool use_otp_0_7;
+  bool use_otp_0_10;
+  bool temp_key_source;
+};
+
+/**
+ * Serializes the hmac options to an one-the-wire representation.
+ *
+ * @param hm The HMAC options
+ *
+ * @return One byte encoding the HMAC options
+ */
+uint8_t serialize_hmac_mode (struct hmac_mode_encoding hm);
+
+/**
+ * Performs HMAC according to the mode encoding.
+ *
+ * @param fd The open file descriptor.
+ * @param hm The encoded hmac options
+ * @param data_slot The key to use
+ *
+ * @return the 32 byte hmac result.  Buf.ptr will be NULL on error
+ */
+struct octet_buffer perform_hmac (int fd, struct hmac_mode_encoding hm,
+                                  unsigned int data_slot);
+
 #endif /* COMMAND_H */

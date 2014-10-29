@@ -33,120 +33,120 @@
 #include <unistd.h>
 #include "log.h"
 
-int i2c_setup(const char* bus)
-{
-  assert(NULL != bus);
+/* int i2c_setup(const char* bus) */
+/* { */
+/*   assert(NULL != bus); */
 
-  int fd;
+/*   int fd; */
 
-  if ((fd = open(bus, O_RDWR)) < 0)
-    {
-      perror("Failed to open I2C bus; Try specifying the bus with -b\n");
-      exit(1);
-    }
+/*   if ((fd = open(bus, O_RDWR)) < 0) */
+/*     { */
+/*       perror("Failed to open I2C bus; Try specifying the bus with -b\n"); */
+/*       exit(1); */
+/*     } */
 
-  return fd;
+/*   return fd; */
 
-}
+/* } */
 
-void i2c_acquire_bus(int fd, int addr)
-{
-  if (ioctl(fd, I2C_SLAVE, addr) < 0)
-    {
-      perror("Failed to acquire bus access and/or talk to slave.\n");
+/* void i2c_acquire_bus(int fd, int addr) */
+/* { */
+/*   if (ioctl(fd, I2C_SLAVE, addr) < 0) */
+/*     { */
+/*       perror("Failed to acquire bus access and/or talk to slave.\n"); */
 
-      exit(1);
-  }
+/*       exit(1); */
+/*   } */
 
-}
-
-
-
-bool wakeup(int fd)
-{
-
-  uint32_t wakeup = 0;
-  unsigned char buf[4] = {0};
-  bool awake = false;
-
-  /* The assumption here that the fd is the i2c fd.  Of course, it may
-   * not be, so this may loop for a while (read forever).  This should
-   * probably try for only so often before quitting.
-  */
-
-  /* Perform a basic check to see if this fd is open.  This does not
-     guarantee it is the correct fd */
-
-  if(fcntl(fd, F_GETFD) < 0)
-    perror("Invalid FD.\n");
-
-  while (!awake)
-    {
-      if (write(fd,&wakeup,sizeof(wakeup)) > 1)
-        {
-
-          CTX_LOG(DEBUG, "%s", "Device is awake.");
-          // Using I2C Read
-          if (read(fd,buf,sizeof(buf)) <= 0)
-            {
-              /* ERROR HANDLING: i2c transaction failed */
-              perror("Failed to read from the i2c bus.\n");
-            }
-          else
-            {
-              assert(is_crc_16_valid(buf, 2, buf+2));
-              awake = true;
-            }
-        }
-    }
-
-  return awake;
-
-}
-
-int sleep_device(int fd)
-{
-
-  unsigned char sleep_byte[] = {0x01};
-
-  return write(fd, sleep_byte, sizeof(sleep_byte));
+/* } */
 
 
-}
 
-ssize_t i2c_write(int fd, unsigned char *buf, unsigned int len)
-{
-  assert(NULL != buf);
+/* bool wakeup(int fd) */
+/* { */
 
-  return write(fd, buf, len);
+/*   uint32_t wakeup = 0; */
+/*   unsigned char buf[4] = {0}; */
+/*   bool awake = false; */
 
-}
+/*   /\* The assumption here that the fd is the i2c fd.  Of course, it may */
+/*    * not be, so this may loop for a while (read forever).  This should */
+/*    * probably try for only so often before quitting. */
+/*   *\/ */
 
-ssize_t i2c_read(int fd, unsigned char *buf, unsigned int len)
-{
-  assert(NULL != buf);
+/*   /\* Perform a basic check to see if this fd is open.  This does not */
+/*      guarantee it is the correct fd *\/ */
 
-  return read(fd, buf, len);
+/*   if(fcntl(fd, F_GETFD) < 0) */
+/*     perror("Invalid FD.\n"); */
+
+/*   while (!awake) */
+/*     { */
+/*       if (write(fd,&wakeup,sizeof(wakeup)) > 1) */
+/*         { */
+
+/*           CTX_LOG(DEBUG, "%s", "Device is awake."); */
+/*           // Using I2C Read */
+/*           if (read(fd,buf,sizeof(buf)) <= 0) */
+/*             { */
+/*               /\* ERROR HANDLING: i2c transaction failed *\/ */
+/*               perror("Failed to read from the i2c bus.\n"); */
+/*             } */
+/*           else */
+/*             { */
+/*               assert(is_crc_16_valid(buf, 2, buf+2)); */
+/*               awake = true; */
+/*             } */
+/*         } */
+/*     } */
+
+/*   return awake; */
+
+/* } */
+
+/* int sleep_device(int fd) */
+/* { */
+
+/*   unsigned char sleep_byte[] = {0x01}; */
+
+/*   return write(fd, sleep_byte, sizeof(sleep_byte)); */
 
 
-}
+/* } */
 
-int hashlet_setup(const char *bus, unsigned int addr)
-{
-    int fd = i2c_setup(bus);
+/* ssize_t i2c_write(int fd, unsigned char *buf, unsigned int len) */
+/* { */
+/*   assert(NULL != buf); */
 
-    i2c_acquire_bus(fd, addr);
+/*   return write(fd, buf, len); */
 
-    wakeup(fd);
+/* } */
 
-    return fd;
+/* ssize_t i2c_read(int fd, unsigned char *buf, unsigned int len) */
+/* { */
+/*   assert(NULL != buf); */
 
-}
+/*   return read(fd, buf, len); */
 
-void hashlet_teardown(int fd)
-{
-    sleep_device(fd);
 
-    close(fd);
+/* } */
 
-}
+/* int hashlet_setup(const char *bus, unsigned int addr) */
+/* { */
+/*     int fd = i2c_setup(bus); */
+
+/*     i2c_acquire_bus(fd, addr); */
+
+/*     wakeup(fd); */
+
+/*     return fd; */
+
+/* } */
+
+/* void hashlet_teardown(int fd) */
+/* { */
+/*     sleep_device(fd); */
+
+/*     close(fd); */
+
+/* } */

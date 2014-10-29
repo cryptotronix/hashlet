@@ -37,6 +37,4 @@ enum STATUS_RESPONSE send_and_receive (int fd, uint8_t *send_buf,
 unsigned int serialize_command (struct Command_ATSHA204 *c,
                                 uint8_t **serialized);
 
-enum STATUS_RESPONSE read_and_validate (int fd, uint8_t *buf, unsigned int len);
-
 #endif /* COMMAND_ADAPTATION_H */

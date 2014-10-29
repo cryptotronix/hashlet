@@ -24,24 +24,24 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-/**
- * Open the I2C bus
- *
- * @param bus The desired I2C bus.
- *
- * @return An open file descriptor or the program will exit.
- */
-int i2c_setup(const char* bus);
+/* /\** */
+/*  * Open the I2C bus */
+/*  * */
+/*  * @param bus The desired I2C bus. */
+/*  * */
+/*  * @return An open file descriptor or the program will exit. */
+/*  *\/ */
+/* int i2c_setup(const char* bus); */
 
-void i2c_acquire_bus(int fd, int addr);
+/* void i2c_acquire_bus(int fd, int addr); */
 
-bool wakeup(int fd);
+/* bool wakeup(int fd); */
 
-int sleep_device(int fd);
+/* int sleep_device(int fd); */
 
-ssize_t i2c_write(int fd, unsigned char *buf, unsigned int len);
+/* ssize_t i2c_write(int fd, unsigned char *buf, unsigned int len); */
 
-ssize_t i2c_read(int fd, unsigned char *buf, unsigned int len);
+/* ssize_t i2c_read(int fd, unsigned char *buf, unsigned int len); */
 
 
 #endif /* I2C_H */

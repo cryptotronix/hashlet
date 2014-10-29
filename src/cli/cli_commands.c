@@ -21,6 +21,10 @@
 
 #include <assert.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "cli_commands.h"
 #include "config.h"
@@ -186,7 +190,6 @@ int dispatch (const char *command, struct arguments *args)
   int result = HASHLET_COMMAND_FAIL;
   struct command * cmd = NULL;
 
-  const char *bus = args->bus;
 
   if ((cmd = find_command (command)) == NULL)
     printf ("%s", "Command not found.  Try --help\n");
@@ -200,14 +203,15 @@ int dispatch (const char *command, struct arguments *args)
         {
           result = (*cmd->func)(fd, args);
         }
-      else if ((fd = hashlet_setup (bus, args->address)) < 0)
+      else if (!(fd = open ("/dev/atsha0", O_RDWR)))
         perror ("Failed to setup the hashlet");
       else
         {
           result = (*cmd->func)(fd, args);
-          hashlet_teardown (fd);
         }
 
+      if (!fd)
+        close (fd);
 
     }
 

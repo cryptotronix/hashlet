@@ -7,10 +7,26 @@ Cryptotronix Hashlet
        src="https://scan.coverity.com/projects/1908/badge.svg"/>
 </a>
 
-Status
+Getting
 ---
 
-As of 7 February, 2014 the 1.0.0 release is considered a second Beta release and is available on the [release](http://download.savannah.gnu.org/releases/hashlet/) page.  It has been tested on a BeagleBone Black, rev 5AC running Debian Wheezy and a Raspberry Pi running Raspian.  It *should* work with Angstrom, but has not been tested.  Beta testers are welcome!
+The easiest way to install hashlet right now is to add my debian [repository](http://debian.cryptotronix.com/) and then just:
+
+```
+sudo apt-get update
+sudo apt-get install hashlet
+```
+
+However, I've only packaged the binary for ARMv7. If you want to help package a binary for another system, I'd appreciate the help!
+
+The second easiest way to install the software is to download the latest [release](http://download.savannah.gnu.org/releases/hashlet/hashlet-1.1.0.tar.gz) and then:
+
+```
+./configure && make
+sudo make install
+```
+
+If you want to hack on hashlet, read more about building below.
 
 Building
 ----
@@ -28,12 +44,8 @@ The run time dependencies are:
 Hardware
 ---
 
-The hardware is available from [Cryptotronix](http://cryptotronix.com/products/hashlet/).  We are an open hardware company, so see the `hardware` folder for the design to make this yourself.
+The hardware was available from [Cryptotronix](http://cryptotronix.com/products/hashlet/).  We are an open hardware company, so see the `hardware` folder for the design to make this yourself. However, this software should work on any board that has an ATSHA204 in the I2C variety.
 
-BOM
----
-
-The chip on the Hashlet is Atmel's ATSHA204.
 
 Running
 ---
@@ -166,8 +178,7 @@ Support
 
 IRC: Join the `#cryptotronix` channel on freenode.
 
-Mailing lists: `hashlet-announce` and `hashlet-users` are open for subscriptions [here](https://savannah.nongnu.org/mail/?group=hashlet).
 
 Contributing
 ---
-See the wiki page on [contributing](https://github.com/cryptotronix/hashlet/wiki/Contributing).
+Pull requests welcome :)

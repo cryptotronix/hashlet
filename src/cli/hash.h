@@ -32,7 +32,7 @@
  * @return A malloc'd buffer of 32 bytes containing the digest.
  * buf.ptr will be null on error
  */
-struct octet_buffer sha256 (FILE *fp);
+struct octet_buffer sha256_file (FILE *fp);
 
 /**
  * Perform a SHA 256 on a fixed data block

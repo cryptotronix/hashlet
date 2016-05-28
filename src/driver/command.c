@@ -645,7 +645,7 @@ bool is_data_locked (int fd)
 }
 
 
-struct octet_buffer get_config_zone (fd)
+struct octet_buffer get_config_zone (int fd)
 {
   const unsigned int SIZE_OF_CONFIG_ZONE = 88;
   const unsigned int NUM_OF_WORDS = SIZE_OF_CONFIG_ZONE / 4;
@@ -666,7 +666,7 @@ struct octet_buffer get_config_zone (fd)
   return buf;
 }
 
-struct octet_buffer get_otp_zone (fd)
+struct octet_buffer get_otp_zone (int fd)
 {
   const unsigned int SIZE_OF_OTP_ZONE = 64;
   const unsigned int SIZE_OF_READ = 32;

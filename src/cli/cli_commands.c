@@ -27,11 +27,7 @@
 #include "../parser/hashlet_parser.h"
 #include "../driver/personalize.h"
 
-#if HAVE_GCRYPT_H
 #include "hash.h"
-#else
-#define NO_GCRYPT "Rebuild with libgcrypt to enable this feature"
-#endif
 
 static struct command commands[NUM_CLI_COMMANDS];
 
@@ -385,7 +381,6 @@ int cli_hash (int fd, struct arguments *args)
   int result = HASHLET_COMMAND_FAIL;
   assert (NULL != args);
 
-#if HAVE_GCRYPT_H
   FILE *f;
   if ((f = get_input_file (args)) == NULL)
     {
@@ -393,7 +388,7 @@ int cli_hash (int fd, struct arguments *args)
     }
   else
     {
-      response = sha256 (f);
+      response = sha256_file (f);
       if (NULL != response.ptr)
         {
           output_hex (stdout, response);
@@ -403,9 +398,7 @@ int cli_hash (int fd, struct arguments *args)
 
       close_input_file (args, f);
     }
-#else
-  printf ("%s\n", NO_GCRYPT);
-#endif
+
 
   return result;
 }
@@ -458,7 +451,6 @@ int cli_mac (int fd, struct arguments *args)
   int result = HASHLET_COMMAND_FAIL;
   assert (NULL != args);
 
-#if HAVE_GCRYPT_H
   struct mac_response rsp;
   struct octet_buffer challenge;
   FILE *f;
@@ -468,7 +460,7 @@ int cli_mac (int fd, struct arguments *args)
     }
   else
     {
-      challenge = sha256 (f);
+      challenge = sha256_file (f);
       if (NULL != challenge.ptr)
         {
           rsp = perform_mac (fd, args->mac_mode,
@@ -488,9 +480,6 @@ int cli_mac (int fd, struct arguments *args)
 
       close_input_file (args, f);
     }
-#else
-  printf ("%s\n", NO_GCRYPT);
-#endif
 
   return result;
 }
@@ -565,7 +554,7 @@ int cli_verify_mac (int fd, struct arguments *args)
 {
   int result = HASHLET_COMMAND_FAIL;
   assert (NULL != args);
-#if HAVE_GCRYPT_H
+
   const char* key;
   struct octet_buffer challenge;
   struct octet_buffer challenge_rsp;
@@ -604,9 +593,7 @@ int cli_verify_mac (int fd, struct arguments *args)
       free_octet_buffer (key_buf);
       free_parsed_keys ();
     }
-#else
-  printf ("%s\n", NO_GCRYPT);
-#endif
+
   return result;
 
 }
@@ -817,7 +804,7 @@ int cli_hmac (int fd, struct arguments *args)
     {
       /* Digest the file then proceed */
       struct octet_buffer file_digest = {0,0};
-      file_digest = sha256 (f);
+      file_digest = sha256_file (f);
       close_input_file (args, f);
 
       print_hex_string ("HMAC file digest", file_digest.ptr, file_digest.len);
@@ -878,13 +865,13 @@ int cli_verify_hmac (int fd, struct arguments *args)
             }
           else
             {
-              challenge = sha256 (f);
+              challenge = sha256_file (f);
             }
         }
       else
         {
           //read the challenge from stdin
-          challenge = sha256 (stdin);
+          challenge = sha256_file (stdin);
         }
 
       if (NULL == challenge.ptr)

@@ -18,8 +18,8 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
 ACLOCAL_AMFLAGS = -I m4
-AM_CPPFLAGS = $(DEPS_CFLAGS)
-hashlet_LDADD = $(DEPS_LIBS)
+AM_CPPFLAGS = $(YACL_CFLAGS) $(CRYPTI2C_CFLAGS)
+hashlet_LDADD = $(YACL_LIBS) $(CRYPTI2C_LIBS)
 
 SUBDIRS = doc .
 
@@ -36,7 +36,8 @@ hashlet_SOURCES = src/driver/command.h src/driver/command.c \
 	          src/cli/main.c \
 	          src/driver/hashlet.h \
 		  src/driver/personalize.h src/driver/personalize.c \
-		  src/cli/hash.h src/cli/hash.c \
+		  src/cli/sha256.h src/cli/sha256.c \
+                  src/cli/hash.h src/cli/hash.c \
 		  src/cli/cli_commands.h src/cli/cli_commands.c \
 		  src/driver/config_zone.h src/driver/config_zone.c \
 		  src/parser/hashlet_bison.y src/parser/hashlet_flex.l \

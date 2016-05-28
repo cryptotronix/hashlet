@@ -19,60 +19,45 @@
  */
 #include "config.h"
 
-#if HAVE_GCRYPT_H
 #include <assert.h>
-#include <gcrypt.h>
 #include "hash.h"
 #include "../driver/defs.h"
+#include "sha256.h"
 
-struct octet_buffer sha256 (FILE *fp)
+struct octet_buffer sha256_file (FILE *fp)
 {
 
-  struct octet_buffer digest;
+  struct octet_buffer digest =  make_buffer (32);
 
-  assert (NULL != fp);
-  /* Init gcrypt */
-  assert (NULL != gcry_check_version (NULL));
-
-  struct gcry_md_handle *hd;
-  struct gcry_md_handle **hd_ptr = &hd;
-
-  assert (GPG_ERR_NO_ERROR == gcry_md_open (hd_ptr, GCRY_MD_SHA256, 0));
+  struct sha256_state state;
+  sha256_init(&state);
 
   int c;
-
+  int rc = -1;
   /* Perform the hash */
   while ((c = getc (fp)) != EOF)
     {
-      gcry_md_putc (hd, c);
+      rc = sha256_process (&state, (const unsigned char *)&c, sizeof c);
+      if (rc) goto OUT;
     }
 
-  unsigned char *result;
+  sha256_done (&state, digest.ptr);
 
-  assert ((result = gcry_md_read (hd, GCRY_MD_SHA256)) != NULL);
-
-  /* copy over to the digest */
-  const unsigned int DLEN = gcry_md_get_algo_dlen (GCRY_MD_SHA256);
-  digest = make_buffer (DLEN);
-  memcpy (digest.ptr, result, DLEN);
-
-  gcry_md_close (hd);
-
+  rc = 0;
+ OUT:
   return digest;
+
 }
 
 struct octet_buffer sha256_buffer (struct octet_buffer data)
 {
   struct octet_buffer digest;
-  const unsigned int DLEN = gcry_md_get_algo_dlen (GCRY_MD_SHA256);
 
   assert (NULL != data.ptr);
-  /* Init gcrypt */
-  assert (NULL != gcry_check_version (NULL));
 
-  digest = make_buffer (DLEN);
+  digest = make_buffer (32);
 
-  gcry_md_hash_buffer (GCRY_MD_SHA256, digest.ptr, data.ptr, data.len);
+  sha256 (data.ptr, data.len, digest.ptr);
 
   return digest;
 }
@@ -81,35 +66,14 @@ struct octet_buffer hmac_buffer (struct octet_buffer data_to_hash,
                                  struct octet_buffer key)
 {
   struct octet_buffer digest;
-  const unsigned int DLEN = gcry_md_get_algo_dlen (GCRY_MD_SHA256);
 
   assert (NULL != data_to_hash.ptr);
   assert (NULL != key.ptr);
 
-  /* Init gcrypt */
-  assert (NULL != gcry_check_version (NULL));
-
-  digest = make_buffer (DLEN);
-
-  gcry_md_hd_t hd;
-
-  gcry_md_open (&hd, GCRY_MD_SHA256, GCRY_MD_FLAG_HMAC);
-
-  assert (NULL != hd);
-
-  gcry_md_setkey (hd, key.ptr, key.len);
-
-  gcry_md_write (hd, data_to_hash.ptr, data_to_hash.len);
-
-  unsigned char *result = gcry_md_read (hd, GCRY_MD_SHA256);
-
-  assert (NULL != result);
-
-  memcpy (digest.ptr, result, DLEN);
-
-  gcry_md_close (hd);
+  assert (0 == hmac_sha256(key.ptr, key.len, data_to_hash.ptr, data_to_hash.len, digest.ptr));
 
   return digest;
+
 }
 
 unsigned int copy_over(uint8_t *dst, const uint8_t *src, unsigned int src_len,
@@ -305,5 +269,3 @@ bool verify_hmac_defaults (struct octet_buffer challenge,
   return result;
 
 }
-
-#endif
